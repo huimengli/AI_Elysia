@@ -44,9 +44,18 @@
 - 12:4x `jarvis/tts.py` 双 provider 化（kokoro 默认 / gptsovits：urllib GET api_v2 `/tts` + wave 解析 PCM，流式=逐句调用）；config.yaml 加 `tts.provider` + `tts.gptsovits` 块（ref=爱莉希雅【感动】wav）。
 - .gitignore 追加 `.venv-gsv/`、`GPT-SoVITS-main/`、`_*.py`。
 - 新增 HB-007（chroma 默认 embedding 目录 `C:\Users\楼听\.cache\chroma` PermissionError，记忆入库失败，不阻塞主链路）→ need_user.md **Q2 待用户决策**（A 修 ACL / B 改显式本地 embedding / C 降级 warning）。
-- 进行中：pwsh-50 `.venv-gsv`（torch CPU + requirements）；之后 api_v2.py :9880 推理验证（**需用户先停 llama :8080，HB-003**）→ provider 切换 + e2e。
+- 进行中：`.venv-gsv` requirements（pwsh-50 两轮超时失败 → `_setup_gsv2.py` 分三批重试，作业 pwsh-64，含 gyan.dev portable ffmpeg 入 `GPT-SoVITS-main/runtime/`）；`tts_infer.yaml` custom 段已指向爱莉希雅 e20/e24（CPU）；参考音频已复制 `GPT-SoVITS-main/ref_audio/Elysia_ref_gandong.wav`；`_tts_api_test.py` 冒烟脚本就绪。之后 api_v2.py :9880 推理验证（**need_user Q3：需用户先停 llama :8080，HB-003**）→ provider 切换 + e2e。
+
+## 2026-10-13 晚间（17:0x–18:1x）
+
+- 17:2x **Q2/HB-007 解决**：chroma 默认 embedding 模型硬编码下载 home `.cache`（沙箱不可写）→ 83MB ONNX 预下载工作区 `.chroma-models/`（SHA256 校验）+ `jarvis/memory.py` `WorkspaceMiniLM` 子类指路；旧空 chroma 库因 EF 配置冲突删除重建；实测 store/search OK。
+- 17:3x **config.yaml 潜伏 bug**：双引号内未转义 `\B`（无效 YAML，任何进程重新加载即崩）→ 自 HEAD 恢复 + 改单引号；工作区文件 GBK/UTF-8 混合编码 → 纯 UTF-8，jarvis 全部 11 处 `open(config)` 补 `encoding="utf-8"`。
+- 17:4x need_user **Q2/Q3 解决并归档**（Q3：用户已停 llama :8080，内存空出）；hard_bug.md 归档（HB-007 标记解决，仅留 HB-003 部分解决）。
+- 17:5x GPT-SoVITS venv 安装：pwsh-77/89 连续在 jieba sdist 构建死挂 → 根因定位（PEP517 隔离构建在 `%LOCALAPPDATA%\Temp` 建临时 venv 被沙箱拦截；镜像确认 jieba/jieba_fast 零 wheel）→ `_setup_gsv4.py`（pwsh-105）：setuptools/wheel 预装 + `--no-build-isolation` 本地构建 jieba、jieba_fast 跳过（可选依赖）、其余纯 wheel 批次 → **ALL_BATCHES_DONE + GSV_IMPORTS_OK**（torch 2.14.1+cpu，18 模块导入通过）。
+- 进行中：api_v2.py :9880 启动 → `_tts_api_test.py` 验证 → `tts.provider: gptsovits` 切换 + Jarvis 重启（HF env）→ `_e2e_stream_test.py` 复验。
 
 ## Git 提交记录
 
 - `7d279a7`（2026-10-13-10:4x，main）`docs(AI): 补全 Jarvis 运行记录并归档 Q1（端到端 CHAT_OK）`——9 files, +273/−2：records/、hard_bug.md、need_user.md（+ai_buckup 归档）、progress/todo/tree、config.yaml、.gitignore。**已本地 commit，未 push。**
 - `f444b85`（2026-10-13-12:5x，main）`feat(AI): 新增 gptsovits TTS provider 并关闭 Qwen3 thinking 解决 LLM 挂起`——11 files, +282/−39：jarvis/tts.py（双 provider）、jarvis/main.py（max_tokens+chat_template_kwargs）、config.yaml、.gitignore、records×2、hard_bug.md（HB-007/HB-008）、need_user.md（Q2）、progress/todo/tree。**已本地 commit，未 push。**
+- `409cc3f`（2026-10-13-14:5x，main）`docs(AI): sync GPT-SoVITS venv retry, e2e PASS, and user asks`——4 files, +16/−2：records/2026-10-13-11-55（pwsh-50 失败复盘+分批重装计划）、todo.md（e2e PASS 勾选、venv/ffmpeg 项更新）、need_user.md（Q3 停 llama :8080）、progress.md。**已本地 commit，未 push。**

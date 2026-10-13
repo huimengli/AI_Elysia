@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-10-13-12-5x
+更新时间: 2026-10-13-18-1x
 
 ```
 JarvisAi/
@@ -9,7 +9,9 @@ JarvisAi/
 ├── PROJECT_SUMMARY.txt
 ├── README.md
 ├── ai_buckup/
-│   └── need_user.md_2026-10-13-09-56-54.md
+│   ├── hard_bug.md_2026-10-13-17-45.md
+│   ├── need_user.md_2026-10-13-09-56-54.md
+│   └── need_user.md_2026-10-13-17-45.md
 ├── config.yaml
 ├── hard_bug.md
 ├── install.bat

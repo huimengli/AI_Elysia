@@ -12,6 +12,7 @@ _*.py
 .claude/
 .pip-cache/
 .hf-cache/
+.chroma-models/
 
 *.log
 *.wav

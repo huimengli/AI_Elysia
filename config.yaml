@@ -34,7 +34,7 @@ tts:
   gptsovits:
     api_url: "http://127.0.0.1:9880/tts"
     text_lang: zh
-    ref_audio_path: "F:\BaiduNetdiskDownload\爱莉希雅\【GPT-SoVITS 2.0】爱莉希雅\参考音频\【感动】欸嘿，大家笑一笑，好吗？.wav"
+    ref_audio_path: 'F:\BaiduNetdiskDownload\爱莉希雅\【GPT-SoVITS 2.0】爱莉希雅\参考音频\【感动】欸嘿，大家笑一笑，好吗？.wav'
     prompt_lang: zh
     prompt_text: "欸嘿，大家笑一笑，好吗？"
     speed_factor: 1.0

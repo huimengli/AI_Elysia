@@ -12,7 +12,7 @@ import threading
 _CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
 
 def _load_config():
-    with open(_CONFIG_PATH) as f:
+    with open(_CONFIG_PATH, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 def _tts_cfg() -> dict:

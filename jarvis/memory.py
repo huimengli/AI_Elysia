@@ -7,6 +7,23 @@ import chromadb
 from sqlalchemy import create_engine, text
 
 _CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
+_WORKSPACE_ROOT = _CONFIG_PATH.parent
+
+# chromadb's default embedding function downloads the ~83MB ONNX model to
+# ``Path.home()/.cache/chroma`` on first use, which is not writable from the
+# DSH sandbox (HB-007). Pinning DOWNLOAD_PATH into the repo keeps the model
+# local and writable. The tarball is pre-downloaded to that path by setup;
+# see records/2026-10-13-11-55.md.
+_MODEL_DIR = _WORKSPACE_ROOT / ".chroma-models" / "all-MiniLM-L6-v2"
+
+
+def _workspace_mini_lm():
+    from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
+
+    class WorkspaceMiniLM(ONNXMiniLM_L6_V2):
+        DOWNLOAD_PATH = _MODEL_DIR
+
+    return WorkspaceMiniLM()
 
 
 def _resolve_path(raw: str) -> Path:
@@ -28,7 +45,7 @@ class Memory:
 
         _cfg_top_k = 3  # default if config not available
         if db_path is None or chroma_path is None:
-            with open(_CONFIG_PATH) as f:
+            with open(_CONFIG_PATH, encoding="utf-8") as f:
                 cfg = yaml.safe_load(f)["memory"]
             db_path = db_path or str(_resolve_path(cfg["db_path"]))
             chroma_path = chroma_path or str(_resolve_path(cfg["chroma_path"]))
@@ -36,7 +53,7 @@ class Memory:
         else:
             # paths provided directly (e.g. from tests); try to read top_k from config
             try:
-                with open(_CONFIG_PATH) as f:
+                with open(_CONFIG_PATH, encoding="utf-8") as f:
                     cfg = yaml.safe_load(f)["memory"]
                 _cfg_top_k = cfg.get("top_k", 3)
             except Exception:
@@ -49,7 +66,9 @@ class Memory:
 
         self._engine = create_engine(f"sqlite:///{db_path}")
         self._chroma = chromadb.PersistentClient(path=chroma_path)
-        self._facts = self._chroma.get_or_create_collection("facts")
+        self._facts = self._chroma.get_or_create_collection(
+            "facts", embedding_function=_workspace_mini_lm()
+        )
         self._setup_db()
 
     def _setup_db(self) -> None:
