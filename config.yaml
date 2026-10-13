@@ -28,7 +28,7 @@ context:
   summarize_after: 8
   max_tokens: 2500
 tts:
-  provider: kokoro
+  provider: gptsovits
   voice: af_heart
   speed: 1.1
   gptsovits:

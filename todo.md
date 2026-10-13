@@ -25,10 +25,11 @@
 - [ ] 2026-10-13-11-55 接入 GPT-SoVITS 2.0 爱莉希雅 TTS（→ records/2026-10-13-11-55.md）
   - [x] 用户已下载 `[GPT-SoVITS 2.0] 爱莉希雅` 到 `F:\BaiduNetdiskDownload\爱莉希雅\`（GPT e5-e20 ckpt + SoVITS e16/e20/e24 pth + 参考音频）
   - [x] 仓库 zip 经 ghproxy.net 下载并解包至 `GPT-SoVITS-main/`（344 文件，含 api_v2.py / webui.py / requirements.txt）
-  - [ ] 独立 venv `.venv-gsv` + 依赖安装（torch ✓ 2.14.1 CPU；requirements 两轮超时失败 → `_setup_gsv2.py` 分三批重试中 pwsh-64）
-  - [ ] portable ffmpeg 放入 `GPT-SoVITS-main/runtime/`（gyan.dev essentials，pwsh-64 同批下载）
+  - [x] 独立 venv `.venv-gsv` + 依赖安装（torch ✓ 2.14.1 CPU；jieba `--no-build-isolation` 本地构建；jieba_fast 零 wheel → 仓库根 shim 包，HB-009；GSV_IMPORTS_OK）
+  - [x] portable ffmpeg 放入 `GPT-SoVITS-main/runtime/`（gyan.dev 死挂 → Python urllib + ghproxy.net 下 ffmpeg-static b6.1.1 win32-x64，`ffmpeg -version` OK）
   - [x] 预训练基座模型下载（hf-mirror：gsv-v2final GPT/SoVITS + chinese-hubert-base 189MB + chinese-roberta-wwm-ext-large 651MB → `GPT-SoVITS-main/GPT_SoVITS/pretrained_models/`，全部就位）
-  - [ ] api_v2.py 加载爱莉希雅权重推理验证（**需用户先停 llama :8080，HB-003 内存**）
-  - [ ] Jarvis 新增 TTS provider（gptsovits）+ config 切换 + 端到端验证
+  - [x] api_v2.py 加载爱莉希雅权重推理验证（llama 已停；Elysia e20+e24_s13080 确认加载；冒烟 **PASS**：84.1s / 541KB WAV / 32kHz / 8.5s；期间修复 HB-010 torchcodec→soundfile 补丁、HB-011 fast_langdetect lite 补丁）
+  - [x] Jarvis 新增 TTS provider（gptsovits）+ config 切换（`tts.provider: gptsovits` 已生效，Jarvis :7860 重启；`_tts_direct_test.py` **PASS** 76.3s/32kHz/5.2s）
+  - [ ] 完整聊天 e2e 复验（`_e2e_stream_test.py`：**待用户重启 llama :8080**，need_user.md Q4）
 - [x] 2026-10-13-12-20 C 盘写满事故处置（C: 剩 10MB → 清 `.venv-gsv`/zip/`.pip-cache` 后余 5.26GB；GPT-SoVITS 保留工作区内，F: 写入被沙箱拒）
-- [ ] 2026-10-13-12-35 HB-007 chroma embedding 下载 PermissionError（→ need_user.md Q2，待用户决策；记忆入库暂不可用，不阻塞 TTS/LLM 主链路）
+- [x] 2026-10-13-12-35 HB-007 chroma embedding 下载 PermissionError（→ need_user.md Q2；17:2x 已解决：`.chroma-models/` 预下载 + `jarvis/memory.py` WorkspaceMiniLM 指路，store/search OK）

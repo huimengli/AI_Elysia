@@ -54,8 +54,21 @@
 - 17:5x GPT-SoVITS venv 安装：pwsh-77/89 连续在 jieba sdist 构建死挂 → 根因定位（PEP517 隔离构建在 `%LOCALAPPDATA%\Temp` 建临时 venv 被沙箱拦截；镜像确认 jieba/jieba_fast 零 wheel）→ `_setup_gsv4.py`（pwsh-105）：setuptools/wheel 预装 + `--no-build-isolation` 本地构建 jieba、jieba_fast 跳过（可选依赖）、其余纯 wheel 批次 → **ALL_BATCHES_DONE + GSV_IMPORTS_OK**（torch 2.14.1+cpu，18 模块导入通过）。
 - 进行中：api_v2.py :9880 启动 → `_tts_api_test.py` 验证 → `tts.provider: gptsovits` 切换 + Jarvis 重启（HF env）→ `_e2e_stream_test.py` 复验。
 
+## 2026-10-13 深夜（18:3x–20:1x）
+
+- 18:3x GPT-SoVITS 仓库**整体同步为 current main 布局**（旧 zip 缺 `AR/`、`text/`，api_v2 sys.path 需要）；权重保持仓库根。
+- 18:4x **HB-009 jieba_fast shim**：镜像零 wheel → 仓库根 `GPT-SoVITS-main/jieba_fast/` re-export shim（不动 site-packages）。
+- 18:5x `tts_infer.yaml` custom 路径修正为 main 布局 → api_v2 确认加载 Elysia e20.ckpt + e24_s13080.pth（无 fall back 行）。
+- 19:2x **HB-010**：/tts 400（torchaudio.load→torchcodec，镜像 0 win wheel）→ `TTS_infer_pack/TTS.py` 本地补丁 `_load_audio_compat()`（soundfile）。
+- 19:3x **HB-011**：/tts 挂死（split_lang 硬编码 `model="full"` → fast_langdetect 下载 ~1GB，外网不可达）→ 仓库副本 `langsegmenter.py` 运行期 monkey-patch 为 lite（包内自带 938KB 量化模型）。
+- 19:5x **api_v2 冒烟 PASS**：84.1s / 541KB WAV / **32kHz** mono / 8.5s——爱莉希雅声音可用（v2 VITS 输出 32k，非 24k；jarvis/tts.py 按 WAV 头采样率播放，已兼容）。
+- 20:0x `config.yaml` 切 **`tts.provider: gptsovits`**；Jarvis 以 `.venv\Scripts\python.exe -u -m jarvis.main` + 三个 HF 环境变量重启（:7860，gptsovits 生效）。
+- 20:1x `_tts_direct_test.py` **PASS**（Jarvis `_synth` → gptsovits：76.3s / 32kHz / 5.2s）——provider 切换 + API 集成验证完成。
+- **当前阻塞**：llama :8080 处于用户停用状态 → 完整聊天 e2e（WS→LLM→爱莉希雅语音）需用户重启 llama → need_user.md **Q4**（status: wait）。
+
 ## Git 提交记录
 
 - `7d279a7`（2026-10-13-10:4x，main）`docs(AI): 补全 Jarvis 运行记录并归档 Q1（端到端 CHAT_OK）`——9 files, +273/−2：records/、hard_bug.md、need_user.md（+ai_buckup 归档）、progress/todo/tree、config.yaml、.gitignore。**已本地 commit，未 push。**
 - `f444b85`（2026-10-13-12:5x，main）`feat(AI): 新增 gptsovits TTS provider 并关闭 Qwen3 thinking 解决 LLM 挂起`——11 files, +282/−39：jarvis/tts.py（双 provider）、jarvis/main.py（max_tokens+chat_template_kwargs）、config.yaml、.gitignore、records×2、hard_bug.md（HB-007/HB-008）、need_user.md（Q2）、progress/todo/tree。**已本地 commit，未 push。**
 - `409cc3f`（2026-10-13-14:5x，main）`docs(AI): sync GPT-SoVITS venv retry, e2e PASS, and user asks`——4 files, +16/−2：records/2026-10-13-11-55（pwsh-50 失败复盘+分批重装计划）、todo.md（e2e PASS 勾选、venv/ffmpeg 项更新）、need_user.md（Q3 停 llama :8080）、progress.md。**已本地 commit，未 push。**
+- `f4e1b48`（2026-10-13-18:1x，main）`fix(AI): repair config.yaml escape/encoding, pin chroma embedding to workspace, close Q2/Q3`——18 files, +195/−126：config.yaml（单引号修复+纯 UTF-8）、jarvis 9 文件（open 补 encoding）、memory.py（WorkspaceMiniLM/HB-007）、.gitignore（.chroma-models/）、need_user/hard_bug 解决并归档 ai_buckup/*_2026-10-13-17-45.md、records/progress/tree。**已本地 commit，未 push。**
