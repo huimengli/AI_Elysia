@@ -15,4 +15,4 @@
   - [x] need_user.md Q1 已答复并归档（用户：llama 由其自行启动，需要时 agent 发请求 → `ai_buckup/need_user.md_2026-10-13-09-56-54.md`）
   - [x] WS 聊天走通 LLM：2026-10-13-10:3x 用户启动 llama.cpp @ :8080（模型与 config 一致，零改动）→ `_ws_chat_test.py` **CHAT_OK** ✓（Qwen 真实回复），HB-004 解除
   - [x] llama.cpp 启动请求已发出并获用户执行（建议 8090 → 实际用户用回 :8080，Steam 已消失）
-  - [ ] 收尾：更新 records/progress/tree.md、本地 git commit（不 push；`_ws_chat_test.py` 保留至验证完成）
+  - [x] 收尾：records/progress/tree/hard_bug 同步、`_ws_chat_test.py` 已删、本地 git commit `7d279a7`（未 push）
