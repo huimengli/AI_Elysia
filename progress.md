@@ -49,3 +49,4 @@
 ## Git 提交记录
 
 - `7d279a7`（2026-10-13-10:4x，main）`docs(AI): 补全 Jarvis 运行记录并归档 Q1（端到端 CHAT_OK）`——9 files, +273/−2：records/、hard_bug.md、need_user.md（+ai_buckup 归档）、progress/todo/tree、config.yaml、.gitignore。**已本地 commit，未 push。**
+- `f444b85`（2026-10-13-12:5x，main）`feat(AI): 新增 gptsovits TTS provider 并关闭 Qwen3 thinking 解决 LLM 挂起`——11 files, +282/−39：jarvis/tts.py（双 provider）、jarvis/main.py（max_tokens+chat_template_kwargs）、config.yaml、.gitignore、records×2、hard_bug.md（HB-007/HB-008）、need_user.md（Q2）、progress/todo/tree。**已本地 commit，未 push。**
