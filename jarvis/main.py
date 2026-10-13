@@ -1,6 +1,7 @@
 from __future__ import annotations
 import json
 import re
+import sys
 import time
 import threading
 import msvcrt
@@ -11,6 +12,15 @@ import numpy as np
 import sounddevice as sd
 import ollama
 from openai import OpenAI
+
+# Windows consoles default to GBK; LLM/tool output can contain characters GBK
+# cannot encode (e.g. Qwen thinking marker U+21B5). Reconfigure so a print
+# never crashes the process and masks the real error (HB-012).
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 from jarvis.wake import listen_for_wake_word
 from jarvis.stt import record_until_silence, transcribe_audio, set_abort_event
@@ -184,8 +194,11 @@ def _play_beep() -> None:
 
 
 def _strip_think(text: str) -> str:
-    """Remove <think>...</think> blocks from LLM output."""
-    return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+    """Remove <think>...</response> blocks and stray Qwen thinking markers."""
+    text = re.sub(r"<think>.*?</response>", "", text, flags=re.DOTALL)
+    # Stray thinking tokens (U+21B5 / U+21B6) that can leak into the answer.
+    text = text.replace("↵", "").replace("↶", "")
+    return text.strip()
 
 
 def _parse_tool_args(raw) -> dict:
@@ -401,12 +414,15 @@ def _process_request(user_text: str) -> str:
 
     facts = memory.search_facts(user_text)
     messages = context.get_messages()
-    if facts:
-        facts_block = "Relevant context from memory: " + "; ".join(facts)
-        messages = [{"role": "system", "content": facts_block}] + messages
     messages.append({"role": "user", "content": user_text})
 
-    full_messages = [{"role": "system", "content": _system_prompt()}] + messages
+    # Single system message: Qwen3.8's chat template rejects a second system
+    # message ("System message must be at the beginning"), so merge memory
+    # facts into the main system prompt instead of a separate system turn.
+    sys_content = _system_prompt()
+    if facts:
+        sys_content += "\n\nRelevant context from memory: " + "; ".join(facts)
+    full_messages = [{"role": "system", "content": sys_content}] + messages
 
     try:
         response_text = _call_llm(full_messages)

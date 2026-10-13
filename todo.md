@@ -22,7 +22,7 @@
   - [x] 唤醒词诊断：mic+OWW 峰值 0.985/0.790 ≫ 0.5 → 链路正常；待用户对新进程实测
   - [x] e2e 流式验证：pwsh-53 **PASS**（case1 71.5s / case2 40.1s，此前挂起 40+min）
   - [x] （优化项）Qwen3.8 thinking 模式导致 iGPU 生成极长 → config `max_tokens: 2048` + `enable_thinking: false`，main.py `create()` 加 `extra_body.chat_template_kwargs`（HB-008）
-- [ ] 2026-10-13-11-55 接入 GPT-SoVITS 2.0 爱莉希雅 TTS（→ records/2026-10-13-11-55.md）
+- [x] 2026-10-13-11-55 接入 GPT-SoVITS 2.0 爱莉希雅 TTS（→ records/2026-10-13-11-55.md）
   - [x] 用户已下载 `[GPT-SoVITS 2.0] 爱莉希雅` 到 `F:\BaiduNetdiskDownload\爱莉希雅\`（GPT e5-e20 ckpt + SoVITS e16/e20/e24 pth + 参考音频）
   - [x] 仓库 zip 经 ghproxy.net 下载并解包至 `GPT-SoVITS-main/`（344 文件，含 api_v2.py / webui.py / requirements.txt）
   - [x] 独立 venv `.venv-gsv` + 依赖安装（torch ✓ 2.14.1 CPU；jieba `--no-build-isolation` 本地构建；jieba_fast 零 wheel → 仓库根 shim 包，HB-009；GSV_IMPORTS_OK）
@@ -30,6 +30,6 @@
   - [x] 预训练基座模型下载（hf-mirror：gsv-v2final GPT/SoVITS + chinese-hubert-base 189MB + chinese-roberta-wwm-ext-large 651MB → `GPT-SoVITS-main/GPT_SoVITS/pretrained_models/`，全部就位）
   - [x] api_v2.py 加载爱莉希雅权重推理验证（llama 已停；Elysia e20+e24_s13080 确认加载；冒烟 **PASS**：84.1s / 541KB WAV / 32kHz / 8.5s；期间修复 HB-010 torchcodec→soundfile 补丁、HB-011 fast_langdetect lite 补丁）
   - [x] Jarvis 新增 TTS provider（gptsovits）+ config 切换（`tts.provider: gptsovits` 已生效，Jarvis :7860 重启；`_tts_direct_test.py` **PASS** 76.3s/32kHz/5.2s）
-  - [ ] 完整聊天 e2e 复验（`_e2e_stream_test.py`：**待用户重启 llama :8080**，need_user.md Q4）
+  - [x] 完整聊天 e2e 复验（`_e2e_stream_test.py`：用户重启 llama :8080 后 **PASS**——case1 70.0s / case2 39.4s；期间修复 HB-012 GBK print 崩溃、HB-013 双 system 500）
 - [x] 2026-10-13-12-20 C 盘写满事故处置（C: 剩 10MB → 清 `.venv-gsv`/zip/`.pip-cache` 后余 5.26GB；GPT-SoVITS 保留工作区内，F: 写入被沙箱拒）
 - [x] 2026-10-13-12-35 HB-007 chroma embedding 下载 PermissionError（→ need_user.md Q2；17:2x 已解决：`.chroma-models/` 预下载 + `jarvis/memory.py` WorkspaceMiniLM 指路，store/search OK）

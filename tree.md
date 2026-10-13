@@ -1,30 +1,30 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-10-13-18-1x
+更新时间: 2026-10-13-21-3x
 
 ```
 JarvisAi/
 ├── .gitignore
-├── JARVIS_STATE.md
-├── PROJECT_SUMMARY.txt
-├── README.md
-├── ai_buckup/
-│   ├── hard_bug.md_2026-10-13-17-45.md
-│   ├── need_user.md_2026-10-13-09-56-54.md
-│   └── need_user.md_2026-10-13-17-45.md
+├── _chat_template.jinja
+├── _gsv_main.tar.gz
+├── _tts_infer_backup.yaml
 ├── config.yaml
 ├── hard_bug.md
 ├── install.bat
+├── JARVIS_STATE.md
 ├── need_user.md
 ├── progress.md
-├── records/
-│   ├── 2026-10-12-12-28-30.md
-│   ├── 2026-10-13-11-45.md
-│   └── 2026-10-13-11-55.md
+├── PROJECT_SUMMARY.txt
+├── README.md
 ├── requirements.txt
 ├── start.bat
 ├── todo.md
 ├── tree.md
+├── ai_buckup/
+│   ├── hard_bug.md_2026-10-13-17-45.md
+│   ├── need_user.md_2026-10-13-09-56-54.md
+│   ├── need_user.md_2026-10-13-17-45.md
+│   └── need_user.md_2026-10-13-21-12-19.md
 ├── jarvis/
 │   ├── __init__.py
 │   ├── context.py
@@ -47,8 +47,10 @@ JarvisAi/
 │       ├── subagent.py
 │       ├── system.py
 │       └── web_search.py
-├── tools/
-│   └── __init__.py
+├── records/
+│   ├── 2026-10-12-12-28-30.md
+│   ├── 2026-10-13-11-45.md
+│   └── 2026-10-13-11-55.md
 └── tests/
     ├── __init__.py
     ├── test_context.py

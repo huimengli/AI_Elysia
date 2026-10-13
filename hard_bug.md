@@ -49,3 +49,23 @@
 - 根因：`split_lang` pip 包（site-packages）硬编码 full 模型 + Facebook CDN 在本环境不可达。
 - 方案：不碰 site-packages——在仓库副本 `GPT_SoVITS/text/LangSegmenter/langsegmenter.py` 运行期 monkey-patch `_detector.fast_lang_detect` / `_possible_detection_list` 为 `model="lite"`（fast-langdetect 包自带量化模型 `lid.176.ftz`，938KB，零下载）；并建 `GPT_SoVITS/pretrained_models/fast_langdetect/` 空目录防"目录不存在"报错。
 - 关联需求：records/2026-10-13-11-55.md
+
+## HB-012 GBK 控制台打印含 ⌵（U+21B5）异常信息崩溃，掩盖真实错误（已解决）
+
+- 时间：2026-10-13-20-4x
+- 状态：已解决（修复已实施，随 HB-013 一并于 e2e 复验）
+- 影响：`_process_request` 捕获 LLM 异常后执行 `print(f"[WARN] Primary provider failed ({e}), trying Ollama fallback")`；当 `{e}` 文本含 Qwen thinking 标记 ⌵（U+21B5）时，GBK 控制台 `UnicodeEncodeError: 'gbk' codec can't encode character '\u21b5'`，异常从 print 处上抛 → Web WS 收到 `Error: 'gbk' codec...`，**真实 LLM 错误被完全掩盖**，且 Ollama 回退路径从未执行。
+- 现象：`.jarvis-run.log` traceback：`main.py line 416 print` → `UnicodeEncodeError`；WS e2e 两案例均返回该 GBK 错误文本。
+- 根因：Windows 控制台默认 GBK 编码；LLM/工具输出可含 GBK 不可编码字符（Qwen thinking 标记 ⌵/⌖）。
+- 方案：`jarvis/main.py` 顶部对 `sys.stdout`/`sys.stderr` `reconfigure(encoding="utf-8", errors="replace")`，print 永不因编码崩溃；同时增强 `_strip_think`：剥离成对 thinking 标签后，额外清除残留 ⌵（U+21B5）/⌖（U+21B6）字符，防止泄漏进 TTS/前端。
+- 关联需求：records/2026-10-13-11-55.md
+
+## HB-013 Qwen3.8 chat template 拒绝第二条 system 消息，llama.cpp 返回 500（已解决）
+
+- 时间：2026-10-13-20-5x
+- 状态：已解决（修复已实施，随 e2e 复验）
+- 影响：memory facts 非空时 `_process_request` 构造 `[system(主提示)] + [system(facts)] + ...` 双 system 消息 → llama.cpp Jinja `500 System message must be at the beginning.` → 经 HB-012 的 GBK print 崩溃后以 `Error: 'gbk' codec...` 呈现给 WS 客户端。
+- 现象：curl 矩阵隔离——单 system + user/tools/chat_template_kwargs 全部 OK；**两条 system 必 500**。从 GGUF metadata（`_gguf_template.py` 手工解析 header）提取 `tokenizer.chat_template`（8952 字符）证实：该模板 `{%- for message in messages %}` 循环内对任何非首位 system 消息 `raise_exception('System message must be at the beginning.')`（标准 Qwen3 模板只检查 messages[0]，此"Qwen3.8"新模板检查所有位置）。
+- 根因：`jarvis/main.py` `_process_request` 将 memory facts 作为独立 system 消息插入；新模型模板不允许多条 system。
+- 方案：facts 合并进主 system prompt 单条消息（`sys_content = _system_prompt(); if facts: sys_content += "\n\nRelevant context from memory: ..."`），全链路仅一条 system。curl 双 system 500 / 单 system OK 已实测验证。
+- 关联需求：records/2026-10-13-11-55.md

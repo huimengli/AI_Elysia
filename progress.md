@@ -66,6 +66,14 @@
 - 20:1x `_tts_direct_test.py` **PASS**（Jarvis `_synth` → gptsovits：76.3s / 32kHz / 5.2s）——provider 切换 + API 集成验证完成。
 - **当前阻塞**：llama :8080 处于用户停用状态 → 完整聊天 e2e（WS→LLM→爱莉希雅语音）需用户重启 llama → need_user.md **Q4**（status: wait）。
 
+## 2026-10-13 深夜至凌晨（20:4x–21:1x）
+
+- 20:4x 用户重启 llama-server（:8080，IQ2_XS-mtp 量化、ctx 16348）→ need_user **Q4 done**。首跑 e2e 两案例均 `Error: 'gbk' codec can't encode '\u21b5'` → `.jarvis-run.log` 定位两层问题：GBK print 崩溃掩盖真实 LLM 500（**HB-012**）+ llama.cpp 500（**HB-013**）。
+- 20:5x **HB-013 根因**：Qwen3.8 新 chat template 拒绝任何非首位 system 消息（`raise_exception('System message must be at the beginning.')`）；经 `_gguf_template.py` 从 GGUF metadata 手工提取模板证实（该 GGUF 为 Swift 重打包非标准文件——字符串无 8 字节对齐，v3 header n_tensors 在前；模板存 `_chat_template.jinja`）。curl 矩阵验证：单 system OK / 双 system 必 500。
+- 21:0x **修复**（`jarvis/main.py` 三处）：stdout/stderr `reconfigure(utf-8, errors=replace)`（HB-012）；facts 合并进主 system prompt 单条消息（HB-013）；`_strip_think` 增残留 ⌵/⌖ 清除。`_e2e_stream_test.py` PASS 判定加严（拒绝 `Error:`/codec 文本）。
+- 21:1x **e2e 复验 PASS**（pwsh-200）：case1 自我介绍 70.0s / case2 时间问句 39.4s，均真实回答、无 GBK 错误。case2 未触发工具事件——系统提示词含 `Current date and time`，IQ2_XS 模型直接引用作答（答案正确），属模型行为差异非缺陷。
+- 收尾：need_user.md 全量归档 `ai_buckup/need_user.md_2026-10-13-21-12-19.md`（Q2/Q3/Q4 均 done）；hard_bug.md 追加 HB-012/HB-013（已解决）；records/todo/tree 同步。**需求"接入 GPT-SoVITS 2.0 爱莉希雅 TTS"已完成**（端到端验收通过）。
+
 ## Git 提交记录
 
 - `7d279a7`（2026-10-13-10:4x，main）`docs(AI): 补全 Jarvis 运行记录并归档 Q1（端到端 CHAT_OK）`——9 files, +273/−2：records/、hard_bug.md、need_user.md（+ai_buckup 归档）、progress/todo/tree、config.yaml、.gitignore。**已本地 commit，未 push。**
