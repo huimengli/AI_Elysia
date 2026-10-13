@@ -16,3 +16,18 @@
   - [x] WS 聊天走通 LLM：2026-10-13-10:3x 用户启动 llama.cpp @ :8080（模型与 config 一致，零改动）→ `_ws_chat_test.py` **CHAT_OK** ✓（Qwen 真实回复），HB-004 解除
   - [x] llama.cpp 启动请求已发出并获用户执行（建议 8090 → 实际用户用回 :8080，Steam 已消失）
   - [x] 收尾：records/progress/tree/hard_bug 同步、`_ws_chat_test.py` 已删、本地 git commit `7d279a7`（未 push）
+- [ ] 2026-10-13-11-45 用户报告三问题排查与修复（→ records/2026-10-13-11-45.md）
+  - [x] "Stopped." 根因：非流式 + 60s 超时 → 改流式 + 300s（main.py），HB-005 记录
+  - [x] 重启漏 HF env 致进程启动即崩（HB-006）→ pwsh-19 带正确 env 恢复，:7860 ✓
+  - [x] 唤醒词诊断：mic+OWW 峰值 0.985/0.790 ≫ 0.5 → 链路正常；待用户对新进程实测
+  - [ ] e2e 流式验证（pwsh-31 卡 40+min → 判为 thinking 无限生成，已停；修复后复测中）
+  - [x] （优化项）Qwen3.8 thinking 模式导致 iGPU 生成极长 → config `max_tokens: 2048` + `enable_thinking: false`，main.py `create()` 加 `extra_body.chat_template_kwargs`（HB-008）
+- [ ] 2026-10-13-11-55 接入 GPT-SoVITS 2.0 爱莉希雅 TTS（→ records/2026-10-13-11-55.md）
+  - [x] 用户已下载 `[GPT-SoVITS 2.0] 爱莉希雅` 到 `F:\BaiduNetdiskDownload\爱莉希雅\`（GPT e5-e20 ckpt + SoVITS e16/e20/e24 pth + 参考音频）
+  - [x] 仓库 zip 经 ghproxy.net 下载并解包至 `GPT-SoVITS-main/`（344 文件，含 api_v2.py / webui.py / requirements.txt）
+  - [ ] 独立 venv `.venv-gsv` + 依赖安装（torch 等，清华镜像；pwsh-50 运行中）
+  - [x] 预训练基座模型下载（hf-mirror：gsv-v2final GPT/SoVITS + chinese-hubert-base 189MB + chinese-roberta-wwm-ext-large 651MB → `GPT-SoVITS-main/GPT_SoVITS/pretrained_models/`，全部就位）
+  - [ ] api_v2.py 加载爱莉希雅权重推理验证（**需用户先停 llama :8080，HB-003 内存**）
+  - [ ] Jarvis 新增 TTS provider（gptsovits）+ config 切换 + 端到端验证
+- [x] 2026-10-13-12-20 C 盘写满事故处置（C: 剩 10MB → 清 `.venv-gsv`/zip/`.pip-cache` 后余 5.26GB；GPT-SoVITS 保留工作区内，F: 写入被沙箱拒）
+- [ ] 2026-10-13-12-35 HB-007 chroma embedding 下载 PermissionError（→ need_user.md Q2，待用户决策；记忆入库暂不可用，不阻塞 TTS/LLM 主链路）

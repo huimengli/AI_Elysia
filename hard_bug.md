@@ -64,3 +64,46 @@
 - 用户启动 llama.cpp 于 **:8080**（模型 `Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_XS-mtp.gguf`，n_ctx 48128），与 `config.yaml` 完全一致，配置零改动。
 - `_ws_chat_test.py` 端到端复跑 **CHAT_OK**：WS connected → chat → user/status → `response`（Qwen 真实中文回复，非 Ollama 兜底错误）。
 - 状态：**已解决**。注意 HB-003（内存紧张）仍潜在存在：27B 模型常驻 ~8.8GB，系统再开重负载时可能复现 OOM——启动 llama 前留意可用内存。
+
+## HB-005 非流式 LLM 调用 + 60s 超时 → Web UI 只见 "Stopped."（已解决）
+
+- 时间：2026-10-13-11-50
+- 状态：已解决（修复已实施，e2e 验证进行中）
+- 影响：llama.cpp iGPU ~1 tok/s 时，任何超过 60s 的生成被 `OpenAI(timeout=60.0)` 直接掐断；且非流式期间 UI 零反馈，用户以为卡死点 ABORT → `abort_all()` → 回 "Stopped."（web.py:213），两条中文消息均不命中 `_is_stop_command`（仅精确英文匹配）。
+- 现象：Web UI 发 "你听不见我讲话吗?" / "你好?"，状态 SPEAKING + ABORT 可见，最终气泡只有 "Stopped."；llama `/health` 200（非 LLM 故障）。
+- 根因：`_call_openai_provider` 一次性 `create()`（无 stream）+ 客户端 timeout=60s；短回复在 iGPU 上需 30-90s。
+- 方案：`jarvis/main.py` — ① `_get_openai_client` timeout 60→300s；② `_call_openai_provider` 改 `stream=True`，按 chunk 累积 `delta.content` 与 `delta.tool_calls`（index 槽位 `{id,name,arguments}`），工具循环语义不变，每 chunk `_check_abort()`；保持最终 `response` 事件契约（UI 无 partial 处理）。
+- 关联需求：records/2026-10-13-11-45.md
+
+## HB-006 重启 Jarvis 漏设 HF env → Kokoro 启动即崩（已解决）
+
+- 时间：2026-10-13-11-25
+- 状态：已解决
+- 影响：后台作业环境不继承交互 shell 的 `HF_HOME/HF_ENDPOINT`；漏设时 `KPipeline` 初始化 `hf_hub_download(config.json)` 直连 huggingface.co 被拒（WinError 10061），5 次重试后 `LocalEntryNotFoundError`，进程在问候语 TTS 处崩溃——该窗口内无任何进程监听唤醒词。
+- 现象：作业 pwsh-16 启动即 exit 1；用户期间喊 "Hey Jarvis" 无响应。
+- 根因：Kokoro 预训练文件只在工作区 `.hf-cache`（HB-002/预下载策略），默认 HF_HOME（用户目录）下无缓存。
+- 方案：所有 Jarvis 启动命令必须带 `HF_ENDPOINT=https://hf-mirror.com`、`HF_HOME=C:\Users\楼听\Desktop\git\JarvisAi\.hf-cache`、`HF_HUB_DISABLE_XET=1`（已按此重启，作业 pwsh-19，:7860 ✓）。后续若做启动脚本应固化这三个 env。
+- 关联需求：records/2026-10-13-11-45.md
+
+## HB-007 chroma 默认 embedding 下载目录 PermissionError（未解决，待用户决策）
+
+- 时间：2026-10-13-12-35
+- 状态：未解决
+- 影响：唤醒处理 `_process_request` 末尾 `memory.extract_and_store_facts()` → chroma upsert 抛异常，整条请求在 TTS 之后失败（handle_wake 捕获并回 "Sorry, something went wrong."）。
+- 现象：作业 pwsh-19 退出前 traceback：`chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2._download_model_if_not_exists` → `os.makedirs('C:\\Users\\楼听\\.cache\\chroma')` → `PermissionError: [WinError 5] 拒绝访问`。
+- 根因（待验证）：chromadb 默认 ONNXMiniLM_L6_V2 embedding function 首次运行需下载 ~90MB onnx 模型到 `%USERPROFILE%\\.cache\\chroma`，该目录创建被拒（ACL 或目录状态异常）。此前记忆入库曾成功过（memory.db / chroma 目录已存在），说明模型文件曾在别处就位或目录权限近期变化。
+- 方案候选：
+  1. 用户侧修复 `C:\Users\楼听\.cache` ACL（管理员创建/授权）；
+  2. `jarvis/memory.py` 改为显式 embedding_function（如指向工作区 `.hf-cache` 的本地模型），绕开默认下载路径；
+  3. 记忆入库失败降级为 warning 不中断请求（治标）。
+- 关联需求：records/2026-10-13-11-55.md
+
+## HB-008 Qwen3.8 iGPU thinking 模式无限生成 → 单次请求挂起 40+ 分钟（已解决）
+
+- 时间：2026-10-13-12-30
+- 状态：已解决（修复已实施，e2e 复验进行中）
+- 影响：llama.cpp (Qwen3.8-27B GGUF, iGPU) 上每次对话生成前大量 thinking token（~1 tok/s），且 `max_tokens` 未设限 → 单次 LLM 请求挂起数十分钟；Web UI 无 partial 输出，用户只能 ABORT。
+- 现象：e2e WS 测试 case1 发送后 40+ 分钟无任何事件（作业 pwsh-31）；llama `/health` 正常。
+- 根因：Qwen3 系列 chat template 默认开启 thinking（`/think` 隐式），iGPU 推理 ~1 tok/s 时 thinking 阶段可达数千 token；OpenAI 客户端未传 `max_tokens`，生成无上限。
+- 方案：`config.yaml` llm 段新增 `max_tokens: 2048`、`enable_thinking: false`；`jarvis/main.py` `_call_llm` 读取两键并传入 `_call_openai_provider`，`create()` 增加 `max_tokens=max_tokens` 与 `extra_body={"chat_template_kwargs": {"enable_thinking": enable_thinking}}`（llama.cpp 支持 chat_template_kwargs）。
+- 关联需求：records/2026-10-13-11-55.md

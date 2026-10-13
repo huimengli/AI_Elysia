@@ -106,7 +106,7 @@ _openai_clients: dict[str, OpenAI] = {}
 def _get_openai_client(base_url: str, api_key: str = "lm-studio") -> OpenAI:
     if base_url not in _openai_clients:
         _openai_clients[base_url] = OpenAI(
-            base_url=base_url, api_key=api_key, timeout=60.0,
+            base_url=base_url, api_key=api_key, timeout=300.0,
         )
     return _openai_clients[base_url]
 
@@ -195,8 +195,13 @@ def _parse_tool_args(raw) -> dict:
     return raw
 
 
-def _call_openai_provider(provider_cfg: dict, temperature: float, full_messages: list[dict]) -> str:
-    """Call any OpenAI-compatible provider (LM Studio, NVIDIA NIM, etc.)."""
+def _call_openai_provider(provider_cfg: dict, temperature: float, full_messages: list[dict], max_tokens: int = 2048, enable_thinking: bool = False) -> str:
+    """Call any OpenAI-compatible provider (LM Studio, NVIDIA NIM, etc.).
+
+    Uses streaming so slow local generation is not killed by a single
+    read-timeout, and abort checks run per chunk. max_tokens caps output;
+    enable_thinking controls Qwen3-style thinking via llama.cpp chat_template_kwargs.
+    """
     model = provider_cfg["model"]
     base_url = provider_cfg["base_url"]
     api_key = provider_cfg.get("api_key", "lm-studio")
@@ -204,32 +209,70 @@ def _call_openai_provider(provider_cfg: dict, temperature: float, full_messages:
     tool_count = 0
     for _ in range(_MAX_TOOL_LOOPS):
         _check_abort()
-        resp = client.chat.completions.create(
+        stream = client.chat.completions.create(
             model=model,
             messages=full_messages,
             tools=TOOL_SCHEMAS,
             temperature=temperature,
+            max_tokens=max_tokens,
+            extra_body={"chat_template_kwargs": {"enable_thinking": enable_thinking}},
+            stream=True,
         )
-        msg = resp.choices[0].message
-        if msg.tool_calls:
-            full_messages.append(msg.model_dump())
-            for tc in msg.tool_calls:
+        content_parts: list[str] = []
+        tool_acc: dict[int, dict] = {}  # index -> {id, name, arguments}
+        for chunk in stream:
+            _check_abort()
+            if not getattr(chunk, "choices", None):
+                continue
+            delta = chunk.choices[0].delta
+            if delta.content:
+                content_parts.append(delta.content)
+            tcs = getattr(delta, "tool_calls", None)
+            if tcs:
+                for tc in tcs:
+                    slot = tool_acc.setdefault(
+                        tc.index, {"id": "", "name": "", "arguments": ""}
+                    )
+                    if tc.id:
+                        slot["id"] = tc.id
+                    fn = tc.function
+                    if fn is not None:
+                        if fn.name:
+                            slot["name"] += fn.name
+                        if fn.arguments:
+                            slot["arguments"] += fn.arguments
+
+        if tool_acc:
+            calls = [
+                {
+                    "id": s.get("id") or f"call_{i}",
+                    "type": "function",
+                    "function": {"name": s["name"], "arguments": s["arguments"]},
+                }
+                for i, s in sorted(tool_acc.items())
+            ]
+            full_messages.append({
+                "role": "assistant",
+                "content": None,
+                "tool_calls": calls,
+            })
+            for call in calls:
                 _check_abort()
-                args = _parse_tool_args(tc.function.arguments)
+                args = _parse_tool_args(call["function"]["arguments"])
                 tool_count += 1
-                _broadcast({"type": "tool", "name": tc.function.name, "args": args})
+                _broadcast({"type": "tool", "name": call["function"]["name"], "args": args})
                 if tool_count == 4:
                     _speak_if_unmuted("Working on it.")
-                result = _exec_tool_with_retry(tc.function.name, args)
-                print(f"[Tool: {tc.function.name}] {result[:120]}")
-                _broadcast({"type": "tool_result", "name": tc.function.name, "result": result[:200]})
+                result = _exec_tool_with_retry(call["function"]["name"], args)
+                print(f"[Tool: {call['function']['name']}] {result[:120]}")
+                _broadcast({"type": "tool_result", "name": call["function"]["name"], "result": result[:200]})
                 full_messages.append({
                     "role": "tool",
                     "content": result,
-                    "tool_call_id": tc.id,
+                    "tool_call_id": call["id"],
                 })
         else:
-            return _strip_think(msg.content or "Done.")
+            return _strip_think("".join(content_parts) or "Done.")
     return "Done."
 
 
@@ -267,13 +310,15 @@ def _call_llm(full_messages: list[dict]) -> str:
     cfg = _load_config()
     llm_cfg = cfg["llm"]
     temperature = llm_cfg.get("temperature", 0.7)
+    max_tokens = int(llm_cfg.get("max_tokens", 2048))
+    enable_thinking = bool(llm_cfg.get("enable_thinking", False))
     active = llm_cfg.get("active_provider", "ollama")
     providers = llm_cfg.get("providers", {})
     provider = providers.get(active, {})
     ptype = provider.get("type", "ollama")
 
     if ptype == "openai":
-        return _call_openai_provider(provider, temperature, full_messages)
+        return _call_openai_provider(provider, temperature, full_messages, max_tokens, enable_thinking)
     else:
         return _call_ollama_provider(provider, temperature, full_messages)
 

@@ -6,6 +6,9 @@ jarvis/data/
 dist/
 .pytest_cache/
 .venv/
+.venv-gsv/
+GPT-SoVITS-main/
+_*.py
 .claude/
 .pip-cache/
 .hf-cache/

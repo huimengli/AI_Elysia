@@ -1,5 +1,9 @@
 from pathlib import Path
+import io
 import re
+import urllib.parse
+import urllib.request
+import wave
 import yaml
 import numpy as np
 import sounddevice as sd
@@ -10,6 +14,13 @@ _CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
 def _load_config():
     with open(_CONFIG_PATH) as f:
         return yaml.safe_load(f)
+
+def _tts_cfg() -> dict:
+    return _load_config().get("tts", {})
+
+def _active_provider() -> str:
+    """Resolve active TTS backend: 'kokoro' (default) or 'gptsovits'."""
+    return _tts_cfg().get("provider", "kokoro")
 
 _pipeline = None
 _voice_tensor = None
@@ -51,6 +62,50 @@ def _get_voice():
     return _voice_tensor
 
 
+def _gptsovits_synth(text: str) -> tuple[bytes, int]:
+    """Synthesize via GPT-SoVITS api_v2 TTS endpoint.
+
+    Returns (int16 PCM bytes, sample_rate). Server returns a 24 kHz WAV.
+    """
+    cfg = _tts_cfg().get("gptsovits", {})
+    api_url = cfg.get("api_url", "http://127.0.0.1:9880/tts")
+    params = {
+        "text": text,
+        "text_lang": cfg.get("text_lang", "zh"),
+        "ref_audio_path": cfg.get("ref_audio_path", ""),
+        "prompt_lang": cfg.get("prompt_lang", "zh"),
+        "prompt_text": cfg.get("prompt_text", ""),
+        "speed_factor": float(cfg.get("speed_factor", 1.0)),
+        "text_split_method": "cut5",
+    }
+    url = f"{api_url}?{urllib.parse.urlencode(params)}"
+    timeout = float(cfg.get("timeout_s", 120))
+    with urllib.request.urlopen(url, timeout=timeout) as r:
+        wav_bytes = r.read()
+    with wave.open(io.BytesIO(wav_bytes), "rb") as w:
+        rate = w.getframerate()
+        pcm = w.readframes(w.getnframes())
+    return pcm, rate
+
+
+def _synth(text: str) -> tuple[bytes, int]:
+    """Synthesize text with the active TTS provider. Returns (PCM int16 bytes, rate)."""
+    if _active_provider() == "gptsovits":
+        return _gptsovits_synth(text)
+    pipeline = _get_pipeline()
+    voice = _get_voice()
+    speed = _tts_cfg().get("speed", 1.0)
+    audio_chunks = []
+    for _, _, audio in pipeline(text, voice=voice, speed=speed):
+        if audio is not None:
+            audio_chunks.append(audio)
+    if not audio_chunks:
+        return b"", 24000
+    combined = np.concatenate(audio_chunks)
+    pcm = (combined * 32767).astype(np.int16)
+    return pcm.tobytes(), 24000
+
+
 def _split_sentences(text: str) -> list[str]:
     """Split text into sentences for streaming TTS."""
     parts = re.split(r'(?<=[.!?])\s+', text)
@@ -58,22 +113,11 @@ def _split_sentences(text: str) -> list[str]:
 
 
 def speak_to_bytes(text: str) -> bytes:
-    """Convert text to PCM audio bytes using Kokoro TTS."""
+    """Convert text to PCM audio bytes using the active TTS provider."""
     if not text or not text.strip():
         raise ValueError("Text cannot be empty")
-    pipeline = _get_pipeline()
-    voice = _get_voice()
-    cfg = _load_config()
-    speed = cfg["tts"]["speed"]
-    audio_chunks = []
-    for _, _, audio in pipeline(text, voice=voice, speed=speed):
-        if audio is not None:
-            audio_chunks.append(audio)
-    if not audio_chunks:
-        return b""
-    combined = np.concatenate(audio_chunks)
-    pcm = (combined * 32767).astype(np.int16)
-    return pcm.tobytes()
+    pcm, _ = _synth(text)
+    return pcm
 
 
 def is_speaking() -> bool:
@@ -101,12 +145,12 @@ def _wait_or_interrupt() -> bool:
 def speak(text: str) -> None:
     """Speak text aloud. Can be interrupted via stop_speaking()."""
     _interrupt.clear()
-    audio_bytes = speak_to_bytes(text)
-    if not audio_bytes:
+    pcm, rate = _synth(text)
+    if not pcm:
         return
-    audio = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32767
+    audio = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32767
     _speaking.set()
-    sd.play(audio, samplerate=24000)
+    sd.play(audio, samplerate=rate)
     _wait_or_interrupt()
     _speaking.clear()
 
@@ -117,6 +161,26 @@ def speak_streamed(text: str) -> None:
     _interrupt.clear()
     sentences = _split_sentences(text)
     if not sentences:
+        return
+
+    if _active_provider() == "gptsovits":
+        # Per-sentence HTTP synthesis; each sentence plays as soon as it is ready.
+        _speaking.set()
+        try:
+            for sentence in sentences:
+                if _interrupt.is_set():
+                    break
+                pcm, rate = _gptsovits_synth(sentence)
+                if not pcm or _interrupt.is_set():
+                    break
+                audio = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32767
+                sd.play(audio, samplerate=rate)
+                if _wait_or_interrupt():
+                    break
+        finally:
+            sd.stop()  # ensure audio stops even if we break mid-play
+            _speaking.clear()
+            _interrupt.clear()
         return
 
     # Short text — just speak normally

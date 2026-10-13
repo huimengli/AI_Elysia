@@ -35,6 +35,17 @@
 - 10:3x 用户启动 llama.cpp 于 **:8080**（模型与 config.yaml 完全一致，零改动）→ `_ws_chat_test.py` 端到端 **CHAT_OK** ✓（Qwen 真实回复，非 Ollama 兜底）。HB-004 解除。
 - 10:4x 收尾：删除临时验证脚本，todo/progress/hard_bug/tree 同步，最终本地 commit（不 push）。**需求"将 Jarvis 项目运行起来"已完成。**
 
+## 2026-10-13 下午（11:45–12:5x）
+
+- 11:45 span："Stopped." 根因 = 非流式 + 60s 超时 → main.py 改 `stream=True` + timeout 300s（HB-005）；重启漏 HF env 致启动即崩（HB-006）→ 正确 env 重启恢复；唤醒词诊断峰值 0.985/0.790 ≫ 0.5（链路正常，待用户实测）。
+- 11:55 GPT-SoVITS 任务（records/2026-10-13-11-55.md）：仓库 zip 经 ghproxy.net 下载解包 `GPT-SoVITS-main/`；爱莉希雅 v2 权重复制到位；**C 盘写满事故**（剩 10MB → 清 `.venv-gsv`/zip/`.pip-cache` 释放 ~4.3GB，现余 5.26GB）；预训练基座全部就位（gsv-v2final GPT 155MB + SoVITS 106MB + hubert 189MB + roberta 651MB）。
+- 12:3x LLM 慢修复：Qwen3.8 thinking 模式 + 无 max_tokens → iGPU 无限生成（e2e 挂 40+min）→ config `max_tokens: 2048` + `enable_thinking: false`，main.py 传 `chat_template_kwargs`（HB-008）。
+- 12:4x Jarvis 重启（pwsh-52，`-m jarvis.main`，HF env）；`_e2e_stream_test.py` e2e **PASS**（case1 71.5s / case2 40.1s，均真实回复，此前挂起 40+min）。
+- 12:4x `jarvis/tts.py` 双 provider 化（kokoro 默认 / gptsovits：urllib GET api_v2 `/tts` + wave 解析 PCM，流式=逐句调用）；config.yaml 加 `tts.provider` + `tts.gptsovits` 块（ref=爱莉希雅【感动】wav）。
+- .gitignore 追加 `.venv-gsv/`、`GPT-SoVITS-main/`、`_*.py`。
+- 新增 HB-007（chroma 默认 embedding 目录 `C:\Users\楼听\.cache\chroma` PermissionError，记忆入库失败，不阻塞主链路）→ need_user.md **Q2 待用户决策**（A 修 ACL / B 改显式本地 embedding / C 降级 warning）。
+- 进行中：pwsh-50 `.venv-gsv`（torch CPU + requirements）；之后 api_v2.py :9880 推理验证（**需用户先停 llama :8080，HB-003**）→ provider 切换 + e2e。
+
 ## Git 提交记录
 
 - `7d279a7`（2026-10-13-10:4x，main）`docs(AI): 补全 Jarvis 运行记录并归档 Q1（端到端 CHAT_OK）`——9 files, +273/−2：records/、hard_bug.md、need_user.md（+ai_buckup 归档）、progress/todo/tree、config.yaml、.gitignore。**已本地 commit，未 push。**
