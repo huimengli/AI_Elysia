@@ -1,13 +1,11 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-10-13-21-3x
+更新时间: 2026-10-14-22-1x
 
 ```
 JarvisAi/
 ├── .gitignore
 ├── _chat_template.jinja
-├── _gsv_main.tar.gz
-├── _tts_infer_backup.yaml
 ├── config.yaml
 ├── hard_bug.md
 ├── install.bat
@@ -47,10 +45,13 @@ JarvisAi/
 │       ├── subagent.py
 │       ├── system.py
 │       └── web_search.py
+├── openWakeWord/
+│   └── generate_samples.py
 ├── records/
 │   ├── 2026-10-12-12-28-30.md
 │   ├── 2026-10-13-11-45.md
-│   └── 2026-10-13-11-55.md
+│   ├── 2026-10-13-11-55.md
+│   └── 2026-10-13-21-38-01.md
 └── tests/
     ├── __init__.py
     ├── test_context.py
