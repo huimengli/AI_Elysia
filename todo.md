@@ -42,7 +42,7 @@
     - [x] `generate_samples.py` GSV shim 就位并冒烟 PASS（16kHz mono 1.9s 条；断点续传 + 3 次重试已加）
     - [x] 中文负样本方案：官方 `generate_adversarial_texts` 仅英文（CMU 词典，CJK 崩溃）→ `_t2_train_cn.py`（train.py 副本）+ `cn_generate_adversarial_texts`（同音字替换/部分短语/重叠音节真词池），30 条样例测试通过
     - [x] train_config.yaml 校验完整（rir/10 + background/noise 24 + speech 30 就位；UTF-8 读取修复）
-    - [ ] 正样本+负样本合成 `--generate_clips` 重跑中（pwsh-103，4800 条，GSV CPU 预计 1.5–4h）
+    - [ ] 正样本+负样本合成 `--generate_clips` 运行中（pwsh-103，共 6800 条 2000/400/2000/2400；positive_train/test 已齐，negative_train 进行中 ~13 条/min）
     - [x] 负样本准备（24 合成噪声 + 10 RIR + 30 GSV 语音句 + val_fp.npy 已生成）
     - [ ] CPU 后台训练 → 产出 .onnx
     - [ ] 接入：config.yaml `wake_word.model` 指向新模型，加载验证 OWW_OK
