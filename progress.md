@@ -74,6 +74,16 @@
 - 21:1x **e2e 复验 PASS**（pwsh-200）：case1 自我介绍 70.0s / case2 时间问句 39.4s，均真实回答、无 GBK 错误。case2 未触发工具事件——系统提示词含 `Current date and time`，IQ2_XS 模型直接引用作答（答案正确），属模型行为差异非缺陷。
 - 收尾：need_user.md 全量归档 `ai_buckup/need_user.md_2026-10-13-21-12-19.md`（Q2/Q3/Q4 均 done）；hard_bug.md 追加 HB-012/HB-013（已解决）；records/todo/tree 同步。**需求"接入 GPT-SoVITS 2.0 爱莉希雅 TTS"已完成**（端到端验收通过）。
 
+## 2026-10-13 深夜至 2026-10-14（爱莉希雅化 + 自训唤醒词，records/2026-10-13-21-38-01.md）
+
+- 21:3x 需求（6 项）：T1 自称"爱莉希雅" / T2 openwakeword-train 自训唤醒词 / T3 先落盘 / T4 仓库私有或描述改"自用" / T5 强制中文 / T6 网页 UI 爱莉希雅化（仅记 todo）。
+- T1/T5 代码完成：系统提示词（自称 + 始终简体中文）、启动问候、停止命令"已停止。"、Windows 通知；web.py 3 处中文化。
+- HB-014（OpenAI stream 死连接无限阻塞）：`_iter_stream_with_timeout`(120s) + `_MAX_TOOL_LOOPS` 15→3 + `max_tokens` 512；TTS 未就绪时启动问候崩溃修复（best-effort）。
+- T2 训练链：torchinfo/torchmetrics/pandas/matplotlib/scipy1.14.1/numpy2.2.6 等装齐（pip 索引死 → `_dl_wheels.py` urllib+wheel 本地安装模式）；`openWakeWord/generate_samples.py` GSV shim（冒烟 PASS、断点续传、3 次重试）；官方英文 adversarial 生成器 CJK 不可用 → `_t2_train_cn.py`（train.py 副本 + `cn_generate_adversarial_texts` 同音字/部分短语/重叠音节真词池，30 条测试通过）；config UTF-8 读取修复。
+- **HB-015**：e2e"无响应"假阴性——根因 = 测试脚本收 response 后未 break（服务端一直正常投递，收包日志证实 37.0s 送达）；测试加 `break` + 逐条收包日志；期间误加的 web.py 直接 send 已撤除（保持广播单路径）。
+- **2026-10-14 22:0x e2e 正式 PASS**：34.7s，自称"爱莉希雅（Elysia）"✓、简体中文 ✓ → T1/T5 完成；全部 DBG 打点清除，py_compile 通过。
+- 进行中：T2 `--generate_clips` 后台合成中（pwsh-103，4800 条 ~5h）→ augment → train → config 指向新 onnx + 加载验证；T4 待用户手动操作 GitHub（need_user.md Q5）；T6 仅 todo。
+
 ## Git 提交记录
 
 - `7d279a7`（2026-10-13-10:4x，main）`docs(AI): 补全 Jarvis 运行记录并归档 Q1（端到端 CHAT_OK）`——9 files, +273/−2：records/、hard_bug.md、need_user.md（+ai_buckup 归档）、progress/todo/tree、config.yaml、.gitignore。**已本地 commit，未 push。**
@@ -81,3 +91,4 @@
 - `409cc3f`（2026-10-13-14:5x，main）`docs(AI): sync GPT-SoVITS venv retry, e2e PASS, and user asks`——4 files, +16/−2：records/2026-10-13-11-55（pwsh-50 失败复盘+分批重装计划）、todo.md（e2e PASS 勾选、venv/ffmpeg 项更新）、need_user.md（Q3 停 llama :8080）、progress.md。**已本地 commit，未 push。**
 - `f4e1b48`（2026-10-13-18:1x，main）`fix(AI): repair config.yaml escape/encoding, pin chroma embedding to workspace, close Q2/Q3`——18 files, +195/−126：config.yaml（单引号修复+纯 UTF-8）、jarvis 9 文件（open 补 encoding）、memory.py（WorkspaceMiniLM/HB-007）、.gitignore（.chroma-models/）、need_user/hard_bug 解决并归档 ai_buckup/*_2026-10-13-17-45.md、records/progress/tree。**已本地 commit，未 push。**
 - `e9b90f0`（2026-10-13-20:1x，main）`fix(AI): gptsovits provider live + GPT-SoVITS runtime patches, TTS verified`——7 files, +66/−7：config.yaml（tts.provider→gptsovits）、删除工作区根多余 `tools/` 包（import shadowing）、hard_bug.md（HB-009/010/011 已解决）、need_user.md（Q4 待用户重启 llama）、records/progress/todo 同步。**已本地 commit，未 push。**
+- `6b1b545`（2026-10-13-21:3x，main）`fix(AI): merge memory facts into single system message; UTF-8 console hardening`——9 files, +258/−31：jarvis/main.py（HB-012 stdout/stderr utf-8 reconfigure、HB-013 facts 合并进单条 system、`_strip_think` 清残留 ⌵/⌖）、hard_bug.md（HB-012/HB-013 已解决）、need_user.md（Q4 done）+ 归档 `ai_buckup/need_user.md_2026-10-13-21-12-19.md`、`_chat_template.jinja`（HB-013 根因参考：GGUF 内 Qwen3.8 chat template）、records/progress/todo/tree 同步。**已本地 commit，未 push。**

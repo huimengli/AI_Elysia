@@ -33,3 +33,18 @@
   - [x] 完整聊天 e2e 复验（`_e2e_stream_test.py`：用户重启 llama :8080 后 **PASS**——case1 70.0s / case2 39.4s；期间修复 HB-012 GBK print 崩溃、HB-013 双 system 500）
 - [x] 2026-10-13-12-20 C 盘写满事故处置（C: 剩 10MB → 清 `.venv-gsv`/zip/`.pip-cache` 后余 5.26GB；GPT-SoVITS 保留工作区内，F: 写入被沙箱拒）
 - [x] 2026-10-13-12-35 HB-007 chroma embedding 下载 PermissionError（→ need_user.md Q2；17:2x 已解决：`.chroma-models/` 预下载 + `jarvis/memory.py` WorkspaceMiniLM 指路，store/search OK）
+- [ ] 2026-10-13-21-38-01 爱莉希雅化改造 + 自训唤醒词（→ records/2026-10-13-21-38-01.md）
+  - [x] T3 先建 records（records/2026-10-13-21-38-01.md）
+  - [x] T1 自称改"爱莉希雅"：系统提示词 / 启动问候 / 停止命令 / Windows 通知（代码完成；HB-014 流式停滞保护 + 启动问候健壮性修复；**2026-10-14-22:0x e2e PASS 34.7s，自称"爱莉希雅（Elysia）"✓**）
+  - [x] T5 强制中文：系统提示词加"始终用简体中文回答"（同 T1 **e2e PASS**：回复全简体中文 ✓；期间发现 HB-015 测试脚本缺陷并已修复）
+  - [ ] T2 自训唤醒词"爱莉希雅"（openWakeWord 官方 train 流程）
+    - [x] 训练环境搭建（openwakeword 0.6.0 自带 train.py；torchinfo/torchmetrics/pandas/matplotlib/scipy1.14.1/numpy2.2.6 等全部装齐，导入链 T2_IMPORT_OK）
+    - [x] `generate_samples.py` GSV shim 就位并冒烟 PASS（16kHz mono 1.9s 条；断点续传 + 3 次重试已加）
+    - [x] 中文负样本方案：官方 `generate_adversarial_texts` 仅英文（CMU 词典，CJK 崩溃）→ `_t2_train_cn.py`（train.py 副本）+ `cn_generate_adversarial_texts`（同音字替换/部分短语/重叠音节真词池），30 条样例测试通过
+    - [x] train_config.yaml 校验完整（rir/10 + background/noise 24 + speech 30 就位；UTF-8 读取修复）
+    - [ ] 正样本+负样本合成 `--generate_clips` 重跑中（pwsh-103，4800 条，GSV CPU 预计 1.5–4h）
+    - [x] 负样本准备（24 合成噪声 + 10 RIR + 30 GSV 语音句 + val_fp.npy 已生成）
+    - [ ] CPU 后台训练 → 产出 .onnx
+    - [ ] 接入：config.yaml `wake_word.model` 指向新模型，加载验证 OWW_OK
+  - [ ] T4 GitHub 仓库私有化/描述改"自用"——AGENTS 禁止远程写入，需用户手动操作（已提供步骤；need_user.md Q5）
+  - [ ] T6 网页 UI 改为爱莉希雅相关内容（**本轮不做**，仅记录；web.py/static/index.html 暂不动）

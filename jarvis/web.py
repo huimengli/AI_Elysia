@@ -184,7 +184,7 @@ async def api_toggle_mute():
 async def websocket_endpoint(ws: WebSocket):
     await ws.accept()
     _clients.append(ws)
-    await ws.send_text(json.dumps({"type": "connected", "message": "Jarvis online."}))
+    await ws.send_text(json.dumps({"type": "connected", "message": "爱莉希雅已上线。"}))
     try:
         while True:
             data = await ws.receive_text()
@@ -198,7 +198,7 @@ async def websocket_endpoint(ws: WebSocket):
                 if _is_stop_command(user_text):
                     from jarvis.main import abort_all
                     abort_all()
-                    await ws.send_text(json.dumps({"type": "response", "text": "Stopped."}))
+                    await ws.send_text(json.dumps({"type": "response", "text": "已停止。"}))
                     continue
 
                 from jarvis.main import _process_request, _Aborted
@@ -207,10 +207,12 @@ async def websocket_endpoint(ws: WebSocket):
                     response = await loop.run_in_executor(
                         None, _process_request, user_text,
                     )
+                    # The reply reaches clients via main._broadcast (registered
+                    # event listener -> _broadcast_to_ws); no direct send needed.
                     from jarvis.main import _speak_streamed_if_unmuted
                     threading.Thread(target=_speak_streamed_if_unmuted, args=(response,), daemon=True).start()
                 except _Aborted:
-                    await ws.send_text(json.dumps({"type": "response", "text": "Stopped."}))
+                    await ws.send_text(json.dumps({"type": "response", "text": "已停止。"}))
                 except Exception as e:
                     await ws.send_text(json.dumps({"type": "response", "text": f"Error: {e}"}))
 

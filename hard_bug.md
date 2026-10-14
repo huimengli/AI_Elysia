@@ -69,3 +69,28 @@
 - 根因：`jarvis/main.py` `_process_request` 将 memory facts 作为独立 system 消息插入；新模型模板不允许多条 system。
 - 方案：facts 合并进主 system prompt 单条消息（`sys_content = _system_prompt(); if facts: sys_content += "\n\nRelevant context from memory: ..."`），全链路仅一条 system。curl 双 system 500 / 单 system OK 已实测验证。
 - 关联需求：records/2026-10-13-11-55.md
+
+## HB-014 WS chat 请求 >600s 挂死：OpenAI stream 迭代器在死连接上无限阻塞（已解决）
+
+- 时间：2026-10-13-23-5x ～ 2026-10-14-18-5x
+- 状态：已解决（修复已实施，随 e2e 复验）
+- 影响：WS chat（及语音管线）触发的 `_process_request` 在"思考中…"之后可能 >600s 无任何响应、无报错；`_cn_test.py` 首 recv 超时。
+- 现象：打点复测 `[DBG] chunks=1 +17.3s` 后不再有任何 chunk，`llm done` 永不打印；期间 llama-server（pid 11012）5 s CPU 零增长、`/health` ok，且 Jarvis(868)↔:8080 **无任何 TCP 连接**——socket 两端已死，客户端 `for chunk in stream` 迭代器既不抛错也不结束。
+- 尝试/排除：
+  1. 直接复刻 `_call_openai_provider`（tools=TOOL_SCHEMAS、max_tokens=2048、streaming、enable_thinking=False）：113 s 完成、loop 1、无 tool call → LLM+tools 路径本身健康；
+  2. 新进程 `Memory()` 初始化 1.3 s、`search_facts` 0.4 s → chroma/ONNXMiniLM 路径快；
+  3. `_play_beep` 7.6 s（慢但有限）；无并发请求时全链路 37.6 s（probe：connected→response 全程计时）→ 服务器进程各阶段本身均快。
+- 根因：客户端侧——openai SDK stream 迭代器在 chunk 之间没有独立停滞超时（`timeout=300` 只约束连接级读）；llama.cpp 中途掐断流（进程存活、health ok、CPU 零，疑似 slot idle/重置或 iGPU TDR，本环境无法进一步确认服务端原因）后，死/半开 socket 使 recv 既不返回数据也不可靠地得到 EOF，生成器永久阻塞。
+- 方案：`jarvis/main.py` 新增 `_iter_stream_with_timeout(stream, timeout=120)`——daemon 线程 pump chunk 入 `queue.Queue`，主循环 `q.get(timeout=120)`：120 s 无 chunk → 抛 `TimeoutError` → 经 `_process_request` "Primary provider failed" 分支在有限时间内向 WS 回 `Error: ...`（不再静默挂死）；配套收敛最坏时长：`_MAX_TOOL_LOOPS` 15→3、`config.yaml llm.max_tokens` 2048→512。
+- 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-015 e2e "WS 无响应"假阴性：测试脚本收 response 后未 break，持续等待下一条消息至 600s 超时（已解决）
+
+- 时间：2026-10-14-21-3x ～ 2026-10-14-22-0x
+- 状态：已解决（测试脚本修复；正式 e2e PASS 34.7s）
+- 影响：`_cn_test.py` 连续多次"失败"（每次 600s 超时、无响应），误导排查方向——一度怀疑 web.py 响应投递路径缺失，甚至临时加过直接 `ws.send_text`（造成 response 双份投递后撤除）。
+- 现象：服务器端打点证明全链路完整：`after_call_llm len=65` → `_process_request returned` →（加测后）`response send completed`；而客户端 600s 收不到任何东西。
+- 根因：**测试脚本缺陷**——recv 循环中 `if mtype == "response": response_parts.append(...)` 之后没有 `break`，服务器每轮 chat 只发一条完整 response 即静默，于是循环以新的 600s 超时继续等下一条永远不来的消息 → `TimeoutError`。收包日志（`_cn_test_recv.log`）证实 response 实际在 **37.0s** 已送达（且 HB-014 修复后广播路径正常）。
+- 方案：`_cn_test.py` 收到 `type == "response"` 即 `break`；并加逐条收包日志（时间戳 + 原文）防再误判。服务器代码保持原设计：response 仅经 `main._broadcast`（事件监听 → `_broadcast_to_ws`）单路径投递，web.py 不重复直发。
+- 教训：e2e "无响应"类故障先核对**客户端收包日志**再动服务端；打点应覆盖收发两端。
+- 关联需求：records/2026-10-13-21-38-01.md

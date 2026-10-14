@@ -8,7 +8,13 @@ dist/
 .venv/
 .venv-gsv/
 GPT-SoVITS-main/
+openWakeWord/*
+!openWakeWord/generate_samples.py
 _*.py
+_wheels/
+_*.txt
+_*.tar.gz
+_*.yaml
 .claude/
 .pip-cache/
 .hf-cache/

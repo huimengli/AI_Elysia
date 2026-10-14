@@ -121,7 +121,7 @@ def speak_to_bytes(text: str) -> bytes:
 
 
 def is_speaking() -> bool:
-    """Check if Jarvis is currently speaking."""
+    """Check if 爱莉希雅 is currently speaking."""
     return _speaking.is_set()
 
 

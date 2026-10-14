@@ -59,7 +59,7 @@ def listen_for_wake_word(callback) -> None:
     _busy = threading.Lock()
     _ignore_until = [0.0]
 
-    print("[Jarvis] Listening for wake word...")
+    print("[爱莉希雅] Listening for wake word...")
     try:
         while True:
             # ── Mic pause: STT is recording, yield the hardware ──
@@ -99,7 +99,7 @@ def listen_for_wake_word(callback) -> None:
                 _ignore_until[0] = now + 3.0
                 from jarvis.main import abort_all
                 abort_all()
-                print("[Jarvis] Stopped. (voice interrupt)")
+                print("[爱莉希雅] Stopped. (voice interrupt)")
             else:
                 # IDLE: normal wake — 2s cooldown to skip "Yes?" echo
                 _ignore_until[0] = now + 2.0

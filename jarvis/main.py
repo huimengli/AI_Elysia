@@ -29,7 +29,7 @@ from jarvis.context import ContextManager
 from jarvis.memory import Memory
 from jarvis.tools.router import TOOL_SCHEMAS, dispatch
 
-_MAX_TOOL_LOOPS = 15
+_MAX_TOOL_LOOPS = 3
 _CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
 
 # Global abort — Esc sets this, stops everything (speech + tool loop + follow-up)
@@ -60,10 +60,10 @@ class _Aborted(Exception):
 
 
 def abort_all() -> None:
-    """Stop everything Jarvis is doing right now."""
+    """Stop everything 爱莉希雅 is doing right now."""
     _abort.set()
     stop_speaking()
-    _broadcast({"type": "status", "message": "Stopped."})
+    _broadcast({"type": "status", "message": "已停止。"})
 
 
 def _is_stop_command(text: str) -> bool:
@@ -72,6 +72,8 @@ def _is_stop_command(text: str) -> bool:
     return cleaned in {
         "stop", "jarvis stop", "hey jarvis stop",
         "cancel", "abort", "shut up", "be quiet", "nevermind", "never mind",
+        # 中文语音停止命令（STT 转写结果，见 T1 2026-10-13-21-38-01）
+        "停止", "停下", "爱莉希雅停止", "别说了", "闭嘴", "取消",
     }
 
 
@@ -89,12 +91,12 @@ def toggle_mute() -> None:
     if _muted.is_set():
         _muted.clear()
         _broadcast({"type": "mute", "muted": False})
-        print("[Jarvis] Unmuted.")
+        print("[爱莉希雅] Unmuted.")
     else:
         _muted.set()
         stop_speaking()
         _broadcast({"type": "mute", "muted": True})
-        print("[Jarvis] Muted.")
+        print("[爱莉希雅] Muted.")
 
 
 def _speak_if_unmuted(text: str) -> None:
@@ -128,7 +130,7 @@ memory = Memory()
 def _system_prompt() -> str:
     now = datetime.now().strftime("%A, %B %d %Y, %I:%M %p")
     return (
-        "You are Jarvis, a fully agentic personal AI assistant with screen vision and desktop control. "
+        "You are 爱莉希雅 (Elysia), a fully agentic personal AI assistant with screen vision and desktop control. "
         "Be concise, confident, and helpful. No moralizing, no refusals, no disclaimers. "
         "Just do what your owner asks.\n\n"
         "AGENTIC WORKFLOW for UI tasks:\n"
@@ -143,6 +145,7 @@ def _system_prompt() -> str:
         "- For typing in fields: click_at the field first, then type_text\n"
         "- Use press_key for keyboard shortcuts (ctrl+t, alt+f4, etc)\n"
         "- If a tool fails, try once more before giving up\n\n"
+        "Always reply in Simplified Chinese (简体中文) unless the user explicitly asks for another language. "
         "Answer in 1-3 sentences unless more is clearly needed. "
         f"Current date and time: {now}."
     )
@@ -208,6 +211,40 @@ def _parse_tool_args(raw) -> dict:
     return raw
 
 
+_STREAM_STALL_TIMEOUT_S = 120.0
+
+
+def _iter_stream_with_timeout(stream, timeout: float = _STREAM_STALL_TIMEOUT_S):
+    """Yield chunks from an OpenAI stream, raising TimeoutError if no chunk
+    arrives within ``timeout`` seconds.
+
+    A dead or half-closed socket (e.g. llama-server dropping the connection
+    mid-generation) otherwise blocks the iterator forever — see HB-014.
+    """
+    import queue
+    import threading
+
+    q: "queue.Queue" = queue.Queue()
+
+    def _pump() -> None:
+        try:
+            for c in stream:
+                q.put(c)
+        except Exception as e:  # surface the transport error to the consumer
+            q.put(e)
+        finally:
+            q.put(None)
+
+    threading.Thread(target=_pump, daemon=True).start()
+    while True:
+        item = q.get(timeout=timeout)
+        if item is None:
+            return
+        if isinstance(item, Exception):
+            raise item
+        yield item
+
+
 def _call_openai_provider(provider_cfg: dict, temperature: float, full_messages: list[dict], max_tokens: int = 2048, enable_thinking: bool = False) -> str:
     """Call any OpenAI-compatible provider (LM Studio, NVIDIA NIM, etc.).
 
@@ -233,7 +270,7 @@ def _call_openai_provider(provider_cfg: dict, temperature: float, full_messages:
         )
         content_parts: list[str] = []
         tool_acc: dict[int, dict] = {}  # index -> {id, name, arguments}
-        for chunk in stream:
+        for chunk in _iter_stream_with_timeout(stream):
             _check_abort()
             if not getattr(chunk, "choices", None):
                 continue
@@ -275,7 +312,7 @@ def _call_openai_provider(provider_cfg: dict, temperature: float, full_messages:
                 tool_count += 1
                 _broadcast({"type": "tool", "name": call["function"]["name"], "args": args})
                 if tool_count == 4:
-                    _speak_if_unmuted("Working on it.")
+                    _speak_if_unmuted("好的，我处理一下。")
                 result = _exec_tool_with_retry(call["function"]["name"], args)
                 print(f"[Tool: {call['function']['name']}] {result[:120]}")
                 _broadcast({"type": "tool_result", "name": call["function"]["name"], "result": result[:200]})
@@ -304,7 +341,7 @@ def _call_ollama_provider(provider_cfg: dict, temperature: float, full_messages:
                 tool_count += 1
                 _broadcast({"type": "tool", "name": tc.function.name, "args": args})
                 if tool_count == 4:
-                    _speak_if_unmuted("Working on it.")
+                    _speak_if_unmuted("好的，我处理一下。")
                 result = _exec_tool_with_retry(tc.function.name, args)
                 print(f"[Tool: {tc.function.name}] {result[:120]}")
                 _broadcast({"type": "tool_result", "name": tc.function.name, "result": result[:200]})
@@ -351,28 +388,28 @@ def handle_wake() -> None:
     try:
         _handle_wake_inner()
     except _Aborted:
-        print("[Jarvis] Aborted.")
+        print("[爱莉希雅] Aborted.")
     except Exception as e:
         import traceback
         print(f"[ERROR] {e}")
         traceback.print_exc()
         if not _abort.is_set():
-            _speak_if_unmuted("Sorry, something went wrong.")
+            _speak_if_unmuted("抱歉，出了点问题。")
     finally:
         _abort.clear()
-        _broadcast({"type": "status", "message": "Ready."})
-        print("[Jarvis] Listening for wake word...")
+        _broadcast({"type": "status", "message": "就绪。"})
+        print("[爱莉希雅] Listening for wake word...")
 
 
 def _handle_wake_inner() -> None:
     if is_speaking():
         stop_speaking()
-    print("[Jarvis] Wake word detected!")
-    _broadcast({"type": "status", "message": "Wake."})
-    _speak_if_unmuted("Yes?")
+    print("[爱莉希雅] Wake word detected!")
+    _broadcast({"type": "status", "message": "在。"})
+    _speak_if_unmuted("嗯？我在听。")
 
-    print("[Jarvis] Recording...")
-    _broadcast({"type": "status", "message": "Listening..."})
+    print("[爱莉希雅] Recording...")
+    _broadcast({"type": "status", "message": "正在聆听…"})
 
     # Pause wake word mic so STT can use the hardware exclusively
     from jarvis.wake import pause_wake_mic, resume_wake_mic
@@ -383,25 +420,25 @@ def _handle_wake_inner() -> None:
     finally:
         resume_wake_mic()  # Always resume wake word detection
     _check_abort()
-    print(f"[Jarvis] Recorded {len(audio)/16000:.1f}s of audio, transcribing...")
+    print(f"[爱莉希雅] Recorded {len(audio)/16000:.1f}s of audio, transcribing...")
     user_text = transcribe_audio(audio)
     if not user_text.strip():
-        print("[Jarvis] Transcription empty — didn't catch anything.")
-        _speak_if_unmuted("I didn't catch that.")
-        _broadcast({"type": "status", "message": "Ready."})
+        print("[爱莉希雅] Transcription empty — didn't catch anything.")
+        _speak_if_unmuted("我没听清，请再说一遍。")
+        _broadcast({"type": "status", "message": "就绪。"})
         return
     print(f"[You] {user_text}")
 
     if _is_stop_command(user_text):
         abort_all()
-        print("[Jarvis] Stopped. (voice)")
+        print("[爱莉希雅] Stopped. (voice)")
         raise _Aborted()
 
     response_text = _process_request(user_text)
     _check_abort()
 
-    print(f"[Jarvis] {response_text}")
-    _broadcast({"type": "status", "message": "Speaking..."})
+    print(f"[爱莉希雅] {response_text}")
+    _broadcast({"type": "status", "message": "正在说话…"})
     _speak_streamed_if_unmuted(response_text)
 
 
@@ -410,7 +447,7 @@ def _process_request(user_text: str) -> str:
     _check_abort()
     _play_beep()
     _broadcast({"type": "user", "text": user_text})
-    _broadcast({"type": "status", "message": "Thinking..."})
+    _broadcast({"type": "status", "message": "思考中…"})
 
     facts = memory.search_facts(user_text)
     messages = context.get_messages()
@@ -452,7 +489,7 @@ def _keyboard_listener() -> None:
                 # Escape key
                 if key == b'\x1b':
                     abort_all()
-                    print("\n[Jarvis] Stopped. (Esc)")
+                    print("\n[爱莉希雅] Stopped. (Esc)")
                 # Extended keys: F2 = 0x00+0x3c, INSERT = 0xe0+0x52
                 elif key in (b'\x00', b'\xe0'):
                     special = msvcrt.getch()
@@ -474,10 +511,10 @@ def _handle_typed_command(text: str) -> None:
     print(f"[You] {text}")
     try:
         response = _process_request(text)
-        print(f"[Jarvis] {response}")
+        print(f"[爱莉希雅] {response}")
         _speak_streamed_if_unmuted(response)
     except _Aborted:
-        print("[Jarvis] Stopped.")
+        print("[爱莉希雅] Stopped.")
     finally:
         _abort.clear()
 
@@ -486,17 +523,21 @@ def main() -> None:
     import webbrowser
     from jarvis.web import start_web_background
 
-    print("[Jarvis] Starting up...")
-    print("[Jarvis] Keys: Esc = stop | F2 = type | INSERT = mute/unmute")
+    print("[爱莉希雅] Starting up...")
+    print("[爱莉希雅] Keys: Esc = stop | F2 = type | INSERT = mute/unmute")
 
     start_web_background(port=7860)
-    print("[Jarvis] Web UI: http://localhost:7860")
+    print("[爱莉希雅] Web UI: http://localhost:7860")
 
     threading.Thread(target=_keyboard_listener, daemon=True).start()
 
     webbrowser.open("http://localhost:7860")
 
-    _speak_if_unmuted("Good morning. Jarvis online.")
+    try:
+        _speak_if_unmuted("早安，爱莉希雅已上线。")
+    except Exception as e:
+        # Best-effort greeting: a missing/unready TTS backend must not kill the server.
+        print(f"[WARN] Startup greeting failed (TTS unavailable?): {e}")
     listen_for_wake_word(handle_wake)
 
 
