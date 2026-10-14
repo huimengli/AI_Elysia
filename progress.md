@@ -83,6 +83,7 @@
 - **HB-015**：e2e"无响应"假阴性——根因 = 测试脚本收 response 后未 break（服务端一直正常投递，收包日志证实 37.0s 送达）；测试加 `break` + 逐条收包日志；期间误加的 web.py 直接 send 已撤除（保持广播单路径）。
 - **2026-10-14 22:0x e2e 正式 PASS**：34.7s，自称"爱莉希雅（Elysia）"✓、简体中文 ✓ → T1/T5 完成；全部 DBG 打点清除，py_compile 通过。
 - 进行中：T2 `--generate_clips` 后台合成中（pwsh-103，4800 条 ~5h）→ augment → train → config 指向新 onnx + 加载验证；T4 待用户手动操作 GitHub（need_user.md Q5）；T6 仅 todo。
+- 2026-10-14 22:2x 新需求：用户对 GPT-SoVITS 效果不满意，提出 TTS 迁移到 Soul-AILab/SoulX-Podcast（**仅记录 todo，本轮不做**）→ records/2026-10-14-22-23-49.md + todo.md。
 
 ## Git 提交记录
 
