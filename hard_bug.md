@@ -94,3 +94,18 @@
 - 方案：`_cn_test.py` 收到 `type == "response"` 即 `break`；并加逐条收包日志（时间戳 + 原文）防再误判。服务器代码保持原设计：response 仅经 `main._broadcast`（事件监听 → `_broadcast_to_ws`）单路径投递，web.py 不重复直发。
 - 教训：e2e "无响应"类故障先核对**客户端收包日志**再动服务端；打点应覆盖收发两端。
 - 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-016 openwakeword 训练链在"venv 残缺 + Windows 沙箱"下的四类环境坑（已解决，shim 固化于 _t2_train_cn.py）
+
+- 时间：2026-10-14-23-0x
+- 状态：已解决（全部以 `_t2_train_cn.py` 模块级 shim/补丁方式规避，不动 site-packages；dry-run 全链 PASS 验证）
+- 影响：`--augment_clips` / `--train_model` 在本环境直接运行必崩（四处独立阻塞点，逐一定位修复后才跑通 dry-run）。
+- 现象与根因：
+  1. **torchaudio 无可用后端**：torchaudio 2.11+cpu 默认后端 torchcodec 未装（`ImportError`），soundfile 后端缺 `libsndfile.dll`（OSError 0x7e）→ `openwakeword.data.augment_clips` 运行时 `torchaudio.load/.info`（9 处）全崩。shim：scipy.io.wavfile + wave 替换（int16→float32/32768、声道取均值；info 返回 SimpleNamespace）。
+  2. **沙箱禁命名管道**：CPU provider 下 `AudioFeatures._get_melspectrogram_batch/_get_embeddings_batch` 必建 `multiprocessing.pool.ThreadPool`（Windows 下 Pool 创建即走命名管道 IPC）→ `PermissionError WinError 5`；且无 ncpu=1 串行分支。shim：`openwakeword.utils.ThreadPool` 替换为串行假池。**注意**：对已 `from ... import X` 的模块须重绑其自身全局名，仅改源模块属性无效。
+  3. **numpy 2.x `np.memmap` 写裸二进制无 .npy header**（venv 实测）：上游 `trim_mmap` 用 `np.load(mmap_mode='r')` 读回在任何平台都失败（`ValueError: pickled (object) data`）；且训练分支 `mmap_batch_generator`（788 行）同样 `np.load` → 最终特征文件必须 `np.save` 成规范 .npy。
+  4. **Windows 删打开中的 memmap 文件**：`compute_features_from_generator` 写句柄 `fp` 未关时调 trim → `WinError 32`。须先 `del fp + gc.collect()`。
+  5. **torch DataLoader `num_workers>0`**（trainer 1060 行）：Windows spawn 上下文同样依赖命名管道 → 沙箱 WinError 5。改 `num_workers=0`（进程内加载，仅变慢）。
+- 方案：`_t2_train_cn.py` shim 区固化：torchaudio 替换 / `_SerialThreadPool` / `_finalize_feature_file`（np.fromfile 读裸数组→按 row_counter 截断→np.save 规范 .npy）+ `_compute_features_patched`；train 分支 `num_workers=0`。全风险清单见 records/2026-10-13-21-38-01.md 23:1x/23:3x。
+- 教训：本 venv 训练任何依赖 torchaudio/多进程/np.memmap 的开源流水线前先查这三类坑；沙箱内命名管道类失败（WinError 5）一律改单进程路径，不要尝试提权绕过。
+- 关联需求：records/2026-10-13-21-38-01.md
