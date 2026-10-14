@@ -46,6 +46,12 @@ def listen_for_wake_word(callback) -> None:
 
     cfg = _load_config()["wake_word"]
     oww = Model(wakeword_models=[cfg["model"]], inference_framework="onnx")
+    # openwakeword keys predictions by the model filename stem for local model
+    # files (e.g. "aili_xiya_v0.1" for .../aili_xiya_v0.1.onnx) but by the raw
+    # name for built-in models (which may themselves contain a dot, e.g.
+    # "hey_jarvis_v0.1"). Mirror that resolution here.
+    _model_spec = cfg["model"]
+    _model_key = Path(_model_spec).stem if Path(_model_spec).exists() else _model_spec
 
     audio = pyaudio.PyAudio()
     mic = audio.open(
@@ -82,7 +88,7 @@ def listen_for_wake_word(callback) -> None:
                 continue
 
             predictions = oww.predict(pcm)
-            score = predictions.get(cfg["model"], 0)
+            score = predictions.get(_model_key, 0)
 
             if score < cfg["threshold"]:
                 continue
