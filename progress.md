@@ -17,8 +17,10 @@
 - **2026-10-15 13:3x 夜间关机中断**：pwsh-103（生成）与 pwsh-42（GSV :9880）被杀；落盘 2000/400/2000/217。恢复：GSV 重启（pwsh-3）→ `--generate_clips` 续跑（pwsh-5）→ Jarvis 重启（pwsh-7，HF 三 env）；llama.cpp :8080 未受影响。
 - **2026-10-15 13:4x 生成完成**：四目录 **2000/400/2000/400 = 4800 条**（目标 = n_samples/n_samples_val；此前"negative_test 2400"为误记，已修正）。
 - **2026-10-15 13:5x–16:3x T2 训练链排障**：augment PASS（四特征 .npy + val_fp）；train 分支连修 **HB-017/018/019/020**（prefetch_factor、n_per_class dict、data_transforms 行序 + n=16 硬编码、`total_length//16000` 截断 + 不持久化漂移 → `input_shape` 改从 .npy shape 读取）；冒烟 #4 PASS（120 步全链路含验证与 ONNX 导出，verify 框架实测可用，冒烟模型 FAIL 属预期）。
-- **2026-10-15 16:4x 正式训练运行中**（pwsh-12：`--train_model` steps=60000 → `_t2_verify_onnx.py 40`；日志 `_t2_train.log`/`_t2_verify.log`）。服务齐备：llama :8080（pwsh-1）、Jarvis :7860（pwsh-3）、GSV :9880（pwsh-8）。后续：verify PASS → config.yaml `wake_word.model` 指向 `openWakeWord/output/aili_xiya_v0.1/aili_xiya_v0.1.onnx` → 重启服务器 + e2e 复验。
-- 进行中/待办：T4 待用户手动 GitHub 操作（need_user.md Q5）；T6 仅 todo。
+- **2026-10-15 17:0x 正式训练完成但验收 FAIL → HB-021**：pwsh-12 跑完 60000+6000+6000 步并导出 ONNX，verify FAIL——模型对静音/噪声/pos/neg **恒定输出 ≈0.999**（最终层偏置≈+7.4 饱和）。根因：高损失样本挖掘 + 负权重 ramp(1→1000) → 负样本退出 batch 后数万步纯正样本训练。修复已实施：禁用高损失挖掘、`max_negative_weight: 1`、补 `logging.basicConfig(INFO)`。**重训中**（pwsh-23：`_wheels\_t2_train_verify.ps1` = train→verify）。服务齐备：llama :8080（pwsh-1）、Jarvis :7860（pwsh-3）、GSV :9880（pwsh-8）。**config.yaml 暂不指向新 ONNX**；verify PASS 后再改指 → 重启服务器 + e2e 复验。
+- **2026-10-15 晚间 chain #2 FAIL → HB-022**：pwsh-23 重训"正常完成"但验收再次恒定 1.0（pos/neg 均 1.000）。全面再诊断：ONNX 导出无罪（`_diag_onnx2`：图/权重正常、最终 bias=0.0666，此前"+7.4"系 w·h+b 总和误判；`_diag_onnx3`：用 ONNX 权重重建 torch ≡ ORT 输出）→ **根因 = seq1 `lr=0.0001` 过大**，正负类分布几乎不可分（mean 1.854/1.893、std≈15.5）下训练呈"振荡 + DC 漂移"、全输入饱和；日志 "Final Recall 0.637" 系 torchmetrics stateful 指标全程累计值，非最终模型真实分。迷你运行对照（balanced 32:32、5k 步）：lr=1e-5 → pos≈0.93/neg≈0.64、振荡抑制。**修复已实施**：seq1 lr 0.0001→1e-5，重训链运行中（pwsh-1）。若再 FAIL：数据侧强化（background noise/speech wav 生成普通负样本、adversarial 移训练集外仅验证）。
+- **2026-10-15 21:0x 新增 DSH Agent 预设**（records/2026-10-15-21-05-48.md）：PTC-MY / 创造模式-MY，与工作区 bundle `dsh-my-presets` 一并落盘；插件列表逐字复制内置 ptc/cordis，仅 compaction-basic 参数自定义（0.8/16348/0.16）。旧 profile patch 的 id-覆盖行无法创建新预设（Loader 跳过），已改 bundle `insert:` 方案，install_bundle 成功、两行 active。
+- 进行中/待办：T2 重训验收中（pwsh-1）；T4 待用户手动 GitHub 操作（need_user.md Q5）；T6 仅 todo。
 
 ## Git 提交记录
 
@@ -34,3 +36,4 @@
 - `30eba61`（2026-10-14-22:41，main）`docs(AI): T2 pre-training audit — tflite conversion best-effort, generation at 900/2000`。**已本地 commit，未 push。**
 - `3bb5b7d`（2026-10-14-22:51，main）`feat(AI): wake.py supports local ONNX model paths (prediction key = filename stem); T2 acceptance script ready`。**已本地 commit，未 push。**
 - `8a97e4a`（2026-10-14-23:2x，main）`docs(AI): ledger backfill (c63c8ef..3bb5b7d) + T2 augment chain de-risked (3 blockers fixed)`。**已本地 commit，未 push。**
+- `07bd022`（2026-10-15-16:5x，main）`docs(AI): T2 train-branch HB-017..020 fixes, smoke PASS, production training launched`。**已本地 commit，未 push。**

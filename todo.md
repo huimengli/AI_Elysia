@@ -49,3 +49,4 @@
   - [ ] T4 GitHub 仓库私有化/描述改"自用"——AGENTS 禁止远程写入，需用户手动操作（已提供步骤；need_user.md Q5）
   - [ ] T6 网页 UI 改为爱莉希雅相关内容（**本轮不做**，仅记录；web.py/static/index.html 暂不动）
 - [ ] 2026-10-14-22-23-49 TTS 迁移到 SoulX-Podcast（→ records/2026-10-14-22-23-49.md；**本轮不做**，仅记录；用户不满 GPT-SoVITS 效果）
+- [x] 2026-10-15-21-05-48 新增 DSH Agent 预设 PTC-MY 与 创造模式-MY（→ records/2026-10-15-21-05-48.md；bundle `dsh-my-presets` 安装成功，两预设行 active）

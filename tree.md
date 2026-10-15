@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-10-14-22-1x
+更新时间: 2026-10-15-21-1x
 
 ```
 JarvisAi/
@@ -22,7 +22,11 @@ JarvisAi/
 │   ├── hard_bug.md_2026-10-13-17-45.md
 │   ├── need_user.md_2026-10-13-09-56-54.md
 │   ├── need_user.md_2026-10-13-17-45.md
-│   └── need_user.md_2026-10-13-21-12-19.md
+│   ├── need_user.md_2026-10-13-21-12-19.md
+│   └── progress.md_2026-10-15-13-49-00.md
+├── dsh-my-presets/
+│   ├── cordis.patch.yml
+│   └── package.json
 ├── jarvis/
 │   ├── __init__.py
 │   ├── context.py
