@@ -109,3 +109,51 @@
 - 方案：`_t2_train_cn.py` shim 区固化：torchaudio 替换 / `_SerialThreadPool` / `_finalize_feature_file`（np.fromfile 读裸数组→按 row_counter 截断→np.save 规范 .npy）+ `_compute_features_patched`；train 分支 `num_workers=0`。全风险清单见 records/2026-10-13-21-38-01.md 23:1x/23:3x。
 - 教训：本 venv 训练任何依赖 torchaudio/多进程/np.memmap 的开源流水线前先查这三类坑；沙箱内命名管道类失败（WinError 5）一律改单进程路径，不要尝试提权绕过。
 - 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-017 DataLoader `num_workers=0` 与显式 `prefetch_factor` 冲突（已解决）
+
+- 时间：2026-10-15-13-5x
+- 状态：已解决
+- 影响：T2 `--train_model` 在 DataLoader 构造处即崩，训练无法启动（augment 阶段已成功，四特征 .npy 已落盘）。
+- 现象：`ValueError: prefetch_factor option could only be specified in multiprocessing. Let num_workers > 0 to enable multiprocessing, otherwise set prefetch_factor to None.`（torch 2.x 对 `num_workers=0` + `prefetch_factor=16` 的硬校验；dry-run 未触达该行，故此前漏检）。
+- 根因：HB-016 第 5 条改 `num_workers=0` 时保留了上游显式 `prefetch_factor=16`。
+- 方案：`_t2_train_cn.py` train 分支 DataLoader 去掉 `prefetch_factor`（`num_workers=0` 时默认即 None），py_compile 通过；重跑链（augment 因特征文件已存在而跳过，直达 train）。
+- 教训：改 DataLoader 并发参数时同步清掉只与多进程相关的选项（prefetch_factor/persistent_workers）。
+- 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-018 `mmap_batch_generator` 的 `n_per_class` 收到 int 而非 dict（已解决）
+
+- 时间：2026-10-15-14-1x
+- 状态：已解决
+- 影响：T2 `--train_model` 在批次生成器构造处即崩，训练无法启动。
+- 现象：`AttributeError: 'int' object has no attribute 'items'`（`openwakeword/data.py:825` `for label, n in self.n_per_class.items()`）。
+- 根因：上游 `train.py:847` 直接把 `config["batch_n_per_class"]`（int=32）传给 `mmap_batch_generator(n_per_class=...)`，而该参数需要 `{类名: 每类窗口数}` dict；自动计算分支（data.py:800-816）仅在参数为假值时触发。
+- 方案：`_t2_train_cn.py` train 分支改传 `n_per_class={key: config["batch_n_per_class"] for key in feature_data_files.keys()}`（3 类 × 32；每类 32 clip × 27 帧窗口 = 864 条，整除无余）。
+- 教训：上游 train.py 与 data.py 接口不一致属上游 bug，fork 副本中修参即可，勿改 site-packages。
+- 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-019 `data_transforms` 构建顺序早于正样本类注册 + 窗口函数硬编码 `n=16`（已解决）
+
+- 时间：2026-10-15-14-3x
+- 状态：已解决（待冒烟/正式训练运行时复验）
+- 影响：T2 `--train_model` 首批 vstack 即崩；且即使不崩，模型输入帧数与特征文件不符导致前向失败。
+- 现象：`ValueError: ... along dimension 1, the array at index 0 has size 16 and the array at index 1 has size 27`（`data.py:852` `np.vstack(X)`）。
+- 根因（两处独立缺陷叠加）：
+  1. **行序 bug**：上游 train 分支先构建 `data_transforms = {key: f for key in feature_data_files}`，之后才把 `'positive'/'adversarial_negative'` 追加进 `feature_data_files` → 这两个类在生成器中 `self.data_transform_funcs.get(label)` 为 None（data.py:835）跳过窗口变换，保持原始 27 帧；而 'negative' 被切成 16 帧 → vstack 维数不一致。
+  2. **硬编码 n=16**：上游 `f(x, n=16)` 仅在 total_length ≤ 36000 样本（16 帧）时成立；本数据集 clip > 2 s → 特征 (N, 27, 96)，模型 `input_shape[0]=27`（`get_embedding_shape(total_length//16000)`），n=16 的窗口与模型输入不符。
+- 方案：`_t2_train_cn.py` train 分支：① 把 positive/adversarial_negative 的文件赋值移到 `data_transforms` 构建**之前**（三类同享同一变换）；② `def f(x, n=input_shape[0])` 动态取帧数（NOTE 注释说明上游 16 的适用边界）。
+- 教训：改训练分支逻辑顺序前，先核对"字典构建点"与"其依赖数据完成填充点"的先后；窗口/池化类参数一律与 `input_shape` 联动，勿沿用上游魔数。
+- 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-020 `total_length` 双重缺陷 → 模型输入帧数与特征不符（已解决）
+
+- 时间：2026-10-15-16-2x
+- 状态：已解决（待冒烟复验）
+- 影响：T2 `--train_model` 训练循环本身正常（~100 it/s），但首次 X_val 验证前向即崩，模型无法收敛/导出。
+- 现象：先 `mat1 and mat2 shapes cannot be multiplied (800x2592 and 1536x128)`（模型 T=16）；改浮点后仍 `(800x2592 and 2400x128)`（模型 T=25，特征实为 27 帧）。
+- 根因（两层独立缺陷叠加）：
+  1. **整除截断**：`utils.py:238 get_embedding_shape(audio_length: float, sr=16000)` 入参是**秒（浮点）**；上游 train.py 传 `total_length//16000`。上游默认 total_length=32000 恰为 16000 整数倍无感；本数据 total_length≈44000–47000 → 截断到 2 s → 合成 32000 样本 → 16 帧。
+  2. **total_length 不持久 + 随机采样漂移**（改浮点后暴露）：`total_length` 每次运行都从 positive_test 的 **50 个随机 clip 中位数**重算（train.py:937-947），**不写入 yaml**。本数据 clip 时长双峰，两次运行的随机中位数分属不同峰 → generate 运行得 27 帧特征、train 运行得 25 帧模型输入。
+- 方案：`_t2_train_cn.py` train 分支不再调 `get_embedding_shape`，直接 `np.load("positive_features_test.npy", mmap_mode="r").shape` 取 `(frames, melbins)`=(27,96) 作为 `input_shape`（确定性、与数据恒一致）。
+- 教训：凡"运行期重算且未持久化"的量，跨进程/跨阶段复用前必须核对一致性；模型输入形状一律以落盘特征文件为准。
+- 关联需求：records/2026-10-13-21-38-01.md
