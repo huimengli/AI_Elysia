@@ -37,3 +37,4 @@
 - `3bb5b7d`（2026-10-14-22:51，main）`feat(AI): wake.py supports local ONNX model paths (prediction key = filename stem); T2 acceptance script ready`。**已本地 commit，未 push。**
 - `8a97e4a`（2026-10-14-23:2x，main）`docs(AI): ledger backfill (c63c8ef..3bb5b7d) + T2 augment chain de-risked (3 blockers fixed)`。**已本地 commit，未 push。**
 - `07bd022`（2026-10-15-16:5x，main）`docs(AI): T2 train-branch HB-017..020 fixes, smoke PASS, production training launched`。**已本地 commit，未 push。**
+- `38b1d02`（2026-10-15-21:1x，main）`feat(AI): add DSH agent presets PTC-MY and 创造模式-MY via workspace bundle`。**已本地 commit，未 push。**
