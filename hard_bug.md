@@ -157,3 +157,52 @@
 - 方案：`_t2_train_cn.py` train 分支不再调 `get_embedding_shape`，直接 `np.load("positive_features_test.npy", mmap_mode="r").shape` 取 `(frames, melbins)`=(27,96) 作为 `input_shape`（确定性、与数据恒一致）。
 - 教训：凡"运行期重算且未持久化"的量，跨进程/跨阶段复用前必须核对一致性；模型输入形状一律以落盘特征文件为准。
 - 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-021 训练塌缩：高损失挖掘 + 负权重 ramp → 全输入常数 0.999（修复中，重训 pwsh-23）
+
+- 时间：2026-10-15-17-0x
+- 状态：修复已实施，重训+验收运行中（pwsh-23）
+- 影响：生产训练（60000+6000+6000 步）"正常完成"并导出 ONNX，但验收全阈值 FAIL：pos/neg 均 ≈0.999（recall=1.0 / false=1.0），模型不可用。
+- 现象：`_t2_verify_result.txt` pos mean/max=0.999/0.999、neg 0.999/0.999；诊断脚本 `_diag_onnx.py`：静音→0.999、随机噪声→0.9989、8 个真实 pos/neg clip 全部 0.999（仅 1 个 neg=0.000）；最终层 Gemm 权重 L2=1.35（非零）但**最终偏置≈+7.4**（sigmoid(7.4)≈0.9994），决策被偏置主导。
+- 根因（训练动力学缺陷，非数据管线 bug——标签映射已核实正确 positive→1/adversarial_negative→0）：
+  1. `train_model` 的"高损失样本挖掘"（只回传 pred≥0.001 的负样本与 pred<0.999 的正样本）+ seq1 负权重 `linspace(1→1000)`；
+  2. 负样本被快速压到 <0.001 后**永久退出 batch**，之后数万步 batch 几乎全是正样本（权重 1）→ 最终层偏置被单向推高至饱和；
+  3. 待所有正样本也达到 0.999 上限后，batch 变空，训练空转"收敛"——退化解固定点。
+- 附带缺陷：验证指标只写内存 `self.history`，且脚本未配置 logging handler（INFO 级被静默丢弃）→ `_t2_train.log` 无任何验证轨迹，事故无法从日志回溯。
+- 方案：① `_t2_train_cn.py` 禁用高损失挖掘（全量平衡 batch，两类始终有梯度）；② `train_config.yaml` `max_negative_weight: 1000→1`（去 ramp）；③ `__main__` 加 `logging.basicConfig(level=INFO)` 保留验证轨迹；④ 重训链 `_wheels\_t2_train_verify.ps1`（跳过已完成的 augment）后台运行 pwsh-23，完成后跑 `_t2_verify_onnx.py 40`。
+- 教训：带"样本筛选 + 类别权重 ramp"的训练配方在负样本易压制的数据集上会塌缩为常数输出；验收必须包含"静音/噪声输入分数应≈0"的健全性检查（已写入 `_diag_onnx.py`）。
+- 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-022 lr=1e-4 振荡+直流漂移 → 全输入饱和常数 1（修复中，重训 pwsh-1）
+
+- 时间：2026-10-15-18-1x（chain #2 verify FAIL），当日晚间完成全面再诊断
+- 状态：根因已定位，修复已实施（seq1 lr 0.0001→1e-5），重训+验收运行中（pwsh-1）
+- 影响：HB-021 修复（禁挖掘、负权重=1、INFO 日志）后重训仍塌缩——`_t2_verify_result.txt` pos/neg 均 1.000/1.000，全阈值 FAIL，T2 ONNX 不可用。
+- 现象：chain #2（pwsh-23）"正常完成"并导出 ONNX（opset 18），验收依旧恒定 ≈1.0；`_t2_train.log` 打印 "Final Model Accuracy: 0.676 / Recall: 0.637"，看似"有区分度"，实为假象。
+- 尝试/排除：
+  1. 疑 ONNX 导出 → `_diag_onnx2.py`：图结构正确（Reshape→Gemm→LayerNorm(eps=1e-5)→ReLU×2 块→Gemm→Sigmoid），`last_layer.weight` L2=1.97、**`last_layer.bias`=0.0666**（此前"+7.4 偏置"结论系误判——那是 `w·h+b` 总和而非偏置单项）→ 权重正常；
+  2. `_diag_onnx3.py`：用 ONNX initializers 重建 torch Net，与 ORT 在 zeros/random/pos/neg 上输出**完全一致**（logits +11.75/+12.30/+15.94/+12.51）→ **导出无罪，torch 模型本身已塌缩**；
+  3. `_diag_train_mini.py`（复刻 `__main__` 数据配置的插桩迷你训练）：lr=1e-4 下 loss 每 100 步在 0.008↔0.53 间大幅振荡、pos 预测 0.36↔0.98 摆动，同时 relu_1 sum 缓慢直流漂移（51→57 / 3000 步）→ 60k 步累积成全输入饱和；
+  4. lr 对照实验（balanced 32p+32n、5000 步）：lr=3e-5 → pos≈0.97/neg≈0.78（漂移仍继续）；**lr=1e-5 → pos≈0.93/neg≈0.64，振荡抑制、无 runaway** → 选定 1e-5。
+- 根因：seq1 `lr=0.0001`（`_t2_train_cn.py` auto_train 硬编码）过大；数据侧正负类分布几乎不可分（pos mean 1.8540/std 15.44 vs neg 1.8931/15.50，最大逐维均值差 5.5，唯一可学习线索是帧 13–26 的"短语后尾部上下文"）→ 大 lr 在弱信号上表现为"振荡 + DC 漂移"，最终层对所有输入（含全零）输出 logit +11..+15。
+- 附带缺陷：**torchmetrics stateful 指标陷阱**——`self.recall`/`self.accuracy` 在整个训练过程累积、从不清零，merge 后打印的 "Final Model Accuracy/Recall" 是全程累计值，不是最终模型真实验证分（最终模型实际全类 ≈1.0）。
+- 方案：① `_t2_train_cn.py` seq1 `lr = 0.0001 → 1e-5`（带 HB-022 注释）；② 重训链 `_wheels\_t2_train_verify.ps1` 后台运行（pwsh-1），完成后自动跑 `_t2_verify_onnx.py 40`。若再 FAIL：数据侧强化——yaml `negative` 改为由 `background\noise`+`background\speech` wav 生成的普通/易负样本特征（当前与 adversarial 同文件、1:2 负偏），adversarial 移出训练集仅作验证；进一步降 lr / 增 steps。
+- 教训：① stateful 指标使用前必须 reset，训练日志里的"final model"指标不可信，验收以 clip 级 `_t2_verify_onnx.py` 结果为准；② 类别分布近乎相同（弱判别信号）的数据集对饱和型塌缩的 lr 窗口极窄，全量训练前先用迷你运行标定 lr。
+- 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-023 数据侧根因：正负样本同一音色 → 模型学"音色→触发"，v0.2 数据重造（执行中）
+
+- 时间：2026-10-15-20-1x（chain #3 verify FAIL），当夜启动 v0.2 数据方案；2026-10-16 续跑
+- 状态：v0.2 数据集构建中（合成 pwsh-5 / 变换 pwsh-6），训练链待数据就绪
+- 影响：HB-021/022 修复后第 3 次生产重训仍验收全 FAIL——`_t2_verify_onnx.py` pos/neg 全阈值均 1.000，模型不可用。
+- 现象：lr=1e-5 + 禁挖掘 + 负权重=1 的"干净"训练仍饱和；clip 级验收 pos mean≈1.0、neg mean≈1.0。
+- 根因（数据分布，非训练动力学）：v0.1 全部 4000 个训练 clip（pos 2000 + neg 2000）都是**同一个 GSV 爱莉希雅音色**——负样本只是"同音色、不含短语的其它句子"。模型最省力的判别面是"爱莉希雅音色→开火"，与内容无关；验收 clip 同为该音色 → pos/neg 全 1.000。`augment_clips`（openwakeword/data.py L558-700）标准增强音移上限 ±3 semitone，不足以制造音色差异。
+- 方案（v0.2 数据集，杀掉音色捷径）：
+  1. 正样本 2000 = 1000 干净（v0.1 positive_train 后 1000）+ 1000 强变换（前 1000），**正负两类共享同一变换分布**，变换状态不携带类别信息，内容成为唯一可分线索；
+  2. 负样本 2000 = 1550 强变换他人语音（GSV 合成 1700 条不含短语的新句子 `_t2_synth_neg.py` → 强变换）+ 450 噪声/静音；
+  3. 负测试 400 = 150 干净对抗样本（v0.1 negative_train 前 150，**含短语、同音色**——内容判别探针）+ 150 强变换他人语音 + 100 噪声/静音；正测试 400 干净不变；
+  4. 强变换（`_t2_transform_v02.py`，scipy 纯本地）：音移 ±4–10 semitone + 时域拉伸 0.78–1.28（长度还原）+ 随机低/高/带通（2 阶 butter, p=0.65）+ 彩色噪声 SNR 8–20dB (p=0.5) + 峰值归一 0.9。标准增强（±3 st）之后仍保留音色差异。
+- 附带发现：① DSH 沙箱禁命名管道 → `concurrent.futures.ProcessPoolExecutor` 不可用，变换改单进程顺序执行（~20 min 可接受）；② GSV :9880 与 Jarvis :7860 在会话间隙均掉线，需重启；③ venv 缺 `pooch`（librosa 依赖）且无网不可装 → 变换管线弃用 librosa，纯 scipy 实现。
+- 验收门槛不变：`_t2_verify_onnx.py 40 aili_xiya_v0.2` PASS = recall≥0.9 AND false≤0.1（阈值 0.4–0.8）。若 150 条干净对抗探针仍误触，说明模型仍依赖音色/变换状态 → 需 v0.3。
+- 教训：唤醒词数据的负样本必须覆盖**部署分布**（同说话人、同 TTS 音色、含短语的其它句子），仅"不同文本的同音色负样本"会让模型学到音色捷径；验收集必须包含干净对抗样本作内容判别探针。
+- 关联需求：records/2026-10-13-21-38-01.md
