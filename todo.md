@@ -43,7 +43,7 @@
     - [x] 中文负样本方案：官方 `generate_adversarial_texts` 仅英文（CMU 词典，CJK 崩溃）→ `_t2_train_cn.py`（train.py 副本）+ `cn_generate_adversarial_texts`（同音字替换/部分短语/重叠音节真词池），30 条样例测试通过
     - [x] train_config.yaml 校验完整（rir/10 + background/noise 24 + speech 30 就位；UTF-8 读取修复）
     - [x] v0.1 数据合成完成（2000/400/2000/400 = 4800 条）——三次训练验收全 FAIL（HB-021/022/023：同音色捷径）
-    - [ ] **v0.2 数据重建中**（HB-023）：`_t2_synth_neg.py` GSV 合成 1700 条不含短语新句子（pwsh-5）→ `_t2_transform_v02.py` 强变换 2700 clip + 噪声/静音（pwsh-6，单进程顺序）；目标 2000/400/2000/400
+    - [ ] **v0.2 数据重建中**（HB-023/HB-024）：`_t2_synth_neg.py` GSV 合成 1700 条不含短语新句子（pwsh-10）→ `_t2_transform_v02.py` 强变换 2700 clip + 噪声/静音（pwsh-13，单进程顺序；粉噪改 FFT 基 HB-024）；目标 2000/400/2000/400
     - [x] 负样本准备（24 合成噪声 + 10 RIR + 30 GSV 语音句 + val_fp.npy 已生成）
     - [ ] CPU 后台训练 → 产出 .onnx
     - [ ] 接入：config.yaml `wake_word.model` 指向新模型，加载验证 OWW_OK

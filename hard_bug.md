@@ -206,3 +206,12 @@
 - 验收门槛不变：`_t2_verify_onnx.py 40 aili_xiya_v0.2` PASS = recall≥0.9 AND false≤0.1（阈值 0.4–0.8）。若 150 条干净对抗探针仍误触，说明模型仍依赖音色/变换状态 → 需 v0.3。
 - 教训：唤醒词数据的负样本必须覆盖**部署分布**（同说话人、同 TTS 音色、含短语的其它句子），仅"不同文本的同音色负样本"会让模型学到音色捷径；验收集必须包含干净对抗样本作内容判别探针。
 - 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-024（已解决）
+- 时间：2026-10-16 16:2x
+- 状态：已解决（FFT 基粉噪替换，受影响 clip 全部清除重生成）
+- 影响：`_t2_transform_v02.py` 的 Kellet IIR 粉红噪声在 float32/float64 均溢出 inf（`overflow encountered in square` / `invalid value in cast`），v0.2 已写入的 posx/noise clip 部分损坏，两次变换作业作废。
+- 现象：lfilter(Kellet b,a,white) 输出出现 inf；48k 样本即触发（float64）。
+- 根因：经典 Kellet 粉噪 IIR 滤波器极点半径 |z|≈1.0074，长信号指数增长超过 float64 上限（~1e308）→ 溢出 inf → 下游 rms/peak-norm NaN → int16 cast 损坏。
+- 方案：`_pink_noise` 改 FFT 基 1/f 谱整形（rfft × 1/√f × irfft），任意长度稳定；sanity 48k 样本全有限、RMS=0.5。b/a 系数弃用。
+- 关联需求：records/2026-10-13-21-38-01.md
