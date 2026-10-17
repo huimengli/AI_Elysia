@@ -57,3 +57,4 @@
 - `38b1d02`（2026-10-15-21:1x，main）`feat(AI): add DSH agent presets PTC-MY and 创造模式-MY via workspace bundle`。**已本地 commit，未 push。**
 - `a390837`（2026-10-17-15:5x，main）`feat(AI): v0.3c 唤醒词验收 PASS 并接入 config.yaml（recall 0.94 / fp 0.09 @ 阈值 0.7）`。**已本地 commit，未 push。**
 - `1072661`（2026-10-17-16:5x，main）`docs(AI): 勾选 T2 唤醒词完成（v0.3c PASS 已接入）；T4 用户确认延后记 todo`。**已本地 commit，未 push。**
+- `2222230`（2026-10-17-19:0x，main）`feat(AI): Web UI 事件记录 + SQLite 持久化 + 固定应答词 wav + start_all.bat`。**已本地 commit，未 push。**
