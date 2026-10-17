@@ -46,3 +46,4 @@
 - `be4e07c`（2026-10-16-17:1x，main）`docs(AI): HB-024 Kellet IIR 粉噪溢出已解决（FFT 基替换）；todo 作业号更正 pwsh-10/13`。**已本地 commit，未 push。**（台账补记）
 - `07bd022`（2026-10-15-16:5x，main）`docs(AI): T2 train-branch HB-017..020 fixes, smoke PASS, production training launched`。**已本地 commit，未 push。**
 - `38b1d02`（2026-10-15-21:1x，main）`feat(AI): add DSH agent presets PTC-MY and 创造模式-MY via workspace bundle`。**已本地 commit，未 push。**
+- `a390837`（2026-10-17-15:5x，main）`feat(AI): v0.3c 唤醒词验收 PASS 并接入 config.yaml（recall 0.94 / fp 0.09 @ 阈值 0.7）`。**已本地 commit，未 push。**
