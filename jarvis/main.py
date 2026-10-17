@@ -24,9 +24,10 @@ for _stream in (sys.stdout, sys.stderr):
 
 from jarvis.wake import listen_for_wake_word
 from jarvis.stt import record_until_silence, transcribe_audio, set_abort_event
-from jarvis.tts import speak, speak_streamed, is_speaking, stop_speaking
+from jarvis.tts import speak, speak_streamed, is_speaking, stop_speaking, play_ack_wav
 from jarvis.context import ContextManager
 from jarvis.memory import Memory
+from jarvis.events import EventLog
 from jarvis.tools.router import TOOL_SCHEMAS, dispatch
 
 _MAX_TOOL_LOOPS = 3
@@ -125,6 +126,7 @@ def _get_openai_client(base_url: str, api_key: str = "lm-studio") -> OpenAI:
 
 context = ContextManager()
 memory = Memory()
+event_log = EventLog()  # T7: operation log → sqlite (jarvis/data/events.db)
 
 
 def _system_prompt() -> str:
@@ -382,6 +384,17 @@ def _exec_tool_with_retry(name: str, args: dict) -> str:
     return result
 
 
+# Set while the wake pipeline is recording from the mic. wake.py uses this
+# to suppress barge-in aborts: a trigger arriving mid-recording comes from
+# the same microphone (the user's own speech / ambient noise), not a new
+# turn, so aborting would kill our own capture and any in-flight web turn.
+_stt_recording = False
+
+
+def is_recording() -> bool:
+    return _stt_recording
+
+
 def handle_wake() -> None:
     """Called when wake word is detected. Full pipeline: listen → think → speak."""
     _abort.clear()
@@ -393,6 +406,7 @@ def handle_wake() -> None:
         import traceback
         print(f"[ERROR] {e}")
         traceback.print_exc()
+        event_log.log("system", f"Pipeline error: {e}", "error")
         if not _abort.is_set():
             _speak_if_unmuted("抱歉，出了点问题。")
     finally:
@@ -405,8 +419,13 @@ def _handle_wake_inner() -> None:
     if is_speaking():
         stop_speaking()
     print("[爱莉希雅] Wake word detected!")
+    event_log.log("wake", "Wake word triggered", "voice")
     _broadcast({"type": "status", "message": "在。"})
-    _speak_if_unmuted("嗯？我在听。")
+    _broadcast({"type": "wake", "text": "Wake word triggered"})
+    if _muted.is_set():
+        print("[爱莉希雅] (muted) skipping ack")
+    else:
+        play_ack_wav()  # T8: pre-synthesized local wav, no live SoVITS
 
     print("[爱莉希雅] Recording...")
     _broadcast({"type": "status", "message": "正在聆听…"})
@@ -415,21 +434,26 @@ def _handle_wake_inner() -> None:
     from jarvis.wake import pause_wake_mic, resume_wake_mic
     pause_wake_mic()
     time.sleep(0.15)  # Give pyaudio time to release the mic
+    global _stt_recording
+    _stt_recording = True
     try:
         audio = record_until_silence()
     finally:
+        _stt_recording = False
         resume_wake_mic()  # Always resume wake word detection
     _check_abort()
     print(f"[爱莉希雅] Recorded {len(audio)/16000:.1f}s of audio, transcribing...")
     user_text = transcribe_audio(audio)
     if not user_text.strip():
         print("[爱莉希雅] Transcription empty — didn't catch anything.")
+        event_log.log("system", "Wake: no voice recognized", "voice")
         _speak_if_unmuted("我没听清，请再说一遍。")
         _broadcast({"type": "status", "message": "就绪。"})
         return
     print(f"[You] {user_text}")
 
     if _is_stop_command(user_text):
+        event_log.log("system", f"Voice stop command: {user_text}", "voice")
         abort_all()
         print("[爱莉希雅] Stopped. (voice)")
         raise _Aborted()
@@ -442,10 +466,19 @@ def _handle_wake_inner() -> None:
     _speak_streamed_if_unmuted(response_text)
 
 
-def _process_request(user_text: str) -> str:
-    """Build context, call LLM, update memory. Returns response text."""
+def _process_request(user_text: str, source: str = "voice") -> str:
+    """Build context, call LLM, update memory. Returns response text.
+
+    source: "voice" (wake pipeline / F2 keyboard) or "web" (WS chat).
+    """
+    # A new request always starts from a clean slate: an abort raised in a
+    # previous turn (Esc / stop command / barge-in / WS interrupt) must not
+    # poison this one. Mid-turn aborts are set *after* this line, so Esc
+    # during LLM streaming still works as before.
+    _abort.clear()
     _check_abort()
     _play_beep()
+    event_log.log("user", user_text, source)
     _broadcast({"type": "user", "text": user_text})
     _broadcast({"type": "status", "message": "思考中…"})
 
@@ -473,6 +506,7 @@ def _process_request(user_text: str) -> str:
 
     context.add("user", user_text)
     context.add("assistant", response_text)
+    event_log.log("assistant", response_text, source)
     memory.extract_and_store_facts(response_text, user_text)
 
     _broadcast({"type": "response", "text": response_text})
@@ -533,6 +567,7 @@ def main() -> None:
 
     webbrowser.open("http://localhost:7860")
 
+    event_log.log("system", "爱莉希雅 online", "startup")
     try:
         _speak_if_unmuted("早安，爱莉希雅已上线。")
     except Exception as e:

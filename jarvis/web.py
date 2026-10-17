@@ -178,6 +178,15 @@ async def api_toggle_mute():
     return JSONResponse({"muted": is_muted()})
 
 
+# ─── Event log API (T7) ───
+
+@app.get("/api/events")
+async def api_get_events(limit: int = 100):
+    """Recent operation records from sqlite — works with or without a live session."""
+    from jarvis.main import event_log
+    return JSONResponse({"events": event_log.recent(min(max(limit, 1), 500))})
+
+
 # ─── WebSocket ───
 
 @app.websocket("/ws")
@@ -205,7 +214,7 @@ async def websocket_endpoint(ws: WebSocket):
                 loop = asyncio.get_event_loop()
                 try:
                     response = await loop.run_in_executor(
-                        None, _process_request, user_text,
+                        None, _process_request, user_text, "web",
                     )
                     # The reply reaches clients via main._broadcast (registered
                     # event listener -> _broadcast_to_ws); no direct send needed.

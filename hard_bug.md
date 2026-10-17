@@ -285,3 +285,25 @@
 - 方案：Jarvis 启动 env 一律 `HF_ENDPOINT=https://hf-mirror.com`（带 scheme）。pwsh-10 以修正 env 重启。
 - 教训：HF_ENDPOINT 必须含完整 scheme；服务重启后首次语音交互应作为冒烟检查项。
 - 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-030 单次 abort 后全局 `_abort` 永久置位，污染其后所有 Web/语音请求（已解决）
+
+- 时间：2026-10-17-18:1x 发现，当日解决
+- 状态：已解决（`_process_request` 顶部加 `_abort.clear()`，Jarvis 重启生效；WS 冒烟 3 轮 PASS）
+- 影响：任意一次 abort（Esc / 停止指令 / 唤醒词 barge-in / WS interrupt）之后，所有后续 Web chat 与语音请求在 `_process_request` 入口 0 s 即回"已停止。"，零 DB 事件，仅重启进程可恢复。正是用户报告"语音唤醒后没法操作"的真正根因之一。
+- 现象：`_smoke_ws.py` 3/3 轮 0.0 s 返回"已停止。"，无 `source=web` 新事件；最小 WS 探针同现。进程日志 17:51:26 后无任何 wake/stop 事件。
+- 尝试/排除：① 日志无 barge-in / 语音停止指令（二者均有 print，可排除）；② `_smoke_ws.py` 只发 chat，不触发 web.py L207 停止分支；③ 后台进程键盘监听无控制台，kbhit 不可能触发；④ `_abort` 唯一 setter 是 `abort_all()`，web.py L209/L230（WS stop/interrupt）为**无日志静默调用点**——历史上任何一次 WS interrupt（含前端停止按钮）都会把 Event 永久置位。
+- 根因：`handle_wake()` 与 F2 输入路径在每轮前后 clear，但 **Web chat 路径从不清除**；`_process_request` L460 `_check_abort()` 对上一轮遗留的置位 Event 立即抛 `_Aborted` → web.py L223-224 回"已停止。"。abort 本是"一次性信号"，却被当作持久状态使用。
+- 方案：`jarvis/main.py` `_process_request` 顶部（`_check_abort()` 之前）加 `_abort.clear()`——每个新请求从干净状态开始；轮内 abort（LLM 流式期间 Esc）在该行之后置位，语义不受影响。与 `handle_wake`/F2 路径既有模式一致。
+- 关联需求：records/2026-10-17-17-16-41.md
+
+## HB-031 误唤醒 + 录音期 barge-in：`abort_all()` 误杀并发 Web 轮次（已解决）
+
+- 时间：2026-10-17-18:48 发现，当日解决
+- 状态：已解决（wake.py / main.py 三处修复；修复后 WS 冒烟 3/3 PASS）
+- 影响：修复前两次冒烟各有一轮 Web chat 在 LLM 流式中途被误 barge-in 打断回"已停止。"（Run A r2 / Run B r1）；另有一次 `oww.predict` MemoryError 直接崩溃整个进程（Run A 末）。
+- 现象：`_jarvis_run.log`：`Wake word detected!` → 紧接 `Stopped. (voice interrupt)` → `Recording... / Recording aborted`（0.3 s）→ 转录出垃圾文本（如 "You"）→ 垃圾轮；同一时间窗内的并发 WS chat 轮返回"已停止。"。
+- 根因：① 唤醒阈值 0.7 假阳率约 0.09，环境噪音易触发；② STT 录音期 wake loop 与 STT 共享同一麦克风，用户自己说话/环境音的得分一旦过线即进 BUSY 分支 `abort_all()`（全局 Event），既杀掉自己的录音，也误杀任何进行中的 Web 轮次；③ wake loop 内 `oww.predict` 无异常保护，MemoryError 时进程整体崩溃。
+- 方案：a) wake.py BUSY 分支先查 `is_recording()`——录音期不打断（触发来自同一麦克风），仅设 2 s 冷却；b) main.py 新增 `_stt_recording` 标志，`_handle_wake_inner` 在 `record_until_silence()` 前后置位/清除并暴露 `is_recording()`；c) wake.py IDLE 分支若 `is_speaking()`（TTS 正在播放）视为自身回声：`stop_speaking()` + 3 s 冷却，不启动管线；d) wake loop `oww.predict` 加 try/except 保护。
+- 验证：修复后 `_smoke_ws.py` 3/3 PASS（2026-10-17-18:55–18:56，GSV :9880 在线），无"已停止。"误杀；HB-030 的入口 clear 与本条的录音期保护互补（前者管跨轮污染，后者管并发误打断）。
+- 关联需求：records/2026-10-17-17-16-41.md

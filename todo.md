@@ -55,3 +55,7 @@
   - [ ] T6 网页 UI 改为爱莉希雅相关内容（**本轮不做**，仅记录；web.py/static/index.html 暂不动）
 - [ ] 2026-10-14-22-23-49 TTS 迁移到 SoulX-Podcast（→ records/2026-10-14-22-23-49.md；**本轮不做**，仅记录；用户不满 GPT-SoVITS 效果）
 - [x] 2026-10-15-21-05-48 新增 DSH Agent 预设 PTC-MY 与 创造模式-MY（→ records/2026-10-15-21-05-48.md；bundle `dsh-my-presets` 安装成功，两预设行 active）
+- [x] 2026-10-17-17-16-41 Web UI 操作记录 + SQLite 持久化 + 固定应答词 wav + start_all.bat（→ records/2026-10-17-17-16-41.md；先记入 design.md v1.0 再开工；**2026-10-17-18:5x WS 冒烟 3/3 PASS**）
+  - [x] T7 唤醒即记录 + 事件落 sqlite（`jarvis/data/events.db`，不依赖网页端）+ 网页端加载历史记录展示
+  - [x] T8 固定应答词：5 句备选 GSV 预合成 wav → `jarvis/data/ack/`，唤醒随机播放本地 wav（目录空则回退实时 TTS）
+  - [x] T9 `start_all.bat`：一键启动 GSV :9880 + Jarvis :7860（含 HF env；llama.cpp 用户自启不纳入）

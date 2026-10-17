@@ -28,6 +28,15 @@
 - **2026-10-16 21:0x v0.2 训练链完成、验收 FAIL → HB-027**：pwsh-144 全链约半小时（augment→train 72000 步→verify，远低于预估 3.5–4 h），80 条测试 clip 经 predict_clip 打分全 ≈1.000、全阈值 FAIL。根因 = ~1150 epoch 记忆化 + 训练/推理特征管线不一致（batch embed_clips vs streaming predict_clip）。修复执行中：① `_t2_stream_features_v02.py` 流式滑窗重算全部特征（**pwsh-152**，ETA 1–2.5 h，日志 `_t2_streamfeat_v02.log`）；② train_config `steps: 60000→2500`（总 3000 步 ≈7–8 epoch）；③ 重训 `--train_model` → verify `40 aili_xiya_v0.2`。**config.yaml 仍不指向新 ONNX**。
 - **2026-10-17 11:0x v0.2b FAIL 定因 + HB-028 + v0.3 执行中**：pwsh-154 流式特征重算完成（57600 行）→ pwsh-156 steps=2500 重训 → verify `40` **FAIL**（pos 0.946 vs negadv_te ≈0.92–0.95；`_t2_diag_v02b.py` 证明模型已学会类分离，negadv_te = v0.1 干净对抗句、v0.2 训练从未见过 → **数据侧缺口**）。另发现 **HB-028**：`_t2_stream_features_v02.py` 写 `<set>_features_<split>.npy`（24000 行），而 `_t2_train_cn.py` 读标准名 `positive/negative_features_train.npy`——目录里同名的 7:49/7:55 陈旧 2000 行损坏文件被训练静默消费，v0.2b ONNX 实际只学 4000 行 → 无效。已修复：4 个陈旧 npy 移入 `aili_xiya_v0.2/_stale_npy/`；v0.3 = v0.2 + 800 条干净对抗句（v0.1 池 [150:950]，与测试留出 [0:150] 不相交）→ negative_train 33600 行（新 800 条流式窗 9600 行，skipped=0）→ 重训 pwsh-8 完成（期间补 v0.3 目录旧命名 test npy，训练脚本 L1105/1106 需要）→ verify `400` **FAIL**（pos 0.785/0.901，negadv_te 0.504 为主要误报源：32% ≥0.6；无阈值同时满足 recall≥0.9 且 false≤0.1）→ v0.3b（+1050 对抗句，特征 46200）→ verify `400` **FAIL**：pos 0.844（recall@0.7=0.98）但全部负类均匀上移（negadv_te 0.649 / negx_te 0.403 / noise_te 0.333，fp@0.7=0.16）——同音色基线敏感度增强。**v0.3c 执行中**（2026-10-17-11:5x）：+500 条新 Elysia 句子强变换（negx2_tr）+450 噪声（noise2_tr）→ 特征 ~57600 → steps=3000 重训 → verify `400`。**config.yaml 仍不指向新 ONNX**。12:0x 发现会话间隙 GSV :9880 与 Jarvis :7860 再次掉线（首次合成即连拒，0 条落盘）→ GSV 重启（pwsh-20）、Jarvis 重启（pwsh-21，含 3 HF env）、v0.3c 数据续跑（pwsh-22，内置 :9880 就绪探测；首次探测误把 404 当未就绪，已修复为"任意 HTTP 应答即就绪"→ pwsh-28）。15:0x 会话间隙 ~2h：pwsh-27/28 被杀，落盘 neg_src 新句 **188/500**（可续传）→ GSV/Jarvis/数据再次重启（pwsh-2/3/4）。**v0.3c PASS**（15:5x）：数据 pwsh-28（500 新句合成 + 500 negx2_tr + 450 noise2_tr）→ 特征 **57600** 行（pwsh-5）→ steps=3000 重训 ONNX（pwsh-6）→ verify `400`（pwsh-7）**PASS @ 阈值 0.7：recall 0.94 / fp 0.09**；pos mean 0.807，neg 三集同步回落（mean 0.453）。`config.yaml wake_word.model` 已接入 `openWakeWord/output/aili_xiya_v0.3/aili_xiya_v0.3.onnx` + threshold 0.5→0.7，Jarvis 重启加载验证 OK（pwsh-9，期间发现并修复 **HB-029**：HF_ENDPOINT 缺 `https://` 前缀致 STT 加载失败 → pwsh-10 修正 env 重启）。**HB-027 已解决**。
 
+## 2026-10-17（Web UI 操作记录 + SQLite 持久化 + 固定应答词 wav + start_all.bat，records/2026-10-17-17-16-41.md）
+
+- 需求（3 项）：T7 事件记录 + SQLite 持久化 + 网页端历史展示 / T8 5 句固定应答词 GSV 预合成 wav 随机本地播放 / T9 start_all.bat 一键启动。按"先记入 design 再开工"要求建 design.md v1.0。
+- **T7 完成**：`jarvis/events.py` EventLog（`jarvis/data/events.db`，WAL）；main.py/web.py 埋点（wake/user/assistant/system，source=voice|web，唤醒即落库不依赖网页端）；`GET /api/events?limit=N`；index.html 加载拉历史 + WS 实时追加（聊天区 + Live 面板）。
+- **T8 完成**：`config.yaml` tts.ack_dir/ack_phrases；`_gen_ack_wavs.py`（gitignored）经 GSV :9880 合成 5 条 wav（各 ~2.0–2.6 s，24 kHz）→ `jarvis/data/ack/`；`tts.play_ack_wav()` 随机本地播放、目录空回退实时 TTS；唤醒路径不再走实时 SoVITS。
+- **T9 完成**：`start_all.bat`（chcp 65001 + 端口占用检查 + 两独立窗口：GSV `.venv-gsv` / Jarvis HF 三 env；llama.cpp 不纳入，用户自启）。
+- 冒烟排障：**HB-030**（`_abort` 跨轮污染 → `_process_request` 入口 clear）+ **HB-031**（误唤醒 + 录音期 barge-in 误杀并发 Web 轮次 → `is_recording()` 守卫 / TTS 自身回声守卫 / `oww.predict` 异常保护）。最终 `_smoke_ws.py` **3/3 PASS**（2026-10-17-18:55–18:56，GSV :9880 在线）：r1 自述 ✓ / r2 `50` ✓ / r3 有回复 ✓；DB `source=web` user +3 / assistant +3。
+- 遗留：T4 GitHub 操作仍待用户手动（need_user.md Q5，已确认延后）；T6 网页 UI 爱莉希雅化本轮不做（仅 todo）。
+
 ## Git 提交记录
 
 - `7d279a7`（2026-10-13-10:4x，main）`docs(AI): 补全 Jarvis 运行记录并归档 Q1（端到端 CHAT_OK）`。**已本地 commit，未 push。**
@@ -47,3 +56,4 @@
 - `07bd022`（2026-10-15-16:5x，main）`docs(AI): T2 train-branch HB-017..020 fixes, smoke PASS, production training launched`。**已本地 commit，未 push。**
 - `38b1d02`（2026-10-15-21:1x，main）`feat(AI): add DSH agent presets PTC-MY and 创造模式-MY via workspace bundle`。**已本地 commit，未 push。**
 - `a390837`（2026-10-17-15:5x，main）`feat(AI): v0.3c 唤醒词验收 PASS 并接入 config.yaml（recall 0.94 / fp 0.09 @ 阈值 0.7）`。**已本地 commit，未 push。**
+- `1072661`（2026-10-17-16:5x，main）`docs(AI): 勾选 T2 唤醒词完成（v0.3c PASS 已接入）；T4 用户确认延后记 todo`。**已本地 commit，未 push。**

@@ -1,21 +1,23 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-10-15-21-1x
+更新时间: 2026-10-17-18-5x
 
 ```
 JarvisAi/
 ├── .gitignore
-├── _chat_template.jinja
-├── config.yaml
-├── hard_bug.md
-├── install.bat
 ├── JARVIS_STATE.md
-├── need_user.md
-├── progress.md
 ├── PROJECT_SUMMARY.txt
 ├── README.md
+├── _chat_template.jinja
+├── config.yaml
+├── design.md
+├── hard_bug.md
+├── install.bat
+├── need_user.md
+├── progress.md
 ├── requirements.txt
 ├── start.bat
+├── start_all.bat
 ├── todo.md
 ├── tree.md
 ├── ai_buckup/
@@ -30,6 +32,7 @@ JarvisAi/
 ├── jarvis/
 │   ├── __init__.py
 │   ├── context.py
+│   ├── events.py
 │   ├── llm.py
 │   ├── main.py
 │   ├── memory.py
@@ -56,9 +59,12 @@ JarvisAi/
 │   ├── 2026-10-13-11-45.md
 │   ├── 2026-10-13-11-55.md
 │   ├── 2026-10-13-21-38-01.md
-│   └── 2026-10-14-22-23-49.md
+│   ├── 2026-10-14-22-23-49.md
+│   ├── 2026-10-15-21-05-48.md
+│   └── 2026-10-17-17-16-41.md
 └── tests/
     ├── __init__.py
+    ├── opinion.md
     ├── test_context.py
     ├── test_llm.py
     ├── test_memory.py

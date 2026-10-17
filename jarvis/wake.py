@@ -87,7 +87,15 @@ def listen_for_wake_word(callback) -> None:
                 time.sleep(0.05)
                 continue
 
-            predictions = oww.predict(pcm)
+            try:
+                predictions = oww.predict(pcm)
+            except Exception as e:
+                # Transient allocation failure (e.g. MemoryError under RAM
+                # pressure) must not kill the whole process — back off and
+                # keep listening.
+                print(f"[Wake] predict failed ({e}); continuing")
+                time.sleep(0.5)
+                continue
             score = predictions.get(_model_key, 0)
 
             if score < cfg["threshold"]:
@@ -101,12 +109,26 @@ def listen_for_wake_word(callback) -> None:
                 continue
 
             if _busy.locked():
-                # BUSY: wake word = stop everything
-                _ignore_until[0] = now + 3.0
-                from jarvis.main import abort_all
-                abort_all()
-                print("[爱莉希雅] Stopped. (voice interrupt)")
+                # BUSY: wake word = stop everything — unless the pipeline is
+                # mid-recording: then the trigger comes from the same mic we
+                # are recording (the user's own speech / ambient noise), not
+                # a new turn, so aborting would kill our own capture and any
+                # in-flight web turn.
+                from jarvis.main import abort_all, is_recording
+                if is_recording():
+                    _ignore_until[0] = now + 2.0
+                else:
+                    _ignore_until[0] = now + 3.0
+                    abort_all()
+                    print("[爱莉希雅] Stopped. (voice interrupt)")
             else:
+                from jarvis.main import is_speaking, stop_speaking
+                if is_speaking():
+                    # TTS is playing — her own voice echoing into the mic is
+                    # not a user. Stop the speech and skip the pipeline.
+                    stop_speaking()
+                    _ignore_until[0] = now + 3.0
+                    continue
                 # IDLE: normal wake — 2s cooldown to skip "Yes?" echo
                 _ignore_until[0] = now + 2.0
 

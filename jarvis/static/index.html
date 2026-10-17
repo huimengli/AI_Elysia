@@ -682,7 +682,7 @@
       </div>
       <div class="tab-panel" id="tab-live">
         <div class="live-feed" id="liveFeed"></div>
-        <div class="empty-hint" id="liveEmpty">LIVE FEED STANDBY</div>
+        <div class="empty-hint" id="liveEmpty">RECORDS STANDBY</div>
       </div>
       <div class="tab-panel" id="tab-actions">
         <div class="section-label">Quick Commands</div>
@@ -894,7 +894,7 @@ function addActivityStep() {
 function connect() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   ws = new WebSocket(`${proto}://${location.host}/ws`);
-  ws.onopen = () => { statusDot.className = 'status-dot online'; statusText.textContent = 'ONLINE'; setReactorState('online'); loadProviders(); loadMuteState(); };
+  ws.onopen = () => { statusDot.className = 'status-dot online'; statusText.textContent = 'ONLINE'; setReactorState('online'); loadProviders(); loadMuteState(); loadHistory(); };
   ws.onclose = () => { statusDot.className = 'status-dot'; statusText.textContent = 'OFFLINE'; setReactorState('offline'); hideActivity(); setTimeout(connect, 3000); };
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
@@ -917,6 +917,7 @@ function connect() {
         addLiveFeed('user', msg.text);
         break;
       }
+      case 'wake': addLiveFeed('system', '[WAKE] ' + (msg.text || '')); break;
       case 'tool': setStatusText('TOOL: ' + msg.name.toUpperCase()); showActivity('EXECUTING: ' + msg.name); addActivityStep(); addToolCall(msg.name, msg.args); addLiveFeed('tool', '[Tool: ' + msg.name + ']'); break;
       case 'tool_result': updateToolResult(msg.name, msg.result); break;
       case 'response': setThinking(false); hideActivity(); setReactorState('speaking'); setStatusText('SPEAKING'); addMsg('assistant', msg.text); addLiveFeed('assistant', msg.text); break;
@@ -979,6 +980,22 @@ function addLiveFeed(type, text) {
   div.textContent = text.length > 200 ? text.slice(0, 200) + '...' : text;
   liveFeed.appendChild(div); liveFeed.scrollTop = liveFeed.scrollHeight;
   while (liveFeed.children.length > 101) liveFeed.removeChild(liveFeed.children[1]);
+}
+
+let _historyLoaded = false;
+async function loadHistory() {
+  if (_historyLoaded) return;
+  _historyLoaded = true;
+  try {
+    const r = await fetch('/api/events?limit=100');
+    const d = await r.json();
+    for (const ev of d.events || []) {
+      const time = (ev.ts || '').slice(5, 16);
+      if (ev.kind === 'user') addMsg('user', ev.text, ev.source || 'voice');
+      else if (ev.kind === 'assistant') addMsg('assistant', ev.text, ev.source || 'voice');
+      else addLiveFeed('system', '[' + time + '] ' + (ev.text || ev.kind));
+    }
+  } catch (e) {}
 }
 
 function esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }

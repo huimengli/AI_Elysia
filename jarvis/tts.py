@@ -1,5 +1,6 @@
 from pathlib import Path
 import io
+import random
 import re
 import urllib.parse
 import urllib.request
@@ -140,6 +141,45 @@ def _wait_or_interrupt() -> bool:
             return True
         _interrupt.wait(0.05)  # 50ms poll
     return _interrupt.is_set()
+
+
+def _resolve_ack_dir() -> Path:
+    """tts.ack_dir from config, resolved against the repo root."""
+    raw = _tts_cfg().get("ack_dir", "jarvis/data/ack")
+    p = Path(raw)
+    return p if p.is_absolute() else (_CONFIG_PATH.parent / p)
+
+
+def play_ack_wav() -> None:
+    """T8: play a pre-synthesized wake-ack wav picked at random from tts.ack_dir.
+
+    Local file playback — no live TTS round-trip, so the "I'm listening" ack is
+    instant. Falls back to live synthesis when the directory is missing/empty.
+    Interruptible via stop_speaking().
+    """
+    ack_dir = _resolve_ack_dir()
+    wavs = sorted(ack_dir.glob("*.wav")) if ack_dir.is_dir() else []
+    if not wavs:
+        print("[TTS] No pre-generated ack wavs — falling back to live TTS")
+        speak("嗯？我在听。")
+        return
+    pick = random.choice(wavs)
+    with wave.open(str(pick), "rb") as w:
+        rate = w.getframerate()
+        pcm = w.readframes(w.getnframes())
+    if not pcm:
+        speak("嗯？我在听。")
+        return
+    _interrupt.clear()
+    audio = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32767
+    _speaking.set()
+    try:
+        sd.play(audio, samplerate=rate)
+        _wait_or_interrupt()
+    finally:
+        sd.stop()
+        _speaking.clear()
+        _interrupt.clear()
 
 
 def speak(text: str) -> None:
