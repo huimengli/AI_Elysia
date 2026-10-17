@@ -24,14 +24,14 @@
 
 ## 语音与模型权重来源
 
-**所有权重均不包含在本仓库内**（`.gitignore` 排除）。首次启动前请确认「用户提供 / 自训练」类型的文件已就位到对应路径；「自动下载」类型会在首次运行时经 HF 镜像自动拉取。
+**除唤醒词模型（自训练，随本仓库提供）外，其余权重均不包含在本仓库内**（`.gitignore` 排除）。首次启动前请确认「用户提供」类型的文件已就位到对应路径；「自动下载」类型会在首次运行时经 HF 镜像自动拉取。
 
 | 权重 | 类型 | 来源说明 | 位置 |
 | --- | --- | --- | --- |
 | TTS 音色（SoVITS） | 用户提供 | `[GPT2.0] Elysia` 模型包：`Elysia_e16_s8720.pth` / `Elysia_e20_s10900.pth` / `Elysia_e24_s13080.pth` | `GPT-SoVITS-main/SoVITS_weights_v2/` |
 | TTS 音色（GPT） | 用户提供 | 同模型包：`Elysia-e5/e10/e15/e20.ckpt` | `GPT-SoVITS-main/GPT_weights_v2/` |
 | 参考音频 | 用户提供 | `【感动】欸嘿，大家笑一笑，好吗？`（见 `config.yaml` → `tts.gptsovits.ref_audio_path`） | `F:\BaiduNetdiskDownload\爱莉希雅\【GPT-SoVITS 2.0】爱莉希雅\参考音频\` |
-| 唤醒词模型 | 自训练 | openWakeWord v0.3（`aili_xiya_v0.3.onnx`，recall 0.94 / 误触 0.09 @ 0.7） | `openWakeWord/output/aili_xiya_v0.3/` |
+| 唤醒词模型 | 自训练（已入库） | openWakeWord v0.3（`aili_xiya_v0.3.onnx`，recall 0.94 / 误触 0.09 @ 0.7；仅该 onnx 入库，训练 wav 等仍被忽略） | `openWakeWord/output/aili_xiya_v0.3/`（随仓库提供） |
 | LLM 权重 | 用户提供 | 魔搭社区 `Qwen3.8-27B` GGUF 量化（见 `config.yaml` → `llm.providers.llamacpp.model`） | `F:\魔搭社区\Qwen3.8-27B-Q4_K_M-GGUF\` |
 | STT 模型 | 自动下载 | faster-whisper `small`（int8，首次运行经 HF 镜像下载） | `.hf-cache/` |
 

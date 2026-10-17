@@ -60,3 +60,4 @@
   - [x] T8 固定应答词：5 句备选 GSV 预合成 wav → `jarvis/data/ack/`，唤醒随机播放本地 wav（目录空则回退实时 TTS）
   - [x] T9 `start_all.bat`：一键启动 GSV :9880 + Jarvis :7860（含 HF env；llama.cpp 用户自启不纳入）
 - [ ] 2026-10-17-19-11-07 README 中文化（删 Coffe helps）+ fork/权重来源(位置+类型)/自用声明 + 仓库更名 AI_Elysia + LICENSE + push（→ records/2026-10-17-19-11-07.md；用户已允许本次 push）
+- [ ] 2026-10-17-19-52-00 唤醒词模型 onnx v0.3 入库（自训练，用户批准推送）(→ records/2026-10-17-19-52-00.md)

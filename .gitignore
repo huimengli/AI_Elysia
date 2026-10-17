@@ -10,6 +10,11 @@ dist/
 GPT-SoVITS-main/
 openWakeWord/*
 !openWakeWord/generate_samples.py
+!openWakeWord/output/
+openWakeWord/output/*
+!openWakeWord/output/aili_xiya_v0.3/
+openWakeWord/output/aili_xiya_v0.3/*
+!openWakeWord/output/aili_xiya_v0.3/aili_xiya_v0.3.onnx
 _*.py
 _wheels/
 _*.txt

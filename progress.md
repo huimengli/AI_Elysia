@@ -43,7 +43,8 @@
 - **README.md 全文重写为中文**（152 行）：无 buymeacoffee；fork 说明（上游 PanPenek/jarvis MIT + 本仓库改动清单）；权重表（类型：用户提供/自训练/自动下载，含位置与 config.yaml 指引，明确不入库）；自用声明；快速开始（install.bat / start_all.bat / llama.cpp 用户自启）；架构、事件日志、配置说明、故障排查、技术栈、MIT 许可证小节。
 - **LICENSE 新增**（MIT，copyright huimengli——与上游一致、满足 fork 保留许可条款）。
 - tree.md 重建（LICENSE + records/2026-10-17-19-11-07.md）。
-- 待执行：git remote set-url origin → https://github.com/huimengli/AI_Elysia（用户本次批准）；push（本机 git 无 GitHub 凭据则受阻 → need_user.md）。
+- 19:4x remote 已改指 AI_Elysia；push 失败（SEC_E_NO_CREDENTIALS，本机无 GitHub 凭据）→ need_user.md Q6。台账补记 commit `251f7b0`、Q6 记录 commit `193e8cd`。
+- 19:5x（追加需求 records/2026-10-17-19-52-00.md）：用户确认唤醒词 onnx v0.3 为自训练并批准入库 → `.gitignore` 解除仅该 onnx 的忽略（训练 wav 等仍忽略），tree/README 权重表同步；push 同受 Q6 限制。
 
 ## Git 提交记录
 

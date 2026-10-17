@@ -54,7 +54,10 @@ JarvisAi/
 │       ├── system.py
 │       └── web_search.py
 ├── openWakeWord/
-│   └── generate_samples.py
+│   ├── generate_samples.py
+│   └── output/
+│       └── aili_xiya_v0.3/
+│           └── aili_xiya_v0.3.onnx
 ├── records/
 │   ├── 2026-10-12-12-28-30.md
 │   ├── 2026-10-13-11-45.md
