@@ -43,10 +43,14 @@
     - [x] 中文负样本方案：官方 `generate_adversarial_texts` 仅英文（CMU 词典，CJK 崩溃）→ `_t2_train_cn.py`（train.py 副本）+ `cn_generate_adversarial_texts`（同音字替换/部分短语/重叠音节真词池），30 条样例测试通过
     - [x] train_config.yaml 校验完整（rir/10 + background/noise 24 + speech 30 就位；UTF-8 读取修复）
     - [x] v0.1 数据合成完成（2000/400/2000/400 = 4800 条）——三次训练验收全 FAIL（HB-021/022/023：同音色捷径）
-    - [ ] **v0.2 数据重建中**（HB-023/HB-024）：`_t2_synth_neg.py` GSV 合成 1700 条不含短语新句子（pwsh-10）→ `_t2_transform_v02.py` 强变换 2700 clip + 噪声/静音（pwsh-13，单进程顺序；粉噪改 FFT 基 HB-024）；目标 2000/400/2000/400
+    - [x] **v0.2 数据重建完成**（2026-10-16-19:3x，HB-023/024/025）：neg_src 1700/1700 合成齐 + 强变换消费齐 → **2000/400/2000/400 = 4800 条**（pwsh-63/pwsh-13 均 exit 0）
     - [x] 负样本准备（24 合成噪声 + 10 RIR + 30 GSV 语音句 + val_fp.npy 已生成）
-    - [ ] CPU 后台训练 → 产出 .onnx
-    - [ ] 接入：config.yaml `wake_word.model` 指向新模型，加载验证 OWW_OK
+    - [x] v0.2 训练链 pwsh-144 完成（2026-10-16 20:0x→21:0x，全链约半小时）：ONNX 已产出但验收 FAIL（80 clip 全 ≈1.000）→ **HB-027**
+    - [x] v0.2b：流式特征重算（pwsh-154，57600 行）+ steps=2500 重训（pwsh-156）完成，但 verify `40` FAIL（negadv_te 干净对抗句 ≈0.94 ≈ pos；诊断证明模型已学会类分离 → **数据侧缺口**，HB-027/HB-028）
+    - [x] v0.3：negative_train +800 条干净对抗句 → 特征 33600 行 → 重训（pwsh-8）→ verify `400` **FAIL**（pos 0.785 / negadv_te 0.504，两侧边距薄；HB-027）
+    - [x] v0.3b：+1050 对抗句 → 特征 46200 → 重训 → verify `400` **FAIL**（pos 0.844/recall@0.7=0.98，但负类均匀上移，fp@0.7=0.16；HB-027）
+    - [x] **v0.3c 数据侧**（2026-10-17-15:5x PASS）：+500 条新 Elysia 句子强变换（negx2_tr）+450 噪声（noise2_tr）→ 特征 **57600** → steps=3000 重训 → verify `400` **PASS @ 阈值 0.7：recall 0.94 / fp 0.09**（pos mean 0.807；neg 三集回落 mean 0.453；HB-027 已解决）
+    - [x] 接入：config.yaml `wake_word.model` → `openWakeWord/output/aili_xiya_v0.3/aili_xiya_v0.3.onnx` + threshold 0.7，Jarvis 重启加载（pwsh-9）
   - [ ] T4 GitHub 仓库私有化/描述改"自用"——AGENTS 禁止远程写入，需用户手动操作（已提供步骤；need_user.md Q5）
   - [ ] T6 网页 UI 改为爱莉希雅相关内容（**本轮不做**，仅记录；web.py/static/index.html 暂不动）
 - [ ] 2026-10-14-22-23-49 TTS 迁移到 SoulX-Podcast（→ records/2026-10-14-22-23-49.md；**本轮不做**，仅记录；用户不满 GPT-SoVITS 效果）

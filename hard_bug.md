@@ -215,3 +215,73 @@
 - 根因：经典 Kellet 粉噪 IIR 滤波器极点半径 |z|≈1.0074，长信号指数增长超过 float64 上限（~1e308）→ 溢出 inf → 下游 rms/peak-norm NaN → int16 cast 损坏。
 - 方案：`_pink_noise` 改 FFT 基 1/f 谱整形（rfft × 1/√f × irfft），任意长度稳定；sanity 48k 样本全有限、RMS=0.5。b/a 系数弃用。
 - 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-025 `make_texts(1700)` 死循环：句池 1075 < 1700，合成作业静默空转（已解决）
+- 时间：2026-10-16 17:0x 发现，17:5x 解决
+- 状态：已解决（列表 10→20 项扩容 + 确定性全池构建，池 3935 ≥ 1700；pwsh-63 重启后 ~4 s/clip 正常写盘）
+- 影响：`_t2_synth_neg.py` 多个作业（pwsh-43/49/50/52/61）启动打印 "GSV ready" 后静默、worker python 满核空转、`neg_src` 零文件；GSV 服务器与逐 clip 管线本身健康（前台实测 5.7–14 s/clip）。
+- 现象：后台作业日志仅一行 ready；neg_src >5 min 0 文件；Get-Process 显示 worker CPU 时间持续攀升；_gsv.log 无对应新 /tts 请求。
+- 尝试：排除 GSV 排队（前台新探针 5.7 s）、文件写权限（transform 作业同目录正常写入）、脚本后处理代码（前台复刻全管线均快）→ 定位到循环前 `make_texts`。
+- 根因：旧版 `make_texts` 拒绝采样 while 循环；唯一句池 = 9×双槽模板×100 + 16×单槽模板×10 + 15 固定句 = 1075 < 1700，池耗尽后永远凑不齐 → 死循环。且上一会话的修复 edit 因 run_code 程序 TS 解析失败**从未落盘**（磁盘文件仍是旧版），导致多次重启全部照转。
+- 方案：① PEOPLE/PLACES/FOODS/TIMES 各 10→20 项；② `make_texts` 改确定性全池构建（按占位符键 itertools.product、去重 + assert 池≥n + shuffle + 切片）——每次运行同 1700 句，保持按文件名断点续传；③ 杀光空转作业后重启（pwsh-63），~4 s/clip，1700 条 ETA ≈ 2 h。
+- 教训：① "后台作业静默 + 满核空转"先查脚本 I/O 前的循环是否死循环（拒绝采样必须池≥目标数，优先确定性构建）；② edit 失败后必须重读文件确认落盘再重启长作业；③ `import module; f(n)` 探针本身会卡在同一 bug 上，需结合进程状态交叉定位。
+- 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-026 v0.2 train_config 引用 val_fp.npy 但未生成，训练秒挂（已解决）
+- 时间：2026-10-16 19:58 发现，20:0x 解决
+- 状态：已解决（`_t2_make_val_fp_v02.py` 按 v0.1 同配方为 v0.2 目录补生成 val_fp.npy；pwsh-142 exit 0）
+- 影响：pwsh-136 训练链 augment PASS 后 train 阶段 `FileNotFoundError: ...\aili_xiya_v0.2\val_fp.npy`（_t2_train_cn.py L1097）秒挂，verify 未执行。
+- 现象：`[chain-v02] train FAILED (exit 1)`；四特征 .npy 均已落盘，仅 val_fp 缺失。
+- 根因：v0.1 的 `val_fp.npy`（5 分钟背景混音 AudioFeatures）由 `_make_background.py` 一次性写入 `output/aili_xiya_v0.1/`；v0.2 train_config.yaml 把 `false_positive_validation_data_path` 改指 v0.2 目录，但该文件从未为 v0.2 生成。
+- 方案：新增 `_t2_make_val_fp_v02.py`（同 source dirs、同 seed=3、同 5 min 配方），输出 `openWakeWord/output/aili_xiya_v0.2/val_fp.npy`；随后重启 `_wheels\_t2_train_verify_v02.ps1`（augment 重跑 ~10 min 可接受）。
+- 教训：换 model_name/输出目录时，config 引用的**全部**产物文件（特征 npy、val_fp、checkpoint 路径）都要在新目录就位或重生成；train_config 字段逐一核对后再启长训练。
+- 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-027 v0.2 verify FAIL：~1150 epoch 记忆化 + 训练/推理特征管线不一致（修复中）
+- 时间：2026-10-16 21:0x 发现，修复已启动
+- 状态：根因已定位；修复执行中——流式滑窗重算全部特征（pwsh-152），随后 steps=2500 重训 + verify
+- 影响：`_t2_verify_onnx.py 40 aili_xiya_v0.2`（pwsh-144）全阈值 FAIL——80 条测试 clip 经 Model.predict_clip 打分全部 ≈1.000；v0.2 ONNX 不可用，config.yaml wake_word.model 未改动。
+- 现象：pos/neg max_score 在 0.4–0.8 全阈值均 ≈1.000；训练"正常完成"（60000+6000+6000 步、ONNX 导出 OK）。
+- 尝试/排除：
+  1. `_probe_rows.py`：已存特征 npy 行过 ONNX——train 行 pos→1.0000 / neg→~8e-6（模型背下了训练行），test 行混沌（pos_test 行100→0.0；neg_test 行0→0.978，且用 BATCH 特征喂入同样高）；
+  2. `_t2_exp_stream_vs_batch.py`：batch vs streaming 特征对照——saved neg row0=0.9778615（BATCH 特征下仍高）→ **记忆化为主因**，流式/批量失配为次因；
+  3. auto_train 序列分析：3 段 = steps + steps/10 + steps/10 = 72k 有效步 × batch 64 ≈ 4.6M 样本 / 4000 行 ≈ **~1150 epoch**；
+  4. 部署管线确认：`Model(wakeword_models=[onnx])` → tflite 缺省回退 onnx → `AudioFeatures(inference_framework="onnx", ncpu=1)`；`predict_clip` 两端各补 1 s 零、1280 样本/块流式、每块取最近 24 帧窗打分、初始化前 5 帧强制 0——训练特征（batch `embed_clips`，整 clip melspec）与其分布无交集。
+- 根因：① ~1150 epoch 过拟合背下全部 4000 行训练特征（train recall→1、train neg→~0），OOD 流式输入 logit 饱和 ≈1.0；② 次因：训练特征由 batch `embed_clips` 计算 ≠ 推理侧 `predict_clip` 流式特征，模型从没见过部署形态的输入。
+- 方案（修复）：
+  1. `_t2_stream_features_v02.py`：按部署同管线重算四个特征 npy——`AudioFeatures(inference_framework="onnx", ncpu=1)`，逐 clip 前后各 1 s 零、1280 样本/块流式、warmup 后滑动 24 帧窗；pos clip 仅保留与有声段重叠 ≥12/24 帧的窗（80 ms RMS 门限、±2 帧裕量；无有声段时仅留中央窗）；neg clip 全部窗；val_fp.npy 用同 seed-3 配方流式重生成（保持 120 帧上限）。预计总行数 ~26k → epoch ≈ 400 步（batch 64）。
+  2. `train_config.yaml` `steps: 60000→2500`（总 3000 步 ≈7–8 epoch）打破记忆化；seq1 warmup/hold/cosine 结构不变。
+  3. 重训仅 `--train_model`（直接消费替换后的 npy，不重 augment），随后 `_t2_verify_onnx.py 40 aili_xiya_v0.2`。
+- 若 verify 仍 FAIL（尤其 150 条 negadv_te_* 干净对抗探针）→ v0.3 数据侧方案（HB-023 音色捷径），不做 lr 调参；边界情况则试 steps {4000, 6000} 网格，每候选存 ONNX 副本。
+- 教训：① 唤醒词训练预算必须按 epoch 标定（rows / (batch × 总步数)）——为 ~1k 行特征写的 steps 在特征文件涨到 ~26k 行后会变成上千 epoch；② 训练/推理特征管线必须位级一致（同 padding、同流式 AudioFeatures），严禁 batch `embed_clips` 训练特征对 streaming 部署打分。
+- 关联需求：records/2026-10-13-21-38-01.md
+- 状态更新（2026-10-16-21:3x）：首次流式重算 pwsh-152 暴露第一版脚本的帧率映射 bug——假设 1 特征帧/1280 样本块，实测本 venv AudioFeatures ≈ 1 帧/~730 样本（~22 Hz，24 帧窗 ≈ 330 ms）。后果：pos 有声段被映射到 n_start=53 之前 → 全部跳过（pos_train 仅产出 2 行）；neg 每 clip ~680 个滑动窗（总计 ~2.7M 行，不可行）。已杀 pwsh-152。窗口选择改写为 chunk-boundary last-24 帧窗（与 `Model.predict` 的 ==1280 分支逐位一致）+ 每 clip 实测 samples/frame 映射有声段 + 每 clip ≤12 窗等距截取；5+5 clip 冒烟 PASS（pos/neg 均 12 窗/clip，M≈84–120 帧，spf≈660–915）。以 pwsh-154 重启，预计总行数 ≈57.6k → batch 64 下 epoch ≈900 步 → 3000 步 ≈3.3 epoch。
+
+- 状态更新（2026-10-16-22:4x）：pwsh-154 流式特征重算完成（四集 57600 行 + val_fp，skipped=0）；pwsh-156 以 steps=2500 重训导出新 ONNX；`_t2_verify_onnx.py 40 aili_xiya_v0.2`（pwsh-159）**仍 FAIL**——pos mean/max 0.946/0.955，neg(mean) 0.920/0.955，阈值 0.4–0.8 全不满足（recall≥0.9 且 false≤0.1）。
+- 诊断（`_t2_diag_v02b.py`，pwsh-162）：onnxruntime 直接打分——neg_train 行 0.04–0.09、静音窗 0.03、negx_te 0.26–0.71（模型**已学会类分离**），但 **negadv_te（150 条干净对抗句）全部 ≈0.93–0.95 ≈ pos**。`_t2_transform_v02.py` L178-184 证实：negadv_te = v0.1 negative_train 前 150 条**干净未变换**副本，v0.2 训练负例（1550 negx 强变换 + 450 噪声）零条含短语 → 模型从未见过干净对抗分布。结论：**数据侧缺口，非 lr/步数问题**。
+- v0.3 方案（执行中）：v0.1 负样本池共 2000 条干净对抗句；取 [150:950] 共 800 条（与测试留出 [0:150] 不相交）加入 negative_train（2000→2800 clip，33600 行），其余集合不变；特征复用 pwsh-154 产物 + 仅新 800 条重算流式窗（9600 行）；steps=2500（总 3000 ≈2.9 epoch）重训，`_t2_verify_onnx.py 400` 全测试集验收。
+- 状态（2026-10-17-11:2x）：pwsh-8 训练完成（ONNX 导出成功；期间发现训练脚本 L1105/1106 读旧命名 `positive/negative_features_test.npy`，v0.3 目录已用正确 4800 行文件补齐）。`_t2_verify_onnx.py 400` **FAIL**——pos mean/max 0.785/0.901（51 条 <0.7），negadv_te mean 0.504（32% ≥0.6，max 0.837）= 主要误报源；negx_te 0.210、noise_te 0.139 均健康。无阈值满足 recall≥0.9 且 false≤0.1（0.6: 0.95/0.13；0.7: 0.87/0.05）。模型已学会干净对抗分布（negadv 0.94→0.50），但正负两侧边距均偏薄。**v0.3b 方案**：v0.1 池剩余 [950:2000] 共 1050 条干净对抗句加入 negative_train（行 33600→46200）→ steps=3000（≈2.7 epoch）重训 → verify `400`。不做 lr 调参。
+- v0.3b 结果（2026-10-17-11:4x）：**FAIL**。pos 0.785→**0.844**（recall@0.7 = 0.98，正侧显著改善），但全部负类均匀上移：negadv_te 0.504→0.649、negx_te 0.210→0.403、noise_te 0.139→0.333；fp@0.7 = 0.16（超 0.1）。诊断：neg_src 全部为 GSV-Elysia 同音色（`_t2_synth_neg.py` L1-7 明示"唯一差异是内容"），加同音色数据使模型对 Elysia 语音的**基线敏感度整体增强**，而非细化音素边界 → 阈值 0.7 recall 0.98 / fp 0.16，仍无合格阈值（0.8: 0.88/0.04）。
+- **v0.3c 方案**：抑制同音色基线响应——+500 条新 Elysia 句子（neg_src 池 [1700:2200]，确定性模板扩展，与既有 1700 条不相交）强变换 → `negx2_tr_*`；+450 条噪声/静音（seed 71000+，不与 70000/80000 段冲突）→ `noise2_tr_*`；特征 46200→~57600 → steps=3000（≈2.36 epoch）重训 → verify `400`。保留 v0.3b 的 negadv 1850 条（其 phonetic 对比是 pos recall 提升的来源）。
+- 状态（2026-10-17-15:5x）：**v0.3c PASS**。数据 pwsh-28（500 新句合成，含两次会话间隙续传）→ 特征 46200→**57600** 行（pwsh-5）→ steps=3000 重训 ONNX 导出（pwsh-6）→ `_t2_verify_onnx.py 400`（pwsh-7）**PASS @ threshold 0.7：recall 0.94 / fp 0.09**（0.6: 0.97/0.20；0.8: 0.67/0.01）。pos mean 0.807/max 0.888（v0.3b 0.844 → 微降可接受）；neg 全体回落（mean 0.453 / max 0.833，negadv_te、negx_te、noise_te 三集同步下降）——新内容 + 噪声抑制同音色基线，且未侵蚀 negadv 带来的 pos-recall 收益。v0.3c ONNX 已接入 `config.yaml wake_word.model`（threshold 0.5→0.7），Jarvis 重启生效。**HB-027 已解决**。
+
+## HB-028 特征 npy 命名不一致：v0.2b 训练静默消费 2000 行陈旧损坏文件（已修复）
+- 时间：2026-10-17-11:0x 发现（v0.3 staging 时）
+- 状态：已修复——v0.2 目录 4 个陈旧文件移入 `aili_xiya_v0.2/_stale_npy/`；v0.3 特征按正确源重建
+- 影响：pwsh-156“v0.2b”重训实际只加载了 2000+2000 行陈旧特征（非 24000+24000），等效 ~48 epoch 记忆化训练 → 该 ONNX 无效（与 HB-027 v0.2b FAIL 诊断叠加）。
+- 现象：`_t2_stream_features_v02.py`（pwsh-154）写入 `<set>_features_<split>.npy`（如 `positive_train_features_train.npy`，24000 行，10:00/10:13），而 `_t2_train_cn.py` L1049-1050 与 train_config `feature_data_files` 引用 openWakeWord 标准名 `positive_features_train.npy` / `negative_features_train.npy`——目录里恰好存在同名**旧文件**（7:49/7:55，仅 2000 行，系更早被杀运行的部分写入），训练静默消费了它们。
+- 根因：两套命名并存且旧文件未清理；训练脚本对特征文件“存在即信任”，无行数/时间戳校验。
+- 方案：① v0.2 目录 4 个陈旧 npy（positive/negative × train/test）移入 `_stale_npy/` 隔离；② v0.3 `positive_features_train.npy` ← `positive_train_features_train.npy`（24000 行），`negative_features_train.npy` = 24000 + 9600 新 negadv 行（33600）；测试集 npy 两命名同形不受影响。
+- 教训：换特征文件后、启长训练前，必须核对**训练实际加载的文件名与行数**（print np.load(...).shape 或读 _t2_train_cn.py 的加载日志），不能只看“目录里有 npy”。
+- 关联需求：records/2026-10-13-21-38-01.md
+
+## HB-029 STT 模型加载失败：HF_ENDPOINT 缺协议前缀（已解决）
+- 时间：2026-10-17-15:5x 发现，当日解决
+- 状态：已解决（启动环境修正，非代码缺陷）
+- 影响：Jarvis 重启（pwsh-9）后首次语音转录失败——`WhisperModel("small")` cuda/cpu 两次加载均抛 `Request URL is missing an 'http://' or 'https://' protocol.`，e2e 语音链中断。
+- 现象：模型已完整缓存于 `.hf-cache/hub/models--Systran--faster-whisper-small`（snapshot 536b0662…），加载仍触发在线 etag 检查并失败；日志 `[STT] cuda failed to load (...) → CPU transcription also failed`。
+- 根因：启动 env `HF_ENDPOINT=hf-mirror.com` **无 `https://` 前缀**——huggingface_hub 以该值拼接请求 URL，requests 对无 scheme URL 直接抛错。此前会话 STT 正常系模型加载发生在网络/缓存状态不同的时点（etag 命中本地缓存未触发该代码路径）。
+- 验证：独立进程 `HF_ENDPOINT=https://hf-mirror.com` + 同 HF_HOME → `WHISPER_LOAD_OK`（exit 0）；旧值必现失败。
+- 方案：Jarvis 启动 env 一律 `HF_ENDPOINT=https://hf-mirror.com`（带 scheme）。pwsh-10 以修正 env 重启。
+- 教训：HF_ENDPOINT 必须含完整 scheme；服务重启后首次语音交互应作为冒烟检查项。
+- 关联需求：records/2026-10-13-21-38-01.md
