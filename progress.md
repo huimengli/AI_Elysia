@@ -68,3 +68,6 @@
 - `1072661`（2026-10-17-16:5x，main）`docs(AI): 勾选 T2 唤醒词完成（v0.3c PASS 已接入）；T4 用户确认延后记 todo`。**已本地 commit，未 push。**
 - `2222230`（2026-10-17-19:0x，main）`feat(AI): Web UI 事件记录 + SQLite 持久化 + 固定应答词 wav + start_all.bat`。**已本地 commit，未 push。**
 - `999cc32`（2026-10-17-19:4x，main）`docs(AI): README 中文化（fork 说明 + 权重来源/类型 + 自用声明）+ MIT LICENSE`。**已本地 commit，未 push。**
+- `251f7b0`（2026-10-17-19:4x，main）`docs(AI): 台账补记 999cc32（README 中文化 + AI_Elysia 命名 + LICENSE）`。**已本地 commit，未 push。**
+- `193e8cd`（2026-10-17-19:5x，main）`docs(AI): push 受阻（本机无 GitHub 凭据 SEC_E_NO_CREDENTIALS）记 need_user.md Q6；records 实施记录回填`。**已本地 commit，未 push。**
+- `451226f`（2026-10-17-19:5x，main）`feat(AI): 唤醒词模型 onnx v0.3 入库（自训练，13 KB）`。**已本地 commit，未 push。**
