@@ -1,11 +1,12 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-10-17-18-5x
+更新时间: 2026-10-17-19-3x
 
 ```
 JarvisAi/
 ├── .gitignore
 ├── JARVIS_STATE.md
+├── LICENSE
 ├── PROJECT_SUMMARY.txt
 ├── README.md
 ├── _chat_template.jinja
@@ -61,7 +62,8 @@ JarvisAi/
 │   ├── 2026-10-13-21-38-01.md
 │   ├── 2026-10-14-22-23-49.md
 │   ├── 2026-10-15-21-05-48.md
-│   └── 2026-10-17-17-16-41.md
+│   ├── 2026-10-17-17-16-41.md
+│   └── 2026-10-17-19-11-07.md
 └── tests/
     ├── __init__.py
     ├── opinion.md

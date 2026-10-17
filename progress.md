@@ -37,6 +37,14 @@
 - 冒烟排障：**HB-030**（`_abort` 跨轮污染 → `_process_request` 入口 clear）+ **HB-031**（误唤醒 + 录音期 barge-in 误杀并发 Web 轮次 → `is_recording()` 守卫 / TTS 自身回声守卫 / `oww.predict` 异常保护）。最终 `_smoke_ws.py` **3/3 PASS**（2026-10-17-18:55–18:56，GSV :9880 在线）：r1 自述 ✓ / r2 `50` ✓ / r3 有回复 ✓；DB `source=web` user +3 / assistant +3。
 - 遗留：T4 GitHub 操作仍待用户手动（need_user.md Q5，已确认延后）；T6 网页 UI 爱莉希雅化本轮不做（仅 todo）。
 
+## 2026-10-17（README 中文化 + AI_Elysia 命名 + LICENSE，records/2026-10-17-19-11-07.md）
+
+- 需求（6 项）：README 中文化（删 Coffe helps）/ fork 说明 + 权重来源（位置+类型）+ 自用声明 / 仓库更名指向 AI_Elysia / 本次允许 push（用户显式批准，AGENTS 一次性例外）/ 添加许可证 / 权重不入库但 README 写明白配置位置与需求类型。
+- **README.md 全文重写为中文**（152 行）：无 buymeacoffee；fork 说明（上游 PanPenek/jarvis MIT + 本仓库改动清单）；权重表（类型：用户提供/自训练/自动下载，含位置与 config.yaml 指引，明确不入库）；自用声明；快速开始（install.bat / start_all.bat / llama.cpp 用户自启）；架构、事件日志、配置说明、故障排查、技术栈、MIT 许可证小节。
+- **LICENSE 新增**（MIT，copyright huimengli——与上游一致、满足 fork 保留许可条款）。
+- tree.md 重建（LICENSE + records/2026-10-17-19-11-07.md）。
+- 待执行：git remote set-url origin → https://github.com/huimengli/AI_Elysia（用户本次批准）；push（本机 git 无 GitHub 凭据则受阻 → need_user.md）。
+
 ## Git 提交记录
 
 - `7d279a7`（2026-10-13-10:4x，main）`docs(AI): 补全 Jarvis 运行记录并归档 Q1（端到端 CHAT_OK）`。**已本地 commit，未 push。**
