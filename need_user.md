@@ -15,3 +15,14 @@
 4. 注意：本 Agent 从未执行过 push，本地提交不会自动同步到 GitHub；若仓库此前是公开空仓库/已有公开内容，改私有后历史内容仍保留在仓库中。
 
 **A**: （待用户回复）
+
+## Q6 2026-10-17-19-5x push 到 AI_Elysia：本机 git 无 GitHub 凭据（status: wait）
+
+**问题**: 用户已批准本次 `git push`，本地两个提交（`999cc32`、`251f7b0`）就绪、remote origin 已指向 `https://github.com/huimengli/AI_Elysia`，但执行 `git push -u origin main` 失败：`schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS (0x8009030E)` —— 本机 git 没有任何 GitHub 凭据（无 credential manager 条目、无 PAT），Agent 无法代为推送。
+
+**给用户的方案（三选一）**:
+1. **用户自己在终端 push（推荐）**: 在 `C:\Users\楼听\Desktop\git\JarvisAi` 下执行 `git push -u origin main`（凭据弹窗正常输入即可）。
+2. **提供 PAT**: 给我一个有 `repo` 权限的 GitHub Personal Access Token，爱莉希雅写入本机 credential store 后自行完成 push。
+3. **继续延后**：本地提交已保留，remote 已指向正确仓库，之后随时可推。
+
+**A**: （待用户回复）
