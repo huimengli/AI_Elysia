@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-08-15-38（新增 records/2026-11-08-15-16-18.md 与 tests/2026-11-08-15-16-18_cc/）
+更新时间: 2026-11-08-17:12（tests/2026-11-08-15-16-18_cc 增至 6 轮：chromium 自装 + 三层回退验证）
 
 ```
 JarvisAi/
@@ -90,6 +90,9 @@ JarvisAi/
     │   ├── record_1.md
     │   ├── record_2.md
     │   ├── record_3.md
+    │   ├── record_4.md
+    │   ├── record_5.md
+    │   ├── record_6.md
     │   └── opinion.md
     ├── 2026-11-08-14-12-32_cc/
     │   ├── record_1.md
