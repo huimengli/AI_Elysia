@@ -68,7 +68,7 @@
   .logo-icon svg{width:100%;height:100%;}
   .arc-ring,.arc-ring-2,.arc-core{fill:none;stroke:var(--pink);stroke-width:1.2;}
   .arc-ring-2{stroke:var(--lilac);} .arc-core{fill:var(--pink-2);stroke:none;}
-  .arc-ring{animation:spin 14s linear infinite;} .arc-ring-2{animation:spin 9s linear infinite reverse;}
+  .arc-ring{animation:spin 14s linear infinite;transform-origin: center center;} .arc-ring-2{animation:spin 9s linear infinite reverse;transform-origin: center center;}
   @keyframes spin{to{transform:rotate(360deg);}}
   .logo{font-size:20px;font-weight:700;letter-spacing:0.16em;
     background:linear-gradient(90deg,var(--pink-2),var(--pink) 55%,var(--gold));
@@ -105,7 +105,7 @@
     filter:drop-shadow(0 0 12px rgba(248,169,196,0.45));}
   .reactor svg{width:100%;height:100%;}
   .r-outer,.r-mid,.r-inner{fill:none;stroke-width:1.1;}
-  .r-outer{stroke:rgba(248,169,196,0.55);animation:spin 22s linear infinite;}
+  .r-outer{stroke:rgba(248,169,196,0.55);animation:spin 22s linear infinite;transform-origin: center center;}
   .r-mid{stroke:rgba(201,183,224,0.55);}
   .r-inner{stroke:rgba(255,216,232,0.35);}
   .r-core{fill:var(--pink);} .r-core-ring{fill:none;stroke:rgba(255,216,232,0.4);}
