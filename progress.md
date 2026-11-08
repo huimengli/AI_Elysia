@@ -95,4 +95,5 @@
 - 真人测试提示：2B 把「说一句话/记一下」理解成 `type_text` 往桌面打字（本轮真机打了 `我是爱莉希雅`），先按「中止」（UI 中止 / WS `{"type":"interrupt"}` / Esc）；「爱莉希雅」仍常听成「爱利西亚」。当前 jarvis = **job pwsh-38**（阈值 0.65 + 分数日志 + abort 清零 + 上一批 STT 修复）；llama `:8080`、GPT-SoVITS `:9880`（pwsh-10，pid 4436）未重启。要更灵敏设 0.60，别回 0.75。
 
 #### Git 提交记录（语音修复批次）
-- `dc1f3ff` `fix(AI): STT 语言改为 config 驱动（zh）并修空 content 兜底的字面 Done.`；本批 wake 修复 hash 见下方追加。
+- `dc1f3ff` `fix(AI): STT 语言改为 config 驱动（zh）并修空 content 兜底的字面 Done.`
+- `ccb7e60` `fix(AI): 唤醒阈值降为 0.65 并修残留 abort 把录音砍成 0.3s`（**已本地 commit，未 push**；AGENTS §4 禁 push，你只授权过 `future/AI_UI`）
