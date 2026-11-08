@@ -69,3 +69,4 @@
 - [x] 2026-11-08-13-04-48 llm/ 文件夹入 .gitignore（llama.cpp 二进制 + gguf 不入库，.ps1 保留）；选定 2B-Q4_K_M 为主模型，config.yaml 改仓库内模型路径，README/tree 同步 (→ records/2026-11-08-13-04-48.md)
 - [x] 2026-11-08-13-29-56 三个 startLlama*.ps1 的 $BinDir 与默认模型改为仓库内 llm/ 路径（含 VulkanTest 的 Push-Location 与 API-key 分支修复） (→ records/2026-11-08-13-29-56.md)
 - [ ] 2026-11-08-13-04-48 三个 startLlama*.ps1 的 $BinDir/模型路径仍指向外部 testGame；是否改为仓库内 llm/ 路径需用户确认 (→ records/2026-11-08-13-04-48.md)
+- [x] 2026-11-08-18-16-33 切回 main + 重启 Jarvis :7860（job pwsh-21），UI 差异确证（main 52,655 B 旧版 / future/AI_UI 41,769 B Elysia），3 轮验证通过 (→ records/2026-11-08-18-16-33.md)

@@ -54,3 +54,13 @@
 - **2026-11-08-12-51 2B T14 补测**（records/2026-11-08-12-51-25.md）：**decode 21.2 tps、TTFT 248 ms**，400 tokens / 19.1 s，窗口 21.5/21.2/21.2（260 token 内不衰减）→ 2B decode 为 IQ3（8.7 tps）的 2.4 倍；连续第 2 次流式请求 `socket hang up`（三模型复测均现该现象）。
 - **2026-11-08-13-04 llm/ 入库忽略 + 2B 定为主模型**（records/2026-11-08-13-04-48.md）：`llm/` 已含 `llama-b12144-bin-win-cpu-x64/`、`-vulkan-x64/`（含 `llama-server.exe`）、`models/Qwen3.5-2B-Q4_K_M.gguf`(1221.5 MB) + `Qwen3.5-2B_mmproj-F16.gguf`(637.3 MB) 与 3 个 `startLlama*.ps1`。`.gitignore` 追加两 bin 目录 + `llm/models/*.gguf` + `*.gguf`/`*.exe`/`*.dll`（`.ps1` 保留跟踪）；`config.yaml` `llamacpp.model` 改为仓库内 2B 路径；README 三处同步；`tree.md` 加 `llm/`（仅 3 个 .ps1，被忽略的二进制与 gguf 不列）。三个 .ps1 的 `$BinDir` 与默认模型仍指向外部 `testGame`（`startLlamaCpu.ps1` 默认 0.8B 文件仓库内不存在），改动需用户确认（todo 已记）。
 - **2026-11-08-13-29 三个 .ps1 改为仓库内路径**（records/2026-11-08-13-29-56.md）：`$BinDir` 与默认模型全部基于 `$PSScriptRoot`（`llm/llama-b12144-bin-win-vulkan-x64` / `-cpu-x64` + `llm/models/Qwen3.5-2B-Q4_K_M.gguf` + `Qwen3.5-2B_mmproj-F16.gguf`），外部 `testGame` 路径已清零（grep 复核）；`startLlamaCpu.ps1` 原默认 0.8B 文件在仓库不存在（会 `找不到模型` 退出）→ 改 2B；`startLlamaVulkanTest.ps1` 补 `Push-Location $BinDir`+`Pop-Location`（原缺，DLL 可能加载失败）并修 API-key 分支误用未定义 `$llamaArgs` → `$args0`。四个校验路径均存在（`llama-server.exe` ×2 + 两个 gguf）。未实机验证：沙箱禁 spawn，无法执行 PowerShell。
+## 2026-11-08-18-16-33 切回 main 对比 UI（records/2026-11-08-18-16-33.md，tests/2026-11-08-18-16-33_cc/）
+
+- **UI 差异确证**：main = 旧版（`<title>J.A.R.V.I.S.</title>`，`index.html` 52,655 B / 1,174 行，Google Fonts `@import`，无 `--pink`/`petal`，文案仅英文）；`future/AI_UI` = Elysia 版（`<title>爱莉希雅</title>`，41,769 B / 829 行，`--pink`+`petal`+`backdrop-filter`，无 CDN，全中文文案）。刷新 http://127.0.0.1:7860 对比；切分支：`git checkout future/AI_UI` 后重启 jarvis。
+- 服务：llama `:8080`（Qwen3.5-2B-Q4_K_M，与分支无关）、GPT-SoVITS `:9880`（job pwsh-10，pid 4436）未重启；**jarvis `:7860` = job pwsh-21（main 代码）**。WS chat 在 main 代码下正常（`我是爱莉希雅，一位完全自主的个人 AI 助手。`），TTS `POST /tts` 200 / 271,404 B / RIFF。
+- **风险**：main 不含 17:53 的 500 修复（前导 system 摘要并入唯一 system）与 `llm.py` 补丁（`chat_template_kwargs.enable_thinking`、`timeout` 15→90）→ 真人测试聊到 8 条触发压缩会重现「保存设置后管线报错」。语音真人测试请在 `future/AI_UI` 上做。
+- 切分支坑：`git checkout main` 被本地已改的 `todo.md` 阻断（两分支内容不同）→ 先 commit `c071d73`（在 `future/AI_UI`，已 push）再 checkout；重启 `:7860` 需 `Stop-Process` 掉旧 python（`job_kill` 只杀 pwsh 外层）。
+- 本分支台账说明：T6 Elysia UI（`80f7cd1`）、skill 修复文档（`243dc3e`/`19f1cac`/`b025a9e`/`7413031`）、三服务启动（`aaeb358`）、500 修复（`7f4ff44`）、config 记录（`9d2a9dc`）、本需求 record（`c071d73`）都在 `future/AI_UI` 上；本分支只落本需求的 record/tests/progress/tree。
+
+#### Git 提交记录（本分支）
+- 本次：records/2026-11-08-18-16-33.md（重建）、tests/2026-11-08-18-16-33_cc/（4 文件）、todo.md、progress.md、tree.md。已本地 commit（hash 见下），**未 push**（AGENTS §4 禁 push；用户此前只授权 `future/AI_UI`，main 未获授权）。
