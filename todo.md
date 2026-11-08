@@ -71,3 +71,11 @@
 - [ ] 2026-11-08-13-04-48 三个 startLlama*.ps1 的 $BinDir/模型路径仍指向外部 testGame；是否改为仓库内 llm/ 路径需用户确认 (→ records/2026-11-08-13-04-48.md)
 - [x] 2026-11-08-18-16-33 切回 main + 重启 Jarvis :7860（job pwsh-21），UI 差异确证（main 52,655 B 旧版 / future/AI_UI 41,769 B Elysia），3 轮验证通过 (→ records/2026-11-08-18-16-33.md)
 - [ ] 2026-11-08-18-39-40 合并 future/AI_UI 到 main（本地合并，不 push），处理台账冲突并 3 轮验证 (→ records/2026-11-08-18-39-40.md)
+
+### 合并保留（future/AI_UI 侧未包含于 HEAD 的行，append-only 不删历史）
+- [x] 2026-11-08-13-04-48 startLlama*.ps1 改仓库内 llm/ 路径（用户答"改一下"确认，实施见 2026-11-08-13-29-56） (→ records/2026-11-08-13-04-48.md)
+- [x] 2026-11-08-14-12-32 T6 网页 UI 爱莉希雅化（在线搜索风格参考 → 主题化 index.html，保持接口不变，3 轮验证）→ commit + push 到 future/AI_UI（用户显式授权，AGENTS §4 冲突已提示） (→ records/2026-11-08-14-12-32.md)
+- [x] 2026-11-08-15-16-18 重装在线搜索 skill：修 launch 的 env/Edge 路径 + 自装 Chromium Headless Shell（curl 断点续传，F: 盘），6 轮验证（msedge/空env/bundled 三层回退均 exit 0） (→ records/2026-11-08-15-16-18.md)
+- [x] 2026-11-08-17-29-39 启动全部服务（llama :8080 已在跑 / GPT-SoVITS :9880 启成 / Jarvis :7860 启成）供真人测试，3 轮验证通过 (→ records/2026-11-08-17-29-39.md)
+- [x] 2026-11-08-17-53-00 修「保存设置后管线报错」：根因=context 摘要产生第二条 system → chat template 500；main.py 并入唯一 system + llm.py 补 enable_thinking/timeout 90，3 轮验证通过 (→ records/2026-11-08-17-53-00.md)
+- [ ] 2026-11-08-18-16-33 切回 main 分支并重启 Jarvis :7860，做 UI 差异对比（main 无 17:53 修复，需提示） (→ records/2026-11-08-18-16-33.md)

@@ -64,3 +64,32 @@
 
 #### Git 提交记录（本分支）
 - 本次：records/2026-11-08-18-16-33.md（重建）、tests/2026-11-08-18-16-33_cc/（4 文件）、todo.md、progress.md、tree.md。已本地 commit（hash 见下），**未 push**（AGENTS §4 禁 push；用户此前只授权 `future/AI_UI`，main 未获授权）。
+
+### 合并保留（future/AI_UI 侧未包含于 HEAD 的行，append-only 不删历史）
+### 工作约定（2026-11-08-14-35，用户指示）
+- **不允许使用子智能体（subagent / subagent_fork）**。需要子智能体时**必须先询问用户并获批准**。本会话为 T6 网页 UI 改造启动过一个子智能体（72301c15），它在落盘前被停止（`index.html` 未改、`tests/` 未建），此后 T6 由主智能体自己完成。
+- 补充：本会话 spawn 已可用（沙箱 danger-full-access、审批关闭），git/node 可执行；前述"沙箱禁 spawn"仅适用于此前轮次。
+### T6 网页 UI 爱莉希雅化（2026-11-08-14-12-32，records/2026-11-08-14-12-32.md）
+- `jarvis/static/index.html`：53998 B / 1174 行 → 42363 B / 829 行。CSS 块（原 7–585 行 HUD 青蓝主题）整体重写为爱莉希雅主题：樱粉 `#F8A9C4`、浅粉 `#FFD8E8`、深莓 `#7E3F66`、淡紫 `#C9B7E0`、暖金 `#F2C9A8` + 深紫玻璃 `#171021/#1d1428` + `backdrop-filter` 玻璃拟态 + 樱花飘落（`prefers-reduced-motion` 降级）+ 顶部樱粉条 + 粉白渐变按钮/卡片描边；聊天气泡分角色（用户浅粉白、爱莉希雅粉紫渐变带 `✦` 刻印星标）。HTML/JS **仅改文案字面量**（中文化 + 爱莉希雅/刻印「饰品」标题），端点、id、WS 消息格式逐字未动；`jarvis/web.py`、`main.py` 未改；删除 Google Fonts `@import`（离线可用）。
+- 在线风格检索未真实执行：`playwright-online-search` 缺 `chrome-headless-shell-1243` 可执行文件（`playwright install chromium` 未成功，搜索 exit 3），`web_fetch` 无外网；配色取自任务内给定的爱莉希雅色板。
+- 3 轮验证全 PASS（`tests/2026-11-08-14-12-32_cc/` + 累积 `tests/opinion.md`）：轮1 `node --check` + 端点契约；轮2 静态站点 `GET /` 200 / 42363 B / 34 关键 id / 外部资源 0；轮3 node `vm` + DOM 桩喂 7 类 WS 事件，13 项断言全命中。**未做真实浏览器目视验收**（无浏览器可执行文件）。
+- 分支 `future/AI_UI` commit + push：**AGENTS §4 严禁 push，本次为用户显式授权，仅推该分支、不动 main、不 force**；已在回复中提示冲突。
+### 在线搜索 skill 重装（2026-11-08-15-16-18，records/2026-11-08-15-16-18.md）
+- 根因：run_code 子进程 env 为空，playwright 的 `channel:'msedge'` 把路径拼成 `undefined\Program Files\Microsoft\Edge\Application\msedge.exe` → skill 一律 exit 3「no usable browser」。显式 `executablePath` 指向 `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe` 实测可用（Edge 143.0.3650.139）。
+- 修复（skill 目录 `C:\Users\楼听\.dsh\skills\playwright-online-search\search.mjs`，**在仓库外，不 commit**）：新增 `ENV_DEFAULTS` + `repairEnv()`（缺失才补 `ProgramFiles`/`ProgramFiles(x86)`/`LOCALAPPDATA`/`USERPROFILE`/`SystemRoot`），`launch()` 序列改为 `msedge` → `msedge-x86`（显式路径）→ `msedge-x64` → bundled `chromium`；`node --check` 通过。
+- 三轮验证（`tests/2026-11-08-15-16-18_cc/` + 累积 `tests/opinion.md`）：bing **exit 0** 8 条、baidu **exit 0** 5 条（崩坏3 官网 / miHoYo 爱莉希雅主题配饰 / 崩坏3WIKI 壁纸）、duckduckgo **exit 5**（`net::ERR_CONNECTION_TIMED_OUT`，本机网络不可达，skill 正确上报）+ 补充 bing **exit 0**。结论：**skill 已恢复可用，后续检索默认用 bing/baidu**。
+- 后台遗留：`npx playwright install chromium`（195.6 MiB）两次前台 500 s 超时被杀（进度 10%/0%），改 detached `cmd /c` 重定向到 `%TEMP%\pw_install.log` 继续；`ms-playwright` 仍只有 `.links`/`__dirlock`（未装完，非必需）。
+- **真因是磁盘**：`wmic` 实测有一块盘 FreeSpace=0（C: 已满），`ENOSPC` 使 `playwright install` 必然失败（30% 时 `ENOSPC: no space left on device`）。已把 `PLAYWRIGHT_BROWSERS_PATH` 指到 `F:\playwright-browsers`（约 87 GB 空闲）并写入 skill 的 `ENV_DEFAULTS`；下载改由自管 detached 脚本 `F:\Temp\dl.cjs` 写入 `F:\playwright-browsers\headless.zip`（进度 `F:\Temp\pw_install.log`）。**skill 靠系统 Edge 已可用**，bundled chromium 只是第三层冗余。
+### 全部服务启动，供真人测试（2026-11-08-17-29-39，records/2026-11-08-17-29-39.md）
+- 在线服务：**llama.cpp :8080**（pid 20684/16252，`Qwen3.5-2B-Q4_K_M.gguf`，此前已在跑）+ **GPT-SoVITS api_v2 :9880**（pid 4436，job pwsh-10，绝对路径启动，首次相对路径 exit 1）+ **Jarvis jarvis.main :7860**（pid 12880，job pwsh-9，带 HF 镜像 env）。真人测试入口 **http://127.0.0.1:7860**。
+- 3 轮验证全 PASS（`tests/2026-11-08-17-29-39_cc/` + 累积 `tests/opinion.md`）：**轮1 LLM** —— 裸调 8080 无 `chat_template_kwargs` 时 `content=""`、token 全进 `reasoning_content`，带 `enable_thinking:false` 后 content 非空（jarvis `main.py:264-270` 已带，链路正确）；**轮2 TTS** —— `/tts` 200、314,924 B、`RIFF` 头；**轮3 Web UI+WS** —— `GET /` 200/42,420 B（`爱莉希雅` 标题 + `--pink` + `petal`）、三个 API 200、WS `chat` → 6 事件含 `response`，事件落库。
+- 语音链路实况：**wake 触发正常**（aili_xiya_v0.3）→ 30 s 录音 → **STT cuda 失败（CUDA driver version is insufficient）回落 CPU**（`small on cpu`）→ 当时「Transcription empty」。副作用提醒：`type_text` 工具会真往 PC 打字，测试前先用「中止」。
+### 保存设置后管线报错：根因与修复（2026-11-08-17-53-00，records/2026-11-08-17-53-00.md）
+- 真因不是设置页：保存后继续多轮对话使 `context` 窗口达 `summarize_after=8` → `context.py:49` 把 `[Earlier context: …]` 作为**第二条 system** → Qwen3.5 chat template 第 85 行 `raise_exception("System message must be at the beginning")` → 8080 返回 500 → jarvis 回落未运行的 Ollama，用户只看到「连接不上 Ollama」。探针确证：A `[system,user]` 正常 / B 第二条 system → 500 / C 首位非 system → 500。
+- 修复（`fix(AI)`）：`main.py::_process_request` 把前导 system 摘要并入唯一 system 消息，并在主 provider 失败时把**主错误**写进 `status` 事件与事件库；`llm.py` openai 分支补 `chat_template_kwargs.enable_thinking`（否则 content 全空、摘要为空串）且 `timeout` 15→90（15 s 掐断 2B 生成使摘要与子代理回落 Ollama）。3 轮验证（`tests/2026-11-08-17-53-00_cc/`）：连续 5 轮对话（窗口达 8 触发压缩）5 条 response 全出无 500；重启后 UI 200/42,420 B、API 200、TTS 200/266 KB RIFF、WS 对话正常。
+- 运维坑：`job_kill` 只杀 pwsh 外层，旧 python 仍占 `:7860`（新实例 `10048` 退出）→ 必须 `Stop-Process -Id` 旧 pid 后重启；当前 jarvis = job pwsh-17。C 盘仅剩 **0.3 GB**。
+- **2026-11-08-16:58 装成**（用户清理 C: 后）：ENOSPC 消失，但官方 `playwright install` 两次在 40% 被 `ECONNRESET` 打断（跑不完 114.6 MiB）；改 `curl -C -` 断点续传拉满 zip（120,200,717 B，exit 0）+ `Expand-Archive` 到 `F:\playwright-browsers\chromium_headless_shell-1243`（`chrome-headless-shell.exe` 212 MB）。探针 launch+bing 浏览 **version 153.0.8010.12**；三层回退（msedge / 空 env 兜底 / 强制 bundled）三轮 skill 命令均 **exit 0**（6/5/6 条）。**skill 完全恢复**。
+#### Git 提交记录（T6）
+- `80f7cd1` `feat(AI): Web UI 爱莉希雅化（樱粉玻璃拟态 + 樱花飘落 + UI 中文化），3 轮验证`（11 files, +408/-665）。已本地 commit **并 push 到 `origin/future/AI_UI`**（新建远程分支，用户显式授权，AGENTS §4 禁 push 冲突已在回复提示）。分支含 `main` 的 3 个本地提交（`cb3b904`/`35cd7ae`/`338393d`）作为祖先，`main` 未动、未 force。
+#### Git 提交记录（在线搜索 skill 重装）
+- `19f1cac` `docs(AI): 在线搜索 skill 装成 Chromium Headless Shell（curl 断点续传）+ 三层回退 3 轮验证`；`b025a9e` `docs(AI): 复核在线搜索 skill 三层回退（强制 bundled chromium 复跑 exit 0 / 5 条）`。**已本地 commit 并 push 到 `future/AI_UI`**（`243dc3e..b025a9e`，17:31 网络恢复后成功；期间 3 次 push 失败：Connection reset / Empty reply / 连不上 github.com:443）。AGENTS §4 禁 push，本次为用户对该分支的显式授权，未动 main、未 force。
