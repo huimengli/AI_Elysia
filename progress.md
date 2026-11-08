@@ -77,6 +77,11 @@
 - 在线服务：**llama.cpp :8080**（pid 20684/16252，`Qwen3.5-2B-Q4_K_M.gguf`，此前已在跑）+ **GPT-SoVITS api_v2 :9880**（pid 4436，job pwsh-10，绝对路径启动，首次相对路径 exit 1）+ **Jarvis jarvis.main :7860**（pid 12880，job pwsh-9，带 HF 镜像 env）。真人测试入口 **http://127.0.0.1:7860**。
 - 3 轮验证全 PASS（`tests/2026-11-08-17-29-39_cc/` + 累积 `tests/opinion.md`）：**轮1 LLM** —— 裸调 8080 无 `chat_template_kwargs` 时 `content=""`、token 全进 `reasoning_content`，带 `enable_thinking:false` 后 content 非空（jarvis `main.py:264-270` 已带，链路正确）；**轮2 TTS** —— `/tts` 200、314,924 B、`RIFF` 头；**轮3 Web UI+WS** —— `GET /` 200/42,420 B（`爱莉希雅` 标题 + `--pink` + `petal`）、三个 API 200、WS `chat` → 6 事件含 `response`，事件落库。
 - 语音链路实况：**wake 触发正常**（aili_xiya_v0.3）→ 30 s 录音 → **STT cuda 失败（CUDA driver version is insufficient）回落 CPU**（`small on cpu`）→ 当时「Transcription empty」。副作用提醒：`type_text` 工具会真往 PC 打字，测试前先用「中止」。
+### 保存设置后管线报错：根因与修复（2026-11-08-17-53-00，records/2026-11-08-17-53-00.md）
+
+- 真因不是设置页：保存后继续多轮对话使 `context` 窗口达 `summarize_after=8` → `context.py:49` 把 `[Earlier context: …]` 作为**第二条 system** → Qwen3.5 chat template 第 85 行 `raise_exception("System message must be at the beginning")` → 8080 返回 500 → jarvis 回落未运行的 Ollama，用户只看到「连接不上 Ollama」。探针确证：A `[system,user]` 正常 / B 第二条 system → 500 / C 首位非 system → 500。
+- 修复（`fix(AI)`）：`main.py::_process_request` 把前导 system 摘要并入唯一 system 消息，并在主 provider 失败时把**主错误**写进 `status` 事件与事件库；`llm.py` openai 分支补 `chat_template_kwargs.enable_thinking`（否则 content 全空、摘要为空串）且 `timeout` 15→90（15 s 掐断 2B 生成使摘要与子代理回落 Ollama）。3 轮验证（`tests/2026-11-08-17-53-00_cc/`）：连续 5 轮对话（窗口达 8 触发压缩）5 条 response 全出无 500；重启后 UI 200/42,420 B、API 200、TTS 200/266 KB RIFF、WS 对话正常。
+- 运维坑：`job_kill` 只杀 pwsh 外层，旧 python 仍占 `:7860`（新实例 `10048` 退出）→ 必须 `Stop-Process -Id` 旧 pid 后重启；当前 jarvis = job pwsh-17。C 盘仅剩 **0.3 GB**。
 
 - **2026-11-08-16:58 装成**（用户清理 C: 后）：ENOSPC 消失，但官方 `playwright install` 两次在 40% 被 `ECONNRESET` 打断（跑不完 114.6 MiB）；改 `curl -C -` 断点续传拉满 zip（120,200,717 B，exit 0）+ `Expand-Archive` 到 `F:\playwright-browsers\chromium_headless_shell-1243`（`chrome-headless-shell.exe` 212 MB）。探针 launch+bing 浏览 **version 153.0.8010.12**；三层回退（msedge / 空 env 兜底 / 强制 bundled）三轮 skill 命令均 **exit 0**（6/5/6 条）。**skill 完全恢复**。
 

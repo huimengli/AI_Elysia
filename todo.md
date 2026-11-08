@@ -72,3 +72,4 @@
 - [x] 2026-11-08-14-12-32 T6 网页 UI 爱莉希雅化（在线搜索风格参考 → 主题化 index.html，保持接口不变，3 轮验证）→ commit + push 到 future/AI_UI（用户显式授权，AGENTS §4 冲突已提示） (→ records/2026-11-08-14-12-32.md)
 - [x] 2026-11-08-15-16-18 重装在线搜索 skill：修 launch 的 env/Edge 路径 + 自装 Chromium Headless Shell（curl 断点续传，F: 盘），6 轮验证（msedge/空env/bundled 三层回退均 exit 0） (→ records/2026-11-08-15-16-18.md)
 - [x] 2026-11-08-17-29-39 启动全部服务（llama :8080 已在跑 / GPT-SoVITS :9880 启成 / Jarvis :7860 启成）供真人测试，3 轮验证通过 (→ records/2026-11-08-17-29-39.md)
+- [x] 2026-11-08-17-53-00 修「保存设置后管线报错」：根因=context 摘要产生第二条 system → chat template 500；main.py 并入唯一 system + llm.py 补 enable_thinking/timeout 90，3 轮验证通过 (→ records/2026-11-08-17-53-00.md)

@@ -30,12 +30,18 @@ def chat(messages: list[dict]) -> str:
             client = OpenAI(
                 base_url=provider["base_url"],
                 api_key=provider.get("api_key", "lm-studio"),
-                timeout=15.0,
+                # 15 s killed 2B generations mid-flight, which pushed summarization
+                # and subagents onto the (not-running) Ollama fallback.
+                timeout=90.0,
             )
             resp = client.chat.completions.create(
                 model=provider["model"],
                 messages=messages,
                 temperature=temperature,
+                # llama.cpp needs the flag explicitly: without it Qwen3.x spends
+                # the whole budget on reasoning_content and content comes back empty
+                # (see records/2026-11-08-17-29-39.md round 1).
+                extra_body={"chat_template_kwargs": {"enable_thinking": llm_cfg.get("enable_thinking", False)}},
             )
             return resp.choices[0].message.content or ""
         except Exception:

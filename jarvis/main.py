@@ -486,10 +486,17 @@ def _process_request(user_text: str, source: str = "voice") -> str:
     messages = context.get_messages()
     messages.append({"role": "user", "content": user_text})
 
-    # Single system message: Qwen3.8's chat template rejects a second system
-    # message ("System message must be at the beginning"), so merge memory
-    # facts into the main system prompt instead of a separate system turn.
+    # Single system message: Qwen3.5/3.8 chat templates raise "System message must
+    # be at the beginning" for any system turn that is not messages[0] (reproduced
+    # against llama.cpp :8080 in records/2026-11-08-17-53-00.md). context.py prefixes
+    # its rolling summary as a system turn, so strip it here and fold it into the
+    # single system message together with the memory facts.
+    leading: list[str] = []
+    while messages and messages[0].get("role") == "system":
+        leading.append(messages.pop(0).get("content", ""))
     sys_content = _system_prompt()
+    if leading:
+        sys_content += "\n\n" + "\n".join(leading)
     if facts:
         sys_content += "\n\nRelevant context from memory: " + "; ".join(facts)
     full_messages = [{"role": "system", "content": sys_content}] + messages
@@ -499,7 +506,11 @@ def _process_request(user_text: str, source: str = "voice") -> str:
     except _Aborted:
         raise
     except Exception as e:
+        # Surface the primary failure (an Ollama connection error used to mask
+        # the real cause, e.g. the chat-template 500 from a second system turn).
         print(f"[WARN] Primary provider failed ({e}), trying Ollama fallback")
+        _broadcast({"type": "status", "message": f"主模型失败：{str(e)[:120]}，改用备用模型…"})
+        event_log.log("system", f"Primary provider failed: {str(e)[:200]}", source)
         cfg = _load_config()
         ollama_provider = cfg["llm"]["providers"].get("ollama", {"model": "qwen3:8b"})
         response_text = _call_ollama_provider(ollama_provider, cfg["llm"].get("temperature", 0.7), full_messages)
