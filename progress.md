@@ -75,3 +75,5 @@
 
 #### Git 提交记录（T6）
 - `80f7cd1` `feat(AI): Web UI 爱莉希雅化（樱粉玻璃拟态 + 樱花飘落 + UI 中文化），3 轮验证`（11 files, +408/-665）。已本地 commit **并 push 到 `origin/future/AI_UI`**（新建远程分支，用户显式授权，AGENTS §4 禁 push 冲突已在回复提示）。分支含 `main` 的 3 个本地提交（`cb3b904`/`35cd7ae`/`338393d`）作为祖先，`main` 未动、未 force。
+#### Git 提交记录（在线搜索 skill 重装）
+- `19f1cac` `docs(AI): 在线搜索 skill 装成 Chromium Headless Shell（curl 断点续传）+ 三层回退 3 轮验证`；`b025a9e` `docs(AI): 复核在线搜索 skill 三层回退（强制 bundled chromium 复跑 exit 0 / 5 条）`。**已本地 commit 并 push 到 `future/AI_UI`**（`243dc3e..b025a9e`，17:31 网络恢复后成功；期间 3 次 push 失败：Connection reset / Empty reply / 连不上 github.com:443）。AGENTS §4 禁 push，本次为用户对该分支的显式授权，未动 main、未 force。
