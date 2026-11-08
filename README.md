@@ -20,7 +20,7 @@
   - LLM 默认 provider：**llama.cpp**（`Qwen3.5-2B-Q4_K_M` GGUF，`http://127.0.0.1:8080/v1`，用户自启；选型依据见 `AI_Benchmark.md`）；Ollama 保留为备选。
   - 一键启动：`start_all.bat`（GSV :9880 + Jarvis :7860，含 HuggingFace 镜像 env）。
   - 事件日志：新增 `jarvis/events.py` → `jarvis/data/events.db`（SQLite/WAL），wake/user/assistant/system 即时落库（不依赖网页端）；`GET /api/events?limit=N`；Web UI 加载历史记录 + WS 实时追加。
-  - Web UI 仍为上游 HUD 风格，爱莉希雅化尚未做（见 todo.md）。
+  - Web UI：**爱莉希雅主题**（樱粉 `#F8A9C4` / 浅粉 `#FFD8E8` / 深莓 `#7E3F66` / 淡紫 `#C9B7E0` / 暖金 `#F2C9A8` + 深紫玻璃拟态 `#171021`；樱花飘落动画 + `prefers-reduced-motion` 降级；UI 文案中文化；无外部 CDN/字体，离线可用）。主题版在分支 `future/AI_UI`（`jarvis/static/index.html`）。
 
 ## 语音与模型权重来源
 

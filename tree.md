@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-08-13-04
+更新时间: 2026-11-08-15-06（T6 网页 UI 爱莉希雅化；新增 tests/2026-11-08-14-12-32_cc/）
 
 ```
 JarvisAi/
@@ -86,6 +86,11 @@ JarvisAi/
 │   ├── progress.md_2026-10-15-13-49-00.md
 │   └── progress.md_2026-11-08-12-40-22.md
 └── tests/
+    ├── 2026-11-08-14-12-32_cc/
+    │   ├── record_1.md
+    │   ├── record_2.md
+    │   ├── record_3.md
+    │   └── opinion.md
     ├── __init__.py
     ├── opinion.md
     ├── test_context.py

@@ -54,3 +54,15 @@
 - **2026-11-08-12-51 2B T14 补测**（records/2026-11-08-12-51-25.md）：**decode 21.2 tps、TTFT 248 ms**，400 tokens / 19.1 s，窗口 21.5/21.2/21.2（260 token 内不衰减）→ 2B decode 为 IQ3（8.7 tps）的 2.4 倍；连续第 2 次流式请求 `socket hang up`（三模型复测均现该现象）。
 - **2026-11-08-13-04 llm/ 入库忽略 + 2B 定为主模型**（records/2026-11-08-13-04-48.md）：`llm/` 已含 `llama-b12144-bin-win-cpu-x64/`、`-vulkan-x64/`（含 `llama-server.exe`）、`models/Qwen3.5-2B-Q4_K_M.gguf`(1221.5 MB) + `Qwen3.5-2B_mmproj-F16.gguf`(637.3 MB) 与 3 个 `startLlama*.ps1`。`.gitignore` 追加两 bin 目录 + `llm/models/*.gguf` + `*.gguf`/`*.exe`/`*.dll`（`.ps1` 保留跟踪）；`config.yaml` `llamacpp.model` 改为仓库内 2B 路径；README 三处同步；`tree.md` 加 `llm/`（仅 3 个 .ps1，被忽略的二进制与 gguf 不列）。三个 .ps1 的 `$BinDir` 与默认模型仍指向外部 `testGame`（`startLlamaCpu.ps1` 默认 0.8B 文件仓库内不存在），改动需用户确认（todo 已记）。
 - **2026-11-08-13-29 三个 .ps1 改为仓库内路径**（records/2026-11-08-13-29-56.md）：`$BinDir` 与默认模型全部基于 `$PSScriptRoot`（`llm/llama-b12144-bin-win-vulkan-x64` / `-cpu-x64` + `llm/models/Qwen3.5-2B-Q4_K_M.gguf` + `Qwen3.5-2B_mmproj-F16.gguf`），外部 `testGame` 路径已清零（grep 复核）；`startLlamaCpu.ps1` 原默认 0.8B 文件在仓库不存在（会 `找不到模型` 退出）→ 改 2B；`startLlamaVulkanTest.ps1` 补 `Push-Location $BinDir`+`Pop-Location`（原缺，DLL 可能加载失败）并修 API-key 分支误用未定义 `$llamaArgs` → `$args0`。四个校验路径均存在（`llama-server.exe` ×2 + 两个 gguf）。未实机验证：沙箱禁 spawn，无法执行 PowerShell。
+### 工作约定（2026-11-08-14-35，用户指示）
+
+- **不允许使用子智能体（subagent / subagent_fork）**。需要子智能体时**必须先询问用户并获批准**。本会话为 T6 网页 UI 改造启动过一个子智能体（72301c15），它在落盘前被停止（`index.html` 未改、`tests/` 未建），此后 T6 由主智能体自己完成。
+- 补充：本会话 spawn 已可用（沙箱 danger-full-access、审批关闭），git/node 可执行；前述"沙箱禁 spawn"仅适用于此前轮次。
+### T6 网页 UI 爱莉希雅化（2026-11-08-14-12-32，records/2026-11-08-14-12-32.md）
+
+- `jarvis/static/index.html`：53998 B / 1174 行 → 42363 B / 829 行。CSS 块（原 7–585 行 HUD 青蓝主题）整体重写为爱莉希雅主题：樱粉 `#F8A9C4`、浅粉 `#FFD8E8`、深莓 `#7E3F66`、淡紫 `#C9B7E0`、暖金 `#F2C9A8` + 深紫玻璃 `#171021/#1d1428` + `backdrop-filter` 玻璃拟态 + 樱花飘落（`prefers-reduced-motion` 降级）+ 顶部樱粉条 + 粉白渐变按钮/卡片描边；聊天气泡分角色（用户浅粉白、爱莉希雅粉紫渐变带 `✦` 刻印星标）。HTML/JS **仅改文案字面量**（中文化 + 爱莉希雅/刻印「饰品」标题），端点、id、WS 消息格式逐字未动；`jarvis/web.py`、`main.py` 未改；删除 Google Fonts `@import`（离线可用）。
+- 在线风格检索未真实执行：`playwright-online-search` 缺 `chrome-headless-shell-1243` 可执行文件（`playwright install chromium` 未成功，搜索 exit 3），`web_fetch` 无外网；配色取自任务内给定的爱莉希雅色板。
+- 3 轮验证全 PASS（`tests/2026-11-08-14-12-32_cc/` + 累积 `tests/opinion.md`）：轮1 `node --check` + 端点契约；轮2 静态站点 `GET /` 200 / 42363 B / 34 关键 id / 外部资源 0；轮3 node `vm` + DOM 桩喂 7 类 WS 事件，13 项断言全命中。**未做真实浏览器目视验收**（无浏览器可执行文件）。
+- 分支 `future/AI_UI` commit + push：**AGENTS §4 严禁 push，本次为用户显式授权，仅推该分支、不动 main、不 force**；已在回复中提示冲突。
+
+#### Git 提交记录（T6）

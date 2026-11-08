@@ -68,4 +68,5 @@
 - [x] 2026-11-08-12-51-25 2B T14 decode 补测（21.2 tps，TTFT 248 ms） (→ records/2026-11-08-12-51-25.md)
 - [x] 2026-11-08-13-04-48 llm/ 文件夹入 .gitignore（llama.cpp 二进制 + gguf 不入库，.ps1 保留）；选定 2B-Q4_K_M 为主模型，config.yaml 改仓库内模型路径，README/tree 同步 (→ records/2026-11-08-13-04-48.md)
 - [x] 2026-11-08-13-29-56 三个 startLlama*.ps1 的 $BinDir 与默认模型改为仓库内 llm/ 路径（含 VulkanTest 的 Push-Location 与 API-key 分支修复） (→ records/2026-11-08-13-29-56.md)
-- [ ] 2026-11-08-13-04-48 三个 startLlama*.ps1 的 $BinDir/模型路径仍指向外部 testGame；是否改为仓库内 llm/ 路径需用户确认 (→ records/2026-11-08-13-04-48.md)
+- [x] 2026-11-08-13-04-48 startLlama*.ps1 改仓库内 llm/ 路径（用户答"改一下"确认，实施见 2026-11-08-13-29-56） (→ records/2026-11-08-13-04-48.md)
+- [x] 2026-11-08-14-12-32 T6 网页 UI 爱莉希雅化（在线搜索风格参考 → 主题化 index.html，保持接口不变，3 轮验证）→ commit + push 到 future/AI_UI（用户显式授权，AGENTS §4 冲突已提示） (→ records/2026-11-08-14-12-32.md)
