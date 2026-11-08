@@ -70,3 +70,4 @@
 - [x] 2026-11-08-13-29-56 三个 startLlama*.ps1 的 $BinDir 与默认模型改为仓库内 llm/ 路径（含 VulkanTest 的 Push-Location 与 API-key 分支修复） (→ records/2026-11-08-13-29-56.md)
 - [ ] 2026-11-08-13-04-48 三个 startLlama*.ps1 的 $BinDir/模型路径仍指向外部 testGame；是否改为仓库内 llm/ 路径需用户确认 (→ records/2026-11-08-13-04-48.md)
 - [x] 2026-11-08-18-16-33 切回 main + 重启 Jarvis :7860（job pwsh-21），UI 差异确证（main 52,655 B 旧版 / future/AI_UI 41,769 B Elysia），3 轮验证通过 (→ records/2026-11-08-18-16-33.md)
+- [ ] 2026-11-08-18-39-40 合并 future/AI_UI 到 main（本地合并，不 push），处理台账冲突并 3 轮验证 (→ records/2026-11-08-18-39-40.md)
