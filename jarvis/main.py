@@ -459,6 +459,13 @@ def _handle_wake_inner() -> None:
     else:
         play_ack_wav()  # T8: pre-synthesized local wav, no live SoVITS
 
+    # Clear a stale abort flag *before* recording. `record_until_silence`
+    # checks the abort event every chunk (jarvis/stt.py), and `_abort` is only
+    # cleared in `_process_request`, which runs after recording — so a flag left
+    # over from the previous turn (wake during busy = abort_all, UI 中止, Esc)
+    # cut captures to 0.3s: events.db rows 162-169 are wake → 0.3s → "no voice
+    # recognized" (records/2026-11-08-19-25-48.md).
+    _abort.clear()
     print("[爱莉希雅] Recording...")
     _broadcast({"type": "status", "message": "正在聆听…"})
 

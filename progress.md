@@ -88,3 +88,11 @@
 - 两个独立成因：① `stt.py` 45/53 行把 `language="en"` **写死** → 中文口语被英文解码（事件库 `18:49:07 user "You" source=voice`），合成中文音频对照：en → `I love you, Alicia. Yes. Tomorrow is the 3rd day of the meeting…`，zh → `爱利西亚 对 明天下午三点开会 记得带笔记本和钥匙`，None → 同 zh（detected zh 0.967）；② `main.py` 342-343 行在模型工具轮后返回空 content 时**字面兜底 `"Done."`**。
 - 修复（`fix(AI)`）：`stt.py` 语言取 `config.yaml` 的 `stt.language`（新增 `language: zh`，缺省 zh）；`main.py` 加 `_looks_understandable()` 守卫（无 CJK 且 ≤20 字符 → 「我没听清，请再说一遍。」，不调 LLM）；`_call_openai_provider` 记录 `executed` 并用 `_tool_report()` 兜底（无工具→「我处理好了。」；有工具→「我执行了 X、Y：结果首行」），`Done.`/`OK`/`已完成` 当空。复测 WS 2 条中文 chat：**裸 Done. 计数 0**。
 - 真人测试提示：2B 把「记一下」理解成 `type_text` 往记事本打字 + `focus_window`（找不到「记事本」）→ **语音测试会在桌面真实打字**，先按「中止」；「爱莉希雅」常听成「爱利西亚」。当前 **jarvis = job pwsh-30**（含全部修复）；llama `:8080`、GPT-SoVITS `:9880`（pwsh-10，pid 4436）未重启。C 盘已清理。
+### 语音无法触发：阈值 0.75 高于真实峰值 + 残留 abort 砍录音（2026-11-08-19-25-48，records/2026-11-08-19-25-48.md）
+
+- 直接原因是**门槛**：17:53 设置页保存的 `wake_word.threshold: 0.75`；真人 1.5 分钟 `[Wake] peak` 最高 **0.570**，而合成「爱莉希雅，爱莉希雅」（2.98 s，rms 0.083，16k 重采样）37 chunk **PEAK 0.862** —— 模型没问题，是阈值太高（验收可用值 0.7：v0.3c recall 0.94 / fp 0.09）。改成 **0.65** 后真人连续触发（事件库 162/166/168/173 行 wake，peak 0.716/0.689/0.734）。
+- 两个观测/逻辑缺口一并修：① `wake.py` 原本无分数日志（「叫不应」与「麦克风坏」无法区分）→ 新增 3 s 节流 `[Wake] peak X / threshold Y`；② `record_until_silence` 每 chunk 查 `_abort_event`（`stt.py` 94-96），而 `_abort.clear()` 只在录音之后的 `_process_request`（`main.py` 500）；`wake.py` 121-122 行 busy 时喊醒词会 `abort_all()`（UI「中止」/Esc 同理）→ 残留 flag 让下一轮录音第一 chunk 就 break（0.3 s → `Wake: no voice recognized`，事件库 160/165/167/169 行）。修法：`_on_wake` 录音前显式 `_abort.clear()`；复测完整链路（wake → `Speech detected rms=0.0432` → 转写 → 回复）。
+- 真人测试提示：2B 把「说一句话/记一下」理解成 `type_text` 往桌面打字（本轮真机打了 `我是爱莉希雅`），先按「中止」（UI 中止 / WS `{"type":"interrupt"}` / Esc）；「爱莉希雅」仍常听成「爱利西亚」。当前 jarvis = **job pwsh-38**（阈值 0.65 + 分数日志 + abort 清零 + 上一批 STT 修复）；llama `:8080`、GPT-SoVITS `:9880`（pwsh-10，pid 4436）未重启。要更灵敏设 0.60，别回 0.75。
+
+#### Git 提交记录（语音修复批次）
+- `dc1f3ff` `fix(AI): STT 语言改为 config 驱动（zh）并修空 content 兜底的字面 Done.`；本批 wake 修复 hash 见下方追加。

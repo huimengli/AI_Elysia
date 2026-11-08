@@ -64,6 +64,8 @@ def listen_for_wake_word(callback) -> None:
 
     _busy = threading.Lock()
     _ignore_until = [0.0]
+    _peak = 0.0
+    _last_log = time.time()
 
     print("[爱莉希雅] Listening for wake word...")
     try:
@@ -97,6 +99,14 @@ def listen_for_wake_word(callback) -> None:
                 time.sleep(0.5)
                 continue
             score = predictions.get(_model_key, 0)
+
+            # Throttled sensitivity log. Without it a non-triggering wake is
+            # indistinguishable from a dead mic (records/2026-11-08-19-25-48.md).
+            _peak = max(_peak, score)
+            if time.time() - _last_log >= 3.0:
+                print(f"[Wake] peak {_peak:.3f} / threshold {cfg['threshold']}")
+                _peak = 0.0
+                _last_log = time.time()
 
             if score < cfg["threshold"]:
                 continue

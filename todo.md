@@ -80,3 +80,4 @@
 - [x] 2026-11-08-17-53-00 修「保存设置后管线报错」：根因=context 摘要产生第二条 system → chat template 500；main.py 并入唯一 system + llm.py 补 enable_thinking/timeout 90，3 轮验证通过 (→ records/2026-11-08-17-53-00.md)
 - [ ] 2026-11-08-18-16-33 切回 main 分支并重启 Jarvis :7860，做 UI 差异对比（main 无 17:53 修复，需提示） (→ records/2026-11-08-18-16-33.md)
 - [x] 2026-11-08-18-54-18 修「语音输入变 You + Done.」：两处根因（stt.py 写死 language=en；main.py 342-343 空 content 兜底字面 Done.）→ stt 语言取 config（zh）+ 转录守卫 + `_tool_report()` 兜底，3 轮验证通过 (→ records/2026-11-08-18-54-18.md)
+- [x] 2026-11-08-19-25-48 重启后台 + 修语音唤醒不触发：阈值 0.75→0.65（真人 peak 最高 0.570，合成音频 PEAK 0.862）、wake.py 加 peak 分数日志、修残留 abort 把录音砍成 0.3 s，3 轮验证通过 (→ records/2026-11-08-19-25-48.md)
