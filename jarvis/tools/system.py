@@ -169,3 +169,16 @@ def set_timer(seconds: int, message: str = "定时到了！") -> str:
     else:
         time_str = f"{seconds}s"
     return f"Timer set for {time_str}: {message}"
+
+
+def get_time() -> str:
+    """Current local date, clock time and weekday — for 现在几点 / 今天几号.
+
+    The 2B model answered 现在几点 with a get_weather call (user test
+    2026-11-08-19-52-59, records/2026-11-08-19-25-48.md), so there needs to be a
+    tool it can map the question to.
+    """
+    import datetime
+    now = datetime.datetime.now()
+    wd = "一二三四五六日"[now.weekday()]
+    return f"{now.strftime('%Y-%m-%d %H:%M:%S')} 星期{wd}"

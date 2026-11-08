@@ -6,7 +6,7 @@ from jarvis.tools.code_exec import run_python
 from jarvis.tools.system import (
     get_clipboard, set_clipboard, set_volume, get_volume,
     get_system_info, set_brightness, lock_screen, power_command,
-    show_notification, set_timer,
+    show_notification, set_timer, get_time,
 )
 from jarvis.tools.desktop import (
     type_text, press_key, get_open_windows, focus_window,
@@ -21,6 +21,7 @@ TOOL_MAP = {
     "fetch_page":       lambda a: fetch_page(a["url"]),
     "open_url":         lambda a: open_url(a["url"]),
     "get_weather":      lambda a: get_weather(a.get("location", "")),
+    "get_time":         lambda _: get_time(),
     # Apps & processes
     "open_app":         lambda a: open_app(a["name"]),
     "kill_process":     lambda a: kill_process(a["name"]),
@@ -222,6 +223,11 @@ TOOL_SCHEMAS = [
     {"type": "function", "function": {
         "name": "get_volume",
         "description": "Get current system volume.",
+        "parameters": {"type": "object", "properties": {}}}},
+
+    {"type": "function", "function": {
+        "name": "get_time",
+        "description": "Get the current local date, clock time and weekday. Use this for 现在几点 / 今天几号 / 日期 questions — not get_weather.",
         "parameters": {"type": "object", "properties": {}}}},
 
     {"type": "function", "function": {

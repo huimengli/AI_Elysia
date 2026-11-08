@@ -125,6 +125,9 @@ def listen_for_wake_word(callback) -> None:
                 # a new turn, so aborting would kill our own capture and any
                 # in-flight web turn.
                 from jarvis.main import abort_all, is_recording
+                # The 0.3s-cut evidence (records/2026-11-08-19-25-48.md) shows this
+                # branch firing while the flag was already True, so log the decision.
+                print(f"[Wake] barge-in score={score:.3f} recording={is_recording()}")
                 if is_recording():
                     _ignore_until[0] = now + 2.0
                 else:
@@ -139,8 +142,12 @@ def listen_for_wake_word(callback) -> None:
                     stop_speaking()
                     _ignore_until[0] = now + 3.0
                     continue
-                # IDLE: normal wake — 2s cooldown to skip "Yes?" echo
-                _ignore_until[0] = now + 2.0
+                # IDLE: normal wake — cooldown to skip her own ack ("在。") and the
+                # user's immediately-following speech. 2.0s was too short: the ack
+                # plus the start of the user's sentence re-triggered the model inside
+                # the turn (barge-in → abort → 0.3s capture; traced live in
+                # records/2026-11-08-19-25-48.md). 5.0s covers ack + first sentence.
+                _ignore_until[0] = now + 5.0
 
                 def _run():
                     with _busy:

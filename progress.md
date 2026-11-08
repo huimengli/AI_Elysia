@@ -1,43 +1,6 @@
-# Progress — 跨会话进度台账
+# progress — 进度台账
 
-<!-- 已归档于 ai_buckup/progress.md_2026-11-08-18-48.md（全文含 LLM 基准测试细节、历史会话摘要与全部 Git 台账，至 2026-11-08 18:48；本次归档动作记于 records/2026-11-08-18-39-40.md） -->
-
-## 归档摘要（已完成需求，详见备份全文）
-
-- **2026-10-12**（records/2026-10-12-12-28-30.md）："将 Jarvis 项目跑起来"：.venv、config llamacpp active、依赖（清华镜像）、端到端跑通。
-- **2026-10-13**（records/2026-10-13-11-45.md、11-55.md）："接入 GPT-SoVITS 2.0 爱莉希雅 TTS"完成（venv 分批安装、jieba 补丁、:9880 验证）。Q1 已归档。
-- **2026-10-13 深夜–10-17**（records/2026-10-13-21-38-01.md）：爱莉希雅化 T1/T5 完成并 e2e PASS；自训唤醒词 v0.1→v0.2→v0.2b→**v0.3c 验收 PASS（pos 0.807 / neg 0.453，阈值 0.7 → recall 0.94 / fp 0.09）并接入 config.yaml**；排障链 HB-014/017/018/019/020/021/022/023/024/025/027/028。
-- **2026-10-17**（records/2026-10-17-17-16-41.md）：T7 事件记录 + SQLite（events.db, WAL）+ 网页历史展示 / T8 5 句固定应答词 wav 随机播放 / T9 start_all.bat 一键启动；WS 冒烟 3/3 PASS；排障 HB-030（`_abort` 跨轮污染）、HB-031（唤醒 barge-in 误杀并发 Web 轮次）。
-- **2026-10-17**（records/2026-10-17-19-11-07.md、19-52-00.md）：README 全文中文化（fork 说明 + 权重来源/类型 + 自用声明）+ MIT LICENSE；仓库指向 AI_Elysia；唤醒词 onnx v0.3（13 KB，自训练）入库；push 已随 Q6 由用户完成（Q6 事实已解决，待归档）。
-## Git 提交记录
-
-- `7d279a7` `docs(AI): 补全 Jarvis 运行记录并归档 Q1（端到端 CHAT_OK）`。已本地 commit。
-- `f444b85` `feat(AI): 新增 gptsovits TTS provider 并关闭 Qwen3 thinking 解决 LLM 挂起`。已本地 commit。
-- `409cc3f` `docs(AI): sync GPT-SoVITS venv retry, e2e PASS, and user asks`。已本地 commit。
-- `f4e1b48` `fix(AI): repair config.yaml escape/encoding, pin chroma embedding`。已本地 commit。
-- `e9b90f0` `fix(AI): gptsovits provider live + GPT-SoVITS runtime patches, TTS verified`。已本地 commit。
-- `6b1b545` `fix(AI): merge memory facts into single system message; UTF-8 console`。已本地 commit。
-- `a15c1ab` `feat(AI): 爱莉希雅 self-reference + forced Chinese, HB-014 stream stall guard`。已本地 commit。
-- `c63c8ef` `docs(AI): record commit a15c1ab in ledger; rebuild tree snapshot`。已本地 commit。
-- `d8567cb` `docs(AI): record TTS migration request to SoulX-Podcast (todo only)`。已本地 commit。
-- `30eba61` `docs(AI): T2 pre-training audit — tflite best-effort, generation`。已本地 commit。
-- `3bb5b7d` `feat(AI): wake.py supports local ONNX model paths`。已本地 commit。
-- `8a97e4a` `docs(AI): ledger backfill (c63c8ef..3bb5b7d) + T2 augment chain de-risk`。已本地 commit。
-- `8c33f74` `feat(AI): 爱莉希雅自称与中文强制收尾，v0.2 唤醒词数据重建中`。已本地 commit。
-- `be4e07c` `docs(AI): HB-024 Kellet IIR 粉噪溢出已解决（FFT 基替换）；todo 作业号更正`。已本地 commit。
-- `07bd022` `docs(AI): T2 train-branch HB-017..020 fixes, smoke PASS, production training`。已本地 commit。
-- `38b1d02` `feat(AI): add DSH agent presets PTC-MY 与 创造模式-MY via workspace bundle`。已本地 commit。
-- `a390837` `feat(AI): v0.3c 唤醒词验收 PASS 并接入 config.yaml（recall 0.94 / fp 0.09 @ 阈值 0.7）`。已本地 commit。
-- `1072661` `docs(AI): 勾选 T2 唤醒词完成（v0.3c PASS 已接入）；T4 用户确认延后记 todo`。已本地 commit。
-- `2222230` `feat(AI): Web UI 事件记录 + SQLite 持久化 + 固定应答词 wav + start_all.bat`。已本地 commit。
-- `999cc32` `docs(AI): README 中文化（fork 说明 + 权重来源/类型 + 自用声明）+ MIT LICENSE`。已本地 commit。
-- `251f7b0` `docs(AI): 台账补记 999cc32（README 中文化 + AI_Elysia 命名 + LICENSE）`。已本地 commit。
-- `193e8cd` `docs(AI): push 受阻（本机无 GitHub 凭据 SEC_E_NO_CREDENTIALS）记 need_user.md Q6；records 实施记录回填`。已本地 commit。
-- `451226f` `feat(AI): 唤醒词模型 onnx v0.3 入库（自训练，13 KB）`。已本地 commit。
-- `2eaa648` = 当前 HEAD = `origin/main`（2026-10-17-19:5x）。`.git/logs` reflog 有 3 次 `update by push`（18:43 / 19:40 / 19:52），即 Q6 的 push 由用户完成；本条为台账补记（原 451226f 之后未记录）。
-- `cb3b904`（2026-11-08-13:40，main）`docs(AI): LLM 基准台账 AI_Benchmark.md（四模型 T0-T13+E + T14 decode）+ progress 归档`。**已本地 commit，未 push。** 10 文件（AI_Benchmark.md、progress.md、todo.md、tree.md、ai_buckup 备份、records 五则）。
-- `35cd7ae`（2026-11-08-13:40，main，= 当前 HEAD）`feat(AI): llm/ 启动脚本自包含仓库内路径，.gitignore 排除 llama.cpp 二进制与 gguf`。**已本地 commit，未 push。** 8 文件（.gitignore、config.yaml、README.md、三个 .ps1、records 两则）。
-- 排障（非阻塞，已解决）：本会话沙箱默认禁进程 spawn（`EPERM spawnSync cmd.exe`），git 需逐次申请 wider sandbox 批准；且 spawn 环境无 HOME → `git commit` 报 `unable to auto-detect email address`。解法：不改/不写 git 配置，用 `GIT_AUTHOR_NAME=绘梦璃 GIT_AUTHOR_EMAIL=2913394404@qq.com`（取自 2eaa648 作者）+ `GIT_COMMITTER_*` 同值，`git commit -m` 成功。`-c user.name=…` 与 `-m` 不能同用（`options '-m' and '-c' cannot be used together`）。
+<!-- 已归档于 ai_buckup/progress.md_2026-11-08-20-14.md（100 行完整历史）；本文件保留 2026-11-08-18-16 起的小节 + 本批小节（AGENTS §3：先归档再 compact） -->
 ## 2026-11-08-18-16-33 切回 main 对比 UI（records/2026-11-08-18-16-33.md，tests/2026-11-08-18-16-33_cc/）
 
 - **UI 差异确证**：main = 旧版（`<title>J.A.R.V.I.S.</title>`，`index.html` 52,655 B / 1,174 行，Google Fonts `@import`，无 `--pink`/`petal`，文案仅英文）；`future/AI_UI` = Elysia 版（`<title>爱莉希雅</title>`，41,769 B / 829 行，`--pink`+`petal`+`backdrop-filter`，无 CDN，全中文文案）。刷新 http://127.0.0.1:7860 对比；切分支：`git checkout future/AI_UI` 后重启 jarvis。
@@ -97,3 +60,12 @@
 #### Git 提交记录（语音修复批次）
 - `dc1f3ff` `fix(AI): STT 语言改为 config 驱动（zh）并修空 content 兜底的字面 Done.`
 - `ccb7e60` `fix(AI): 唤醒阈值降为 0.65 并修残留 abort 把录音砍成 0.3s`（**已本地 commit，未 push**；AGENTS §4 禁 push，你只授权过 `future/AI_UI`）
+### 真人语音「能唤醒却总答『我没听清』」：录音被自己的 barge-in 打断 + get_time 工具（2026-11-08-19-52-59，records/2026-11-08-19-52-59.md）
+
+- 根因：IDLE 冷却只有 **2 s**（挡不住她的 ack『在。』+ 用户紧接着说话）+ busy 分支的 `is_recording()` 在录音窗口前 0.15 s 仍为 False → `abort_all()`；`record_until_silence` **每个 chunk** 查 abort flag → 第一 chunk（0.3 s）就 break → `Wake: no voice recognized`。现场追踪铁证：`[Wake] barge-in score=0.664 recording=False` + `[ABORT] set by listen_for_wake_word:135 thread=MainThread`（新增日志，job pwsh-44/46）。
+- 修复：`handle_wake` 入口置 `_stt_recording = True`（`finally` 清零，顺带解决残留 flag）、IDLE 冷却 2 s → **5 s**、abort 检查加 **1.5 s 宽限**（前 1.5 s 忽略 flag）。复测真人语音：`[STT] Speech detected (rms=0.0272)` → `Recorded 1.5s` → 事件库 217 行 user `现在几点了`（voice，不是碎片），`Transcription empty` 消失。
+- 真人反馈「回答是天气」→ 新增 `get_time`（`jarvis/tools/system.py` + `router.py` TOOL_MAP/schema，33 schema 含 get_time；`dispatch` 实测 `2026-11-08 20:09:20 星期日`）+ 系统提示「问时间/日期用 get_time，不要用 get_weather」：218 行 `现在是 2026年 11月 8 日 20 点 10 分，星期日。`、221 行 `現在是晚上 8 點 12 分，星期日。`（whisper 偶发繁体；「爱莉希雅」仍常听成「爱利西亚」）。
+- 真人测试注意：2B 会把「说一句话/记一下」理解成 `type_text` 往桌面打字，先按「中止」（UI 中止 / WS `{"type":"interrupt"}` / Esc）；1.5 s 后的 barge-in 仍会截断长句子（遗留）。当前 jarvis = **job pwsh-50**；llama `:8080`、GPT-SoVITS `:9880`（pwsh-10，pid 4436）未重启。
+
+#### Git 提交记录（本批）
+- `b501812` `docs(AI): 语音批次 Git 提交台账（dc1f3ff / ccb7e60）`；本批 `get_time` + abort 宽限的 hash 见下一条（追加）。

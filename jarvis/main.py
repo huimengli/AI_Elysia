@@ -63,6 +63,13 @@ class _Aborted(Exception):
 def abort_all() -> None:
     """Stop everything 爱莉希雅 is doing right now."""
     _abort.set()
+    # Name the caller: the 0.3s captures in records/2026-11-08-19-25-48.md
+    # gave no way to tell who set the flag mid-recording (wake barge-in, UI 中止,
+    # WS interrupt, Esc all look identical in the log).
+    import traceback
+    frames = traceback.extract_stack()[:-1]
+    site = frames[-1] if frames else None
+    print(f"[ABORT] set by {site.name}:{site.lineno} thread={threading.current_thread().name}" if site else "[ABORT] set")
     stop_speaking()
     _broadcast({"type": "status", "message": "已停止。"})
 
@@ -161,6 +168,7 @@ def _system_prompt() -> str:
         "- If a tool fails, try once more before giving up\n\n"
         "Always reply in Simplified Chinese (简体中文) unless the user explicitly asks for another language. "
         "Answer in 1-3 sentences unless more is clearly needed. "
+        "For 现在几点 / 今天几号 / 日期 questions call get_time, never get_weather. "
         "After a tool call, report the outcome as one short Chinese sentence — "
         "never answer with a bare 'Done.', 'OK' or '已完成'; the user hears this text, "
         "so it must say what you did. "
@@ -429,7 +437,14 @@ def is_recording() -> bool:
 
 def handle_wake() -> None:
     """Called when wake word is detected. Full pipeline: listen → think → speak."""
+    global _stt_recording
     _abort.clear()
+    # The barge-in guard (wake.py busy branch) checks is_recording() / is_speaking()
+    # only. Traced live (job pwsh-44, records/2026-11-08-19-25-48.md): a trigger
+    # landing in the ack window printed `barge-in score=0.664 recording=False`,
+    # aborted, and the flag was still False — so record_until_silence died on its
+    # first chunk (0.3s → "我没听清"). Mark the whole turn as busy here.
+    _stt_recording = True
     try:
         _handle_wake_inner()
     except _Aborted:
@@ -442,12 +457,20 @@ def handle_wake() -> None:
         if not _abort.is_set():
             _speak_if_unmuted("抱歉，出了点问题。")
     finally:
+        _stt_recording = False
         _abort.clear()
         _broadcast({"type": "status", "message": "就绪。"})
         print("[爱莉希雅] Listening for wake word...")
 
 
 def _handle_wake_inner() -> None:
+    global _stt_recording
+    # Mark the turn as recording from the very start: `is_recording()` gates the
+    # wake barge-in abort (wake.py 121-132), and the flag used to be set only
+    # after the 0.15s mic-release sleep — so a trigger landing in the ack window
+    # saw is_recording() == False and called abort_all(), which cuts
+    # record_until_silence on its first chunk (0.3s → "no voice recognized").
+    _stt_recording = True
     if is_speaking():
         stop_speaking()
     print("[爱莉希雅] Wake word detected!")
@@ -473,7 +496,6 @@ def _handle_wake_inner() -> None:
     from jarvis.wake import pause_wake_mic, resume_wake_mic
     pause_wake_mic()
     time.sleep(0.15)  # Give pyaudio time to release the mic
-    global _stt_recording
     _stt_recording = True
     try:
         audio = record_until_silence()

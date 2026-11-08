@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-08-19:44（新增 records/2026-11-08-19-25-48.md 与 tests/2026-11-08-19-25-48_cc/：唤醒阈值与录音 abort 修复）
+更新时间: 2026-11-08-20:16（新增 records/2026-11-08-19-52-59.md、tests/2026-11-08-19-52-59_cc/、ai_buckup/progress.md_2026-11-08-20-14.md）
 
 ```
 JarvisAi/
@@ -18,7 +18,8 @@ JarvisAi/
 │   ├── need_user.md_2026-10-13-21-12-19.md
 │   ├── progress.md_2026-10-15-13-49-00.md
 │   ├── progress.md_2026-11-08-12-40-22.md
-│   └── progress.md_2026-11-08-18-48.md
+│   ├── progress.md_2026-11-08-18-48.md
+│   └── progress.md_2026-11-08-20-14.md
 ├── config.yaml
 ├── design.md
 ├── dsh-my-presets
@@ -84,7 +85,8 @@ JarvisAi/
 │   ├── 2026-11-08-18-16-33.md
 │   ├── 2026-11-08-18-39-40.md
 │   ├── 2026-11-08-18-54-18.md
-│   └── 2026-11-08-19-25-48.md
+│   ├── 2026-11-08-19-25-48.md
+│   └── 2026-11-08-19-52-59.md
 ├── requirements.txt
 ├── start.bat
 ├── start_all.bat
@@ -128,6 +130,11 @@ JarvisAi/
 │   │   ├── record_2.md
 │   │   └── record_3.md
 │   ├── 2026-11-08-19-25-48_cc
+│   │   ├── opinion.md
+│   │   ├── record_1.md
+│   │   ├── record_2.md
+│   │   └── record_3.md
+│   ├── 2026-11-08-19-52-59_cc
 │   │   ├── opinion.md
 │   │   ├── record_1.md
 │   │   ├── record_2.md

@@ -1,4 +1,5 @@
 from pathlib import Path
+import time
 import yaml
 import numpy as np
 
@@ -88,10 +89,16 @@ def record_until_silence(
     heard_speech = False
     speech_threshold = 0.015  # louder than silence — confirms user is talking
 
+    _start = time.time()
     with sd.InputStream(samplerate=sample_rate, channels=1, dtype="float32") as stream:
         while True:
-            # Check abort every chunk (~300ms)
-            if _abort_event and _abort_event.is_set():
+            # Check abort every chunk (~300ms), but ignore the flag for the
+            # first 1.5s. Traced live (records/2026-11-08-19-25-48.md, job pwsh-46):
+            # the flag is set right at the start of the turn (echo of her own ack /
+            # the user's wake word), so `Recording aborted.` fired on the first
+            # chunk and the capture was 0.3s → "我没听清，请再说一遍。". The user's
+            # sentence needs ~1.5s before an abort is meaningful.
+            if _abort_event and _abort_event.is_set() and time.time() - _start > 1.5:
                 print("[STT] Recording aborted.")
                 break
 
