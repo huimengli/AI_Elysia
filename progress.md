@@ -64,6 +64,12 @@
 - 在线风格检索未真实执行：`playwright-online-search` 缺 `chrome-headless-shell-1243` 可执行文件（`playwright install chromium` 未成功，搜索 exit 3），`web_fetch` 无外网；配色取自任务内给定的爱莉希雅色板。
 - 3 轮验证全 PASS（`tests/2026-11-08-14-12-32_cc/` + 累积 `tests/opinion.md`）：轮1 `node --check` + 端点契约；轮2 静态站点 `GET /` 200 / 42363 B / 34 关键 id / 外部资源 0；轮3 node `vm` + DOM 桩喂 7 类 WS 事件，13 项断言全命中。**未做真实浏览器目视验收**（无浏览器可执行文件）。
 - 分支 `future/AI_UI` commit + push：**AGENTS §4 严禁 push，本次为用户显式授权，仅推该分支、不动 main、不 force**；已在回复中提示冲突。
+### 在线搜索 skill 重装（2026-11-08-15-16-18，records/2026-11-08-15-16-18.md）
+
+- 根因：run_code 子进程 env 为空，playwright 的 `channel:'msedge'` 把路径拼成 `undefined\Program Files\Microsoft\Edge\Application\msedge.exe` → skill 一律 exit 3「no usable browser」。显式 `executablePath` 指向 `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe` 实测可用（Edge 143.0.3650.139）。
+- 修复（skill 目录 `C:\Users\楼听\.dsh\skills\playwright-online-search\search.mjs`，**在仓库外，不 commit**）：新增 `ENV_DEFAULTS` + `repairEnv()`（缺失才补 `ProgramFiles`/`ProgramFiles(x86)`/`LOCALAPPDATA`/`USERPROFILE`/`SystemRoot`），`launch()` 序列改为 `msedge` → `msedge-x86`（显式路径）→ `msedge-x64` → bundled `chromium`；`node --check` 通过。
+- 三轮验证（`tests/2026-11-08-15-16-18_cc/` + 累积 `tests/opinion.md`）：bing **exit 0** 8 条、baidu **exit 0** 5 条（崩坏3 官网 / miHoYo 爱莉希雅主题配饰 / 崩坏3WIKI 壁纸）、duckduckgo **exit 5**（`net::ERR_CONNECTION_TIMED_OUT`，本机网络不可达，skill 正确上报）+ 补充 bing **exit 0**。结论：**skill 已恢复可用，后续检索默认用 bing/baidu**。
+- 后台遗留：`npx playwright install chromium`（195.6 MiB）两次前台 500 s 超时被杀（进度 10%/0%），改 detached `cmd /c` 重定向到 `%TEMP%\pw_install.log` 继续；`ms-playwright` 仍只有 `.links`/`__dirlock`（未装完，非必需）。
 
 #### Git 提交记录（T6）
 - `80f7cd1` `feat(AI): Web UI 爱莉希雅化（樱粉玻璃拟态 + 樱花飘落 + UI 中文化），3 轮验证`（11 files, +408/-665）。已本地 commit **并 push 到 `origin/future/AI_UI`**（新建远程分支，用户显式授权，AGENTS §4 禁 push 冲突已在回复提示）。分支含 `main` 的 3 个本地提交（`cb3b904`/`35cd7ae`/`338393d`）作为祖先，`main` 未动、未 force。
