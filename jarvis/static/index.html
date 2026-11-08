@@ -546,24 +546,39 @@ function addActivityStep() {
   const n = document.createElement('div'); n.className = 'activity-step active'; activitySteps.appendChild(n);
 }
 
+let wsPing = null;
 function connect() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   ws = new WebSocket(`${proto}://${location.host}/ws`);
-  ws.onopen = () => { statusDot.className = 'status-dot online'; statusText.textContent = '已上线'; setReactorState('online'); loadProviders(); loadMuteState(); loadHistory(); };
-  ws.onclose = () => { statusDot.className = 'status-dot'; statusText.textContent = '离线'; setReactorState('offline'); hideActivity(); setTimeout(connect, 3000); };
+  ws.onopen = () => { statusDot.className = 'status-dot online'; statusText.textContent = '已上线'; setReactorState('online'); loadProviders(); loadMuteState(); loadHistory();
+    // Heartbeat keeps the socket lively and history is re-pulled on every
+    // (re)connect, so a quiet socket drop does not leave the page stale until a
+    // manual reload (records/2026-11-08-19-25-48.md).
+    clearInterval(wsPing);
+    wsPing = setInterval(() => { try { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'ping' })); } catch (e) {} }, 20000);
+  };
+  ws.onclose = () => { statusDot.className = 'status-dot'; statusText.textContent = '离线'; setReactorState('offline'); hideActivity(); clearInterval(wsPing); setTimeout(connect, 3000); };
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
     console.log('[WS]', msg.type, msg.text || msg.message || '');
     switch (msg.type) {
       case 'connected': addMsg('system', msg.message.toUpperCase()); break;
       case 'status':
-        if (msg.message === 'Thinking...') { setThinking(true); showActivity('分析中'); setReactorState('thinking'); setStatusText('处理中'); }
-        else if (msg.message === 'Listening...') { setThinking(false); hideActivity(); setReactorState('listening'); setStatusText('聆听中'); }
-        else if (msg.message === 'Speaking...') { setThinking(false); hideActivity(); setReactorState('speaking'); setStatusText('说话中'); }
-        else if (msg.message === 'Wake.') { setThinking(false); hideActivity(); setReactorState('listening'); setStatusText('聆听中'); addMsg('system', '🎤 聆听中…'); }
-        else if (msg.message === 'Stopped.') { setThinking(false); hideActivity(); setReactorState('online'); setStatusText('待命'); addMsg('system', '⏹ 已停止'); }
-        else if (msg.message === 'Ready.') { setThinking(false); hideActivity(); setReactorState('online'); setStatusText('待命'); }
-        else { setThinking(false); hideActivity(); setReactorState('online'); setStatusText('待命'); }
+        // The backend broadcasts Chinese status strings (jarvis/main.py: 思考中…,
+        // 正在聆听…, 正在说话…, 在。, 已停止。, 就绪。, 主模型失败：…). Matching only the
+        // English literals left the dot/activity/status text permanently idle,
+        // so the page looked frozen until a manual reload (user report
+        // 2026-11-08-20-22, records/2026-11-08-19-25-48.md).
+        const st = msg.message || '';
+        if (st === '思考中…' || st === 'Thinking...') { setThinking(true); showActivity('分析中'); setReactorState('thinking'); setStatusText('处理中'); }
+        else if (st === '正在聆听…' || st === 'Listening...') { setThinking(false); hideActivity(); setReactorState('listening'); setStatusText('聆听中'); }
+        else if (st === '正在说话…' || st === 'Speaking...') { setThinking(false); hideActivity(); setReactorState('speaking'); setStatusText('说话中'); }
+        else if (st === '在。') { setThinking(false); setReactorState('listening'); setStatusText('在。'); addMsg('system', '🎙 在。'); }
+        else if (st === 'Wake.') { setThinking(false); hideActivity(); setReactorState('listening'); setStatusText('聆听中'); addMsg('system', '🎤 聆听中…'); }
+        else if (st === '已停止。' || st === 'Stopped.') { setThinking(false); hideActivity(); setReactorState('online'); setStatusText('待命'); addMsg('system', '⏹ 已停止'); }
+        else if (st.startsWith('主模型失败')) { showActivity('备用模型'); setStatusText('主模型失败，改用备用…'); addMsg('system', '⚠ ' + st); }
+        else if (st === '就绪。' || st === 'Ready.') { setThinking(false); hideActivity(); setReactorState('online'); setStatusText('待命'); }
+        else { setThinking(false); hideActivity(); setReactorState('online'); setStatusText(st || '待命'); }
         break;
       case 'user': {
         const isOurs = pendingWebText && pendingWebText === msg.text;

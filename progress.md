@@ -70,3 +70,11 @@
 #### Git 提交记录（本批）
 - `b501812` `docs(AI): 语音批次 Git 提交台账（dc1f3ff / ccb7e60）`；本批 `get_time` + abort 宽限的 hash 见下一条（追加）。
 - `35984ac` `fix(AI): 修录音被自己的 barge-in 打断（1.5s 宽限 + 5s 冷却）并新增 get_time 工具`（**已本地 commit，未 push**；AGENTS §4 禁 push，你只授权过 `future/AI_UI`）
+### 网页端不实时更新：状态字符串只匹配英文字面量（2026-11-08-20-22-00，records/2026-11-08-20-22-00.md）
+
+- **不是广播坏了**：真实页面 2 s 内就能看到 `user/tool/tool_result/response` 气泡（140→147），WS 序列含 `status:思考中…`。真 bug 是 `index.html` 的 `case 'status'` 只匹配 `Thinking...`/`Listening...`/`Speaking...`/`Wake.`/`Stopped.`/`Ready.`，后端发的是中文（`思考中…`/`正在聆听…`/`在。`/`已停止。`/`主模型失败：…`）→ 状态灯、活动条、状态文字永远停在 `待命`，观感就是「刷新才有新内容」。
+- 修复：`case 'status'` 同时匹配中文+英文（含 `在。`、`主模型失败` 前缀）；`onopen` 加 20 s 心跳 `{type:'ping'}` + 每次（重）连重拉历史；`onclose` 清理心跳。复测：发送后 `处理中`→`说话中`、回复 `1+1 等于 2。` 无需刷新；注入 7 条模拟消息状态依次 `聆听中/在。/处理中/待命/主模型失败，改用备用…`；主动 `ws.close()` → `离线` → 4 s 后自动 `已上线`。
+- 测试手法（可复用）：Playwright `channel: msedge` + `addInitScript` 包裹 `window.WebSocket` 记录消息时序（**reload 会清空页面注入**）；改 `index.html` **不需要重启** jarvis（FastAPI 从磁盘读）。验证 3 轮：[tests/2026-11-08-20-22-00_cc/](tests/2026-11-08-20-22-00_cc)。当前 jarvis = **job pwsh-50**；llama `:8080`、GPT-SoVITS `:9880`（pwsh-10，pid 4436）未重启。
+
+#### Git 提交记录（本批）
+- 本批 hash 见下一条（追加）。
