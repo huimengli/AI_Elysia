@@ -78,3 +78,4 @@
 
 #### Git 提交记录（本批）
 - 本批 hash 见下一条（追加）。
+- `904dbc8` `fix(AI): 网页端实时状态改为匹配中文广播并加心跳/重连重拉历史`（**已本地 commit，未 push**；AGENTS §4 禁 push，你只授权过 `future/AI_UI`）
