@@ -71,6 +71,13 @@
 - 三轮验证（`tests/2026-11-08-15-16-18_cc/` + 累积 `tests/opinion.md`）：bing **exit 0** 8 条、baidu **exit 0** 5 条（崩坏3 官网 / miHoYo 爱莉希雅主题配饰 / 崩坏3WIKI 壁纸）、duckduckgo **exit 5**（`net::ERR_CONNECTION_TIMED_OUT`，本机网络不可达，skill 正确上报）+ 补充 bing **exit 0**。结论：**skill 已恢复可用，后续检索默认用 bing/baidu**。
 - 后台遗留：`npx playwright install chromium`（195.6 MiB）两次前台 500 s 超时被杀（进度 10%/0%），改 detached `cmd /c` 重定向到 `%TEMP%\pw_install.log` 继续；`ms-playwright` 仍只有 `.links`/`__dirlock`（未装完，非必需）。
 - **真因是磁盘**：`wmic` 实测有一块盘 FreeSpace=0（C: 已满），`ENOSPC` 使 `playwright install` 必然失败（30% 时 `ENOSPC: no space left on device`）。已把 `PLAYWRIGHT_BROWSERS_PATH` 指到 `F:\playwright-browsers`（约 87 GB 空闲）并写入 skill 的 `ENV_DEFAULTS`；下载改由自管 detached 脚本 `F:\Temp\dl.cjs` 写入 `F:\playwright-browsers\headless.zip`（进度 `F:\Temp\pw_install.log`）。**skill 靠系统 Edge 已可用**，bundled chromium 只是第三层冗余。
+
+### 全部服务启动，供真人测试（2026-11-08-17-29-39，records/2026-11-08-17-29-39.md）
+
+- 在线服务：**llama.cpp :8080**（pid 20684/16252，`Qwen3.5-2B-Q4_K_M.gguf`，此前已在跑）+ **GPT-SoVITS api_v2 :9880**（pid 4436，job pwsh-10，绝对路径启动，首次相对路径 exit 1）+ **Jarvis jarvis.main :7860**（pid 12880，job pwsh-9，带 HF 镜像 env）。真人测试入口 **http://127.0.0.1:7860**。
+- 3 轮验证全 PASS（`tests/2026-11-08-17-29-39_cc/` + 累积 `tests/opinion.md`）：**轮1 LLM** —— 裸调 8080 无 `chat_template_kwargs` 时 `content=""`、token 全进 `reasoning_content`，带 `enable_thinking:false` 后 content 非空（jarvis `main.py:264-270` 已带，链路正确）；**轮2 TTS** —— `/tts` 200、314,924 B、`RIFF` 头；**轮3 Web UI+WS** —— `GET /` 200/42,420 B（`爱莉希雅` 标题 + `--pink` + `petal`）、三个 API 200、WS `chat` → 6 事件含 `response`，事件落库。
+- 语音链路实况：**wake 触发正常**（aili_xiya_v0.3）→ 30 s 录音 → **STT cuda 失败（CUDA driver version is insufficient）回落 CPU**（`small on cpu`）→ 当时「Transcription empty」。副作用提醒：`type_text` 工具会真往 PC 打字，测试前先用「中止」。
+
 - **2026-11-08-16:58 装成**（用户清理 C: 后）：ENOSPC 消失，但官方 `playwright install` 两次在 40% 被 `ECONNRESET` 打断（跑不完 114.6 MiB）；改 `curl -C -` 断点续传拉满 zip（120,200,717 B，exit 0）+ `Expand-Archive` 到 `F:\playwright-browsers\chromium_headless_shell-1243`（`chrome-headless-shell.exe` 212 MB）。探针 launch+bing 浏览 **version 153.0.8010.12**；三层回退（msedge / 空 env 兜底 / 强制 bundled）三轮 skill 命令均 **exit 0**（6/5/6 条）。**skill 完全恢复**。
 
 #### Git 提交记录（T6）
