@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-08-18:42（合并 `future/AI_UI` 进 `main` 后重建：含 T6 Elysia UI、500 修复、skill 与三服务台账、全部 records/tests 批次）
+更新时间: 2026-11-08-18:50（合并 `future/AI_UI` 进 `main`（`99aeaf1`）后重建：T6 Elysia UI + 500 修复 + skill/三服务/config 台账 + 全部 records/tests 批次；progress.md 已归档至 `ai_buckup/progress.md_2026-11-08-18-48.md`）
 
 ```
 JarvisAi/
@@ -17,7 +17,8 @@ JarvisAi/
 │   ├── need_user.md_2026-10-13-17-45.md
 │   ├── need_user.md_2026-10-13-21-12-19.md
 │   ├── progress.md_2026-10-15-13-49-00.md
-│   └── progress.md_2026-11-08-12-40-22.md
+│   ├── progress.md_2026-11-08-12-40-22.md
+│   └── progress.md_2026-11-08-18-48.md
 ├── config.yaml
 ├── design.md
 ├── dsh-my-presets
@@ -110,6 +111,11 @@ JarvisAi/
 │   │   ├── record_2.md
 │   │   └── record_3.md
 │   ├── 2026-11-08-18-16-33_cc
+│   │   ├── opinion.md
+│   │   ├── record_1.md
+│   │   ├── record_2.md
+│   │   └── record_3.md
+│   ├── 2026-11-08-18-39-40_cc
 │   │   ├── opinion.md
 │   │   ├── record_1.md
 │   │   ├── record_2.md
