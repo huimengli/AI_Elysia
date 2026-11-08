@@ -15,7 +15,7 @@ llm:
     llamacpp:
       type: openai
       label: llama.cpp (Local)
-      model: 'F:\魔搭社区\Qwen3.8-27B-Q4_K_M-GGUF\Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ2_XS-mtp.gguf'
+      model: 'C:\Users\楼听\Desktop\git\JarvisAi\llm\models\Qwen3.5-2B-Q4_K_M.gguf'
       base_url: http://127.0.0.1:8080/v1
       api_key: llamacpp
     ollama:

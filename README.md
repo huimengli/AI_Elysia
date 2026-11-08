@@ -17,7 +17,7 @@
 - **本仓库主要改动**（相对上游）：
   - 唤醒词：自训练 openWakeWord v0.3，短语 **"爱莉希雅"**（recall 0.94 / 误触 0.09 @ 阈值 0.7）；不再使用原 "Hey Jarvis"。
   - TTS：Kokoro → **GPT-SoVITS 2.0 爱莉希雅音色**（见下文「权重来源」）；5 条预合成唤醒应答 wav，唤醒时随机本地播放。
-  - LLM 默认 provider：**llama.cpp**（`Qwen3.8-27B` GGUF，`http://127.0.0.1:8080/v1`，用户自启）；Ollama 保留为备选。
+  - LLM 默认 provider：**llama.cpp**（`Qwen3.5-2B-Q4_K_M` GGUF，`http://127.0.0.1:8080/v1`，用户自启；选型依据见 `AI_Benchmark.md`）；Ollama 保留为备选。
   - 一键启动：`start_all.bat`（GSV :9880 + Jarvis :7860，含 HuggingFace 镜像 env）。
   - 事件日志：新增 `jarvis/events.py` → `jarvis/data/events.db`（SQLite/WAL），wake/user/assistant/system 即时落库（不依赖网页端）；`GET /api/events?limit=N`；Web UI 加载历史记录 + WS 实时追加。
   - Web UI 仍为上游 HUD 风格，爱莉希雅化尚未做（见 todo.md）。
@@ -32,7 +32,7 @@
 | TTS 音色（GPT） | 用户提供 | 同模型包：`Elysia-e5/e10/e15/e20.ckpt` | `GPT-SoVITS-main/GPT_weights_v2/` |
 | 参考音频 | 用户提供 | `【感动】欸嘿，大家笑一笑，好吗？`（见 `config.yaml` → `tts.gptsovits.ref_audio_path`） | `F:\BaiduNetdiskDownload\爱莉希雅\【GPT-SoVITS 2.0】爱莉希雅\参考音频\` |
 | 唤醒词模型 | 自训练（已入库） | openWakeWord v0.3（`aili_xiya_v0.3.onnx`，recall 0.94 / 误触 0.09 @ 0.7；仅该 onnx 入库，训练 wav 等仍被忽略） | `openWakeWord/output/aili_xiya_v0.3/`（随仓库提供） |
-| LLM 权重 | 用户提供 | 魔搭社区 `Qwen3.8-27B` GGUF 量化（见 `config.yaml` → `llm.providers.llamacpp.model`） | `F:\魔搭社区\Qwen3.8-27B-Q4_K_M-GGUF\` |
+| LLM 权重 | 用户提供（不入库） | `Qwen3.5-2B-Q4_K_M.gguf`（1221.5 MB，选型见 `AI_Benchmark.md`；`config.yaml` → `llm.providers.llamacpp.model`）+ 视觉 `Qwen3.5-2B_mmproj-F16.gguf`（637.3 MB） | `llm/models/`；启动器 `llm/llama-b12144-bin-win-cpu-x64/` 与 `-vulkan-x64/`，启动脚本 `llm/startLlama.ps1` / `startLlamaCpu.ps1` / `startLlamaVulkanTest.ps1`（`.ps1` 入库，二进制与 gguf 被 `.gitignore` 排除） |
 | STT 模型 | 自动下载 | faster-whisper `small`（int8，首次运行经 HF 镜像下载） | `.hf-cache/` |
 
 ## 快速开始
@@ -41,7 +41,7 @@
 
 - **Windows 10/11**
 - **Python 3.11+** — [python.org/downloads](https://www.python.org/downloads/)
-- **llama.cpp**（在 `:8080` 提供 `Qwen3.8-27B` GGUF，用户自启）或 **Ollama** — [ollama.com/download](https://ollama.com/download)
+- **llama.cpp**（`llm/startLlama.ps1`（Vulkan）或 `llm/startLlamaCpu.ps1`（纯 CPU）在 `:8080` 提供 `Qwen3.5-2B-Q4_K_M` GGUF，用户自启；启动器与模型不入库）或 **Ollama** — [ollama.com/download](https://ollama.com/download)
 
 ### 1. 安装
 

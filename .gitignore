@@ -27,3 +27,11 @@ _*.yaml
 
 *.log
 *.wav
+
+# llama.cpp 启动器与模型：不入库（llm/ 下的 .ps1 启动脚本保留跟踪）
+llm/llama-b12144-bin-win-cpu-x64/
+llm/llama-b12144-bin-win-vulkan-x64/
+llm/models/*.gguf
+*.gguf
+*.exe
+*.dll
