@@ -36,6 +36,9 @@
 - `193e8cd` `docs(AI): push 受阻（本机无 GitHub 凭据 SEC_E_NO_CREDENTIALS）记 need_user.md Q6；records 实施记录回填`。已本地 commit。
 - `451226f` `feat(AI): 唤醒词模型 onnx v0.3 入库（自训练，13 KB）`。已本地 commit。
 - `2eaa648` = 当前 HEAD = `origin/main`（2026-10-17-19:5x）。`.git/logs` reflog 有 3 次 `update by push`（18:43 / 19:40 / 19:52），即 Q6 的 push 由用户完成；本条为台账补记（原 451226f 之后未记录）。
+- `cb3b904`（2026-11-08-13:40，main）`docs(AI): LLM 基准台账 AI_Benchmark.md（四模型 T0-T13+E + T14 decode）+ progress 归档`。**已本地 commit，未 push。** 10 文件（AI_Benchmark.md、progress.md、todo.md、tree.md、ai_buckup 备份、records 五则）。
+- `35cd7ae`（2026-11-08-13:40，main，= 当前 HEAD）`feat(AI): llm/ 启动脚本自包含仓库内路径，.gitignore 排除 llama.cpp 二进制与 gguf`。**已本地 commit，未 push。** 8 文件（.gitignore、config.yaml、README.md、三个 .ps1、records 两则）。
+- 排障（非阻塞，已解决）：本会话沙箱默认禁进程 spawn（`EPERM spawnSync cmd.exe`），git 需逐次申请 wider sandbox 批准；且 spawn 环境无 HOME → `git commit` 报 `unable to auto-detect email address`。解法：不改/不写 git 配置，用 `GIT_AUTHOR_NAME=绘梦璃 GIT_AUTHOR_EMAIL=2913394404@qq.com`（取自 2eaa648 作者）+ `GIT_COMMITTER_*` 同值，`git commit -m` 成功。`-c user.name=…` 与 `-m` 不能同用（`options '-m' and '-c' cannot be used together`）。
 
 ## 2026-11-08 LLM 基准测试（台账 `AI_Benchmark.md`，records/2026-11-08-12-08-49.md 起）
 
