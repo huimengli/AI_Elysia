@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-08-18:50（合并 `future/AI_UI` 进 `main`（`99aeaf1`）后重建：T6 Elysia UI + 500 修复 + skill/三服务/config 台账 + 全部 records/tests 批次；progress.md 已归档至 `ai_buckup/progress.md_2026-11-08-18-48.md`）
+更新时间: 2026-11-08-19:07（新增 records/2026-11-08-18-54-18.md 与 tests/2026-11-08-18-54-18_cc/：语音输入 You+Done. 的两处根因与修复）
 
 ```
 JarvisAi/
@@ -82,7 +82,8 @@ JarvisAi/
 │   ├── 2026-11-08-17-29-39.md
 │   ├── 2026-11-08-17-53-00.md
 │   ├── 2026-11-08-18-16-33.md
-│   └── 2026-11-08-18-39-40.md
+│   ├── 2026-11-08-18-39-40.md
+│   └── 2026-11-08-18-54-18.md
 ├── requirements.txt
 ├── start.bat
 ├── start_all.bat
@@ -116,6 +117,11 @@ JarvisAi/
 │   │   ├── record_2.md
 │   │   └── record_3.md
 │   ├── 2026-11-08-18-39-40_cc
+│   │   ├── opinion.md
+│   │   ├── record_1.md
+│   │   ├── record_2.md
+│   │   └── record_3.md
+│   ├── 2026-11-08-18-54-18_cc
 │   │   ├── opinion.md
 │   │   ├── record_1.md
 │   │   ├── record_2.md

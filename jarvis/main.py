@@ -78,6 +78,18 @@ def _is_stop_command(text: str) -> bool:
     }
 
 
+def _looks_understandable(text: str) -> bool:
+    """Guard against degenerate STT output. With language forced to English the
+    user's Chinese speech came back as literal "You" (records/2026-11-08-18-54-18),
+    which the LLM answered with a bare "Done.". Text without CJK characters and
+    shorter than a sentence is "didn't catch", not a request.
+    """
+    t = text.strip()
+    if any("\u4e00" <= ch <= "\u9fff" for ch in t):
+        return True
+    return len(t) > 20
+
+
 def _check_abort() -> None:
     """Raise _Aborted if user requested abort."""
     if _abort.is_set():
@@ -149,6 +161,9 @@ def _system_prompt() -> str:
         "- If a tool fails, try once more before giving up\n\n"
         "Always reply in Simplified Chinese (简体中文) unless the user explicitly asks for another language. "
         "Answer in 1-3 sentences unless more is clearly needed. "
+        "After a tool call, report the outcome as one short Chinese sentence — "
+        "never answer with a bare 'Done.', 'OK' or '已完成'; the user hears this text, "
+        "so it must say what you did. "
         f"Current date and time: {now}."
     )
 
@@ -259,6 +274,7 @@ def _call_openai_provider(provider_cfg: dict, temperature: float, full_messages:
     api_key = provider_cfg.get("api_key", "lm-studio")
     client = _get_openai_client(base_url, api_key)
     tool_count = 0
+    executed: list[tuple[str, str]] = []
     for _ in range(_MAX_TOOL_LOOPS):
         _check_abort()
         stream = client.chat.completions.create(
@@ -316,6 +332,7 @@ def _call_openai_provider(provider_cfg: dict, temperature: float, full_messages:
                 if tool_count == 4:
                     _speak_if_unmuted("好的，我处理一下。")
                 result = _exec_tool_with_retry(call["function"]["name"], args)
+                executed.append((call["function"]["name"], result))
                 print(f"[Tool: {call['function']['name']}] {result[:120]}")
                 _broadcast({"type": "tool_result", "name": call["function"]["name"], "result": result[:200]})
                 full_messages.append({
@@ -324,8 +341,23 @@ def _call_openai_provider(provider_cfg: dict, temperature: float, full_messages:
                     "tool_call_id": call["id"],
                 })
         else:
-            return _strip_think("".join(content_parts) or "Done.")
-    return "Done."
+            # A bare "Done." was the literal fallback here: Qwen returns content=""
+            # after a tool round, so the user heard "Done." for every tool task
+            # (records/2026-11-08-18-54-18.md). Report what actually ran.
+            txt = _strip_think("".join(content_parts))
+            if txt.strip() in {"Done.", "Done", "OK", "ok", "已完成"}:
+                txt = ""
+            return txt or _tool_report(executed)
+    return _tool_report(executed)
+
+
+def _tool_report(executed: list[tuple[str, str]]) -> str:
+    """Spoken report when the model returns empty content after tool rounds."""
+    if not executed:
+        return "我处理好了。"
+    names = "、".join(n for n, _ in executed)
+    last = executed[-1][1].strip().split("\n")[0][:80]
+    return f"我执行了 {names}：{last}"
 
 
 def _call_ollama_provider(provider_cfg: dict, temperature: float, full_messages: list[dict]) -> str:
@@ -451,6 +483,13 @@ def _handle_wake_inner() -> None:
         _broadcast({"type": "status", "message": "就绪。"})
         return
     print(f"[You] {user_text}")
+
+    if not _looks_understandable(user_text):
+        print(f"[爱莉希雅] Low-quality transcription ({user_text!r}) — asking to repeat.")
+        event_log.log("system", f"Wake: low-quality transcription: {user_text}", "voice")
+        _speak_if_unmuted("我没听清，请再说一遍。")
+        _broadcast({"type": "status", "message": "就绪。"})
+        return
 
     if _is_stop_command(user_text):
         event_log.log("system", f"Voice stop command: {user_text}", "voice")

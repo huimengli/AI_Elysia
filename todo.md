@@ -79,3 +79,4 @@
 - [x] 2026-11-08-17-29-39 启动全部服务（llama :8080 已在跑 / GPT-SoVITS :9880 启成 / Jarvis :7860 启成）供真人测试，3 轮验证通过 (→ records/2026-11-08-17-29-39.md)
 - [x] 2026-11-08-17-53-00 修「保存设置后管线报错」：根因=context 摘要产生第二条 system → chat template 500；main.py 并入唯一 system + llm.py 补 enable_thinking/timeout 90，3 轮验证通过 (→ records/2026-11-08-17-53-00.md)
 - [ ] 2026-11-08-18-16-33 切回 main 分支并重启 Jarvis :7860，做 UI 差异对比（main 无 17:53 修复，需提示） (→ records/2026-11-08-18-16-33.md)
+- [x] 2026-11-08-18-54-18 修「语音输入变 You + Done.」：两处根因（stt.py 写死 language=en；main.py 342-343 空 content 兜底字面 Done.）→ stt 语言取 config（zh）+ 转录守卫 + `_tool_report()` 兜底，3 轮验证通过 (→ records/2026-11-08-18-54-18.md)

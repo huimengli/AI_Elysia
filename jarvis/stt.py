@@ -40,9 +40,14 @@ def _get_model(force_cpu=False):
 
 def transcribe_audio(audio: np.ndarray) -> str:
     """Transcribe a float32 numpy audio array (16kHz mono) to text."""
+    # language="en" was hardcoded here, so Chinese speech was decoded as English
+    # fragments — a user utterance came back as literal "You" and the LLM answered
+    # "Done." (see records/2026-11-08-18-54-18.md). Language now comes from
+    # config.yaml stt.language (default zh; set null for auto-detect).
+    lang = _load_config()["stt"].get("language", "zh")
     try:
         model = _get_model()
-        segments, _ = model.transcribe(audio, beam_size=5, language="en")
+        segments, _ = model.transcribe(audio, beam_size=5, language=lang)
         return " ".join(seg.text.strip() for seg in segments).strip()
     except Exception as e:
         # If CUDA worked for loading but fails during inference, retry on CPU
@@ -50,7 +55,7 @@ def transcribe_audio(audio: np.ndarray) -> str:
             print(f"[STT] {_model_device} transcription failed ({e}), reloading on CPU")
             try:
                 model = _get_model(force_cpu=True)
-                segments, _ = model.transcribe(audio, beam_size=5, language="en")
+                segments, _ = model.transcribe(audio, beam_size=5, language=lang)
                 return " ".join(seg.text.strip() for seg in segments).strip()
             except Exception as e2:
                 print(f"[STT] CPU transcription also failed: {e2}")
