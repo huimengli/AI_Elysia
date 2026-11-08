@@ -69,3 +69,4 @@
 
 #### Git 提交记录（本批）
 - `b501812` `docs(AI): 语音批次 Git 提交台账（dc1f3ff / ccb7e60）`；本批 `get_time` + abort 宽限的 hash 见下一条（追加）。
+- `35984ac` `fix(AI): 修录音被自己的 barge-in 打断（1.5s 宽限 + 5s 冷却）并新增 get_time 工具`（**已本地 commit，未 push**；AGENTS §4 禁 push，你只授权过 `future/AI_UI`）
