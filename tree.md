@@ -1,11 +1,12 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-10-17-19-3x
+更新时间: 2026-11-08-13-04
 
 ```
 JarvisAi/
 ├── .gitignore
 ├── JARVIS_STATE.md
+├── AI_Benchmark.md
 ├── LICENSE
 ├── PROJECT_SUMMARY.txt
 ├── README.md
@@ -53,6 +54,10 @@ JarvisAi/
 │       ├── subagent.py
 │       ├── system.py
 │       └── web_search.py
+├── llm/
+│   ├── startLlama.ps1
+│   ├── startLlamaCpu.ps1
+│   └── startLlamaVulkanTest.ps1
 ├── openWakeWord/
 │   ├── generate_samples.py
 │   └── output/
@@ -66,7 +71,20 @@ JarvisAi/
 │   ├── 2026-10-14-22-23-49.md
 │   ├── 2026-10-15-21-05-48.md
 │   ├── 2026-10-17-17-16-41.md
-│   └── 2026-10-17-19-11-07.md
+│   ├── 2026-10-17-19-11-07.md
+│   ├── 2026-10-17-19-52-00.md
+│   ├── 2026-11-08-12-08-49.md
+│   ├── 2026-11-08-12-19-15.md
+│   ├── 2026-11-08-12-29-18.md
+│   ├── 2026-11-08-12-40-22.md
+│   └── 2026-11-08-12-51-25.md
+├── ai_buckup/
+│   ├── hard_bug.md_2026-10-13-17-45.md
+│   ├── need_user.md_2026-10-13-09-56-54.md
+│   ├── need_user.md_2026-10-13-17-45.md
+│   ├── need_user.md_2026-10-13-21-12-19.md
+│   ├── progress.md_2026-10-15-13-49-00.md
+│   └── progress.md_2026-11-08-12-40-22.md
 └── tests/
     ├── __init__.py
     ├── opinion.md

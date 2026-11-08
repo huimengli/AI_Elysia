@@ -61,3 +61,11 @@
   - [x] T9 `start_all.bat`：一键启动 GSV :9880 + Jarvis :7860（含 HF env；llama.cpp 用户自启不纳入）
 - [ ] 2026-10-17-19-11-07 README 中文化（删 Coffe helps）+ fork/权重来源(位置+类型)/自用声明 + 仓库更名 AI_Elysia + LICENSE + push（→ records/2026-10-17-19-11-07.md；用户已允许本次 push）
 - [ ] 2026-10-17-19-52-00 唤醒词模型 onnx v0.3 入库（自训练，用户批准推送）(→ records/2026-10-17-19-52-00.md)
+- [ ] 2026-11-08-12-08-49 LLM 基准测试台账 AI_Benchmark.md（三模型对比落盘，后续继续测更多模型） (→ records/2026-11-08-12-08-49.md)
+- [x] 2026-11-08-12-19-15 0.8B 基准复测补缺口项（T0-T13 + E 全量，台账升 v1.1） (→ records/2026-11-08-12-19-15.md)
+- [x] 2026-11-08-12-29-18 Qwen3.5-4B-UD-IQ3_XXS 基准（台账升 v1.2，四模型对比） (→ records/2026-11-08-12-29-18.md)
+- [x] 2026-11-08-12-40-22 新增 T14 decode 速度测试项（IQ3 实测 8.7 tps；其余模型待重载补测） (→ records/2026-11-08-12-40-22.md)
+- [x] 2026-11-08-12-51-25 2B T14 decode 补测（21.2 tps，TTFT 248 ms） (→ records/2026-11-08-12-51-25.md)
+- [x] 2026-11-08-13-04-48 llm/ 文件夹入 .gitignore（llama.cpp 二进制 + gguf 不入库，.ps1 保留）；选定 2B-Q4_K_M 为主模型，config.yaml 改仓库内模型路径，README/tree 同步 (→ records/2026-11-08-13-04-48.md)
+- [x] 2026-11-08-13-29-56 三个 startLlama*.ps1 的 $BinDir 与默认模型改为仓库内 llm/ 路径（含 VulkanTest 的 Push-Location 与 API-key 分支修复） (→ records/2026-11-08-13-29-56.md)
+- [ ] 2026-11-08-13-04-48 三个 startLlama*.ps1 的 $BinDir/模型路径仍指向外部 testGame；是否改为仓库内 llm/ 路径需用户确认 (→ records/2026-11-08-13-04-48.md)
