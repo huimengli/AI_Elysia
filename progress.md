@@ -46,7 +46,8 @@
 - `cc6830a` `docs(AI): record 1e16ca6 hash, 18-21 service restart re-verification, Alt+R run channel fix`（2 files / 16 insertions；**已本地 commit，未 push**）
 - `9939d8d` `docs(AI): append cc6830a commit hash to progress ledger`（1 file；**已本地 commit，未 push**）
 - `324fe25` `fix(AI): start_all.bat sets MPLCONFIGDIR to kill matplotlib WinError5 and launches llama :8080 too`（3 files / 57 insertions；新增 `records/2026-11-09-19-45-46.md`；**已本地 commit，未 push**）
-- 下一条（追加）：本条 hash 的 commit。
+- `10d2b55` `docs(AI): append 324fe25 hash and 19-45 matplotlib/launch fix section to progress ledger`（1 file / 10 insertions；**已本地 commit，未 push**）
+- 最后一条 hash 的「记录该 hash 的 commit」不再追加，避免无限循环。
 
 ## 2026-11-09-18-21 服务重启复验（用户：「服务你需要重启一下」）
 
