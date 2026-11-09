@@ -87,6 +87,7 @@
 - [x] 2026-11-09-15-37-58 顶部状态显示器定稿 + 重启三服务 + 共用浏览器插件评估（→ records/2026-11-09-15-37-58.md）
   - [x] 状态显示器定稿：6 芯片 `待命中/已离线/聆听中/说话中/执行中/思考中` + 右侧 `语音识别/LLM/TTS` 三盏灯，新增 `GET /api/health`（3 轮验证全 PASS）
   - [x] 重启三服务：llama `:8080`(pid 16876) / GPT-SoVITS `:9880`(pid 18284) / Jarvis `:7860`(pid 1924)，实测监听 + TTS 真实合成
+  - [x] 2026-11-09-18-21 二次重启复验（用户「继续(服务你需要重启一下)」）：重启前三端口全无监听、无 `llama-server`/`python.exe`；重启后 llama `:8080`(pid 2072) / GPT-SoVITS `:9880`(pid 19084) / Jarvis `:7860`(pid 2828)，`/api/health` 三灯 online、WS `user→思考中→get_time→tool_result`、事件库 18:39:40→18:39:50 简体中文真实时钟（全程 `.tmp/*.log` 文本通路，零截图）
   - [x] 需求 1/2/3 复核：历史 `.strip()` 崩溃为 11-08 事件（`_coerce` 已修）；17:17/17:19 实测简体 + 真实时钟；两次 1.2 s `stop` 无重复系统气泡
   - [x] 插件三问评估落盘（口碑 / 恶意执行 / 数据外发）：Playwright MCP `--cdp-endpoint` **通过（推荐）**、Chrome DevTools MCP **通过**、Browser MCP（云 relay）**拒绝**
   - [ ] 插件**安装/配置**（`mcp_connector_configure` + Chrome `--remote-debugging-port=9222`）——需用户明确授权后执行

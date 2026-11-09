@@ -42,4 +42,18 @@
 - `35984ac` `fix(AI): 修录音被自己的 barge-in 打断（1.5s 宽限 + 5s 冷却）并新增 get_time 工具`
 - `904dbc8` `fix(AI): 网页端实时状态改为匹配中文广播并加心跳/重连重拉历史`；`104045f` `docs(AI): 网页实时批次提交台账（904dbc8）`
 - `a0ecd92` `fix(AI): add status display + ASR/LLM/TTS health lamps, restart services and verify realtime UI in 3 rounds`（16 files，含 records/tests/progress/todo + `web.py`/`index.html`/`main.py`/`stt.py`/`wake.py`/`router.py`/`.gitignore`；commit 主题用 ASCII，因 `cmd` 会把中文当 GBK 写入）
-- 下一条（追加）：`tree.md` 重建 + `progress.md` 压实 + `records/2026-11-08-20-44-17.md` 入库的 commit。
+- `1e16ca6` `docs(AI): rebuild tree.md, archive+compact progress.md, todo status, add untracked record 2026-11-08-20-44-17`（4 files；`tree.md` 由 `git ls-files` + 未跟踪的非忽略文件重建；`records/2026-11-08-20-44-17.md` 从「未跟踪」补入库；**已本地 commit，未 push**）
+- 下一条（追加）：本会话「服务重启复验」的 commit。
+
+## 2026-11-09-18-21 服务重启复验（用户：「服务你需要重启一下」）
+
+- 重启前实测：`netstat` 无 `:8080/:9880/:7860` 监听，`tasklist` 无 `llama-server`/`python.exe`；只有 pid 3016 对 `:7860` 的 `SYN_SENT`（连不上）。
+- 用 `.tmp\start_services.ps1`（ASCII 版）重启三服务：llama `:8080` pid 2072（`llama.log` 显示模型 `Qwen3.5-2B-Q4_K_M`，`n_ctx 65536`，`/v1/models` 正常应答）、GPT-SoVITS `:9880` pid 19084（Elysia e20/e24 权重 + BERT/HuBERT 加载，CPU；cublas/cudart 缺失仅告警，走 CPU）、Jarvis `:7860` pid 2828（`[Web] Event loop captured`，唤醒监听 peak 0.678/0.666 触发）。
+- 复验（全部走 `.tmp/*.log` 文本通路，无截图）：
+  - `GET /api/health` → `asr online=true warm=true (small/cpu/zh)`、`llm online=true llamacpp @ :8080/v1`、`tts online=true gptsovits @ :9880/tts`。
+  - WS 链路：`user` → `status 思考中…` → `tool get_time` → `tool_result 2026-11-09 18:39:49 星期一`。
+  - 事件库：`18:39:40 user「现在几点了？用一句简体中文回答」(web)` → `18:39:50 assistant「现在是2026年11月9日星期一，晚上6点39分。」(web)`（10 s，简体中文 + 真实时钟）。
+  - 启动时 `startup 爱莉希雅 online`(18:35:08)；18:35:14 唤醒触发 → 18:36:12 `Wake: no voice recognized`（真人录音 30 s 上限，无语音 → 空转录，属已知行为）。
+- **执行通道修正（重要）**：「打开文件 - 安全警告」弹窗对 UIA `invoke` 与鼠标点击均无效（多次「Performed invoke」/「Clicked」后弹窗仍在）；**`Alt+R`（运行(R) 的助记键）才生效**。键盘注入到弹窗前必须先 `list` 取新 window_id。`Win+R` 可作为无 Explorer 时的启动入口（Run 对话框接受 `.bat` 全路径）。
+- 中文路径在 `.bat` 里会被 cmd 当 GBK（`cd /d "C:\Users\楼听\..."` 失效）；一律用 `%USERPROFILE%`。PowerShell 重定向产生的 CJK 日志用 `read` 会报 invalid UTF-8 → 用 `Get-Content | Out-File -Encoding utf8` 转一层再读。
+
