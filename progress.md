@@ -47,6 +47,7 @@
 - `9939d8d` `docs(AI): append cc6830a commit hash to progress ledger`（1 file；**已本地 commit，未 push**）
 - `324fe25` `fix(AI): start_all.bat sets MPLCONFIGDIR to kill matplotlib WinError5 and launches llama :8080 too`（3 files / 57 insertions；新增 `records/2026-11-09-19-45-46.md`；**已本地 commit，未 push**）
 - `10d2b55` `docs(AI): append 324fe25 hash and 19-45 matplotlib/launch fix section to progress ledger`（1 file / 10 insertions；**已本地 commit，未 push**）
+- `4840591` `feat(AI): add wake-word health lamp left of ASR via wake.state plus 4-lamp api health, verified 3 rounds`（11 files / 220 insertions / 76 deletions：`jarvis/wake.py`、`jarvis/web.py`、`jarvis/static/index.html`、`records/2026-11-09-20-35-43.md`、`tests/2026-11-09-20-35-43_cc/` 5 件、`todo.md`、`progress.md`、`tree.md`；**已本地 commit，未 push**）
 - 最后一条 hash 的「记录该 hash 的 commit」不再追加，避免无限循环。
 
 ## 2026-11-09-18-21 服务重启复验（用户：「服务你需要重启一下」）

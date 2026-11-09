@@ -91,3 +91,10 @@
 - 观测配额首次落地执行：以 UIA 语义树 + `.tmp/*.log` 文本为主，仅 3 张小区域截图用于定位与目视验收；新执行通道（`.bat` + 资源管理器「运行(R)」+ 日志重定向）已写入 progress.md。
 - 服务：llama `:8080`(pid 16876)、GPT-SoVITS `:9880`(pid 18284)、jarvis `:7860`(pid 1924) 由本会话重启并验证；真人语音测试会继续往事件库写行。
 
+# 批次结论（tests/2026-11-09-20-35-43_cc，验证 3 轮）
+
+- 需求：状态灯在「语音识别」左侧加「唤醒」（`records/2026-11-09-20-35-43.md`）。
+- 3 轮全 PASS：① `GET /api/health` 四灯真值（`wake online=true / listening=true / model aili_xiya_v0.3.onnx / threshold 0.65 / last_detect 21:03:00`，`asr.warm` 已为 `true`，`llm/tts` 保持在线）；② 服务端返回 HTML 中 `lamp-wake` 行紧邻 `lamp-asr` **之前**，`lamps` 绑定 4 盏、`pollHealth` keys 为 `['wake','asr','llm','tts']`、让出麦克风时黄灯；③ 进程内直调 `_health_snapshot()` 核对 `keys=["wake","asr","llm","tts"]` 与未加载态优雅退化（`online=false`、`last_detect=""`、不抛异常）。
+- 方法学：全程零截图，`curl` + `Select-String` + `.tmp/*.log`（UTF-8 转码后读）；重启走 `.tmp\bats\run28.bat`（`Get-NetTCPConnection -LocalPort 7860` 定位 pid 后杀，再 `Start-Process` 隐藏窗口拉起），执行通道沿用 15-37 批次定稿的「运行(R)」+ 安全警告 Alt+R 放行。
+- 结论：唤醒灯数据源与 UI 两侧闭合，在线 / 离线 / 让麦克风三态语义明确；`asr/llm/tts` 零回归。遗留：`threshold` 改后需重启 Jarvis 才刷新 `state`；灯为 5 s 轮询、`peak` 为 3 s 日志窗峰值。
+
