@@ -80,3 +80,13 @@
 - 3 轮验证全 PASS（`tests/2026-11-09-20-35-43_cc/`，累积见 `tests/opinion.md`）：`/api/health` 四灯真值（`wake online=true/listening=true/threshold 0.65/last_detect 21:03:00`）、服务端 HTML 灯序与 JS 绑定（`lamp-wake` 行紧邻 `lamp-asr` 前）、进程内快照核对 `keys=["wake","asr","llm","tts"]` 与未加载态优雅退化。全程零截图。
 - 小坑：`.tmp\probe.py` 直调快照时 `ModuleNotFoundError: No module named 'jarvis'`（`sys.path[0]` 是脚本目录），在 bat 里 `set "PYTHONPATH=%CD%"` 解决。
 
+## 2026-11-09-21-19 `start_all.bat`：ASCII + CRLF + `start` 开四个 cmd 窗口
+
+- 需求（用户原话「1. start_all.bat 应当是CR LF换行格式 ASCII编码 2. start_all应该通过start打开三个(或者更多)cmd界面」）→ `records/2026-11-09-21-19-29.md` + `todo.md` 追加后开工。
+- 实测改前：`CR=56 LF=56`（**换行本来就是 CRLF**，要求 1 已满足），但 `nonASCII=250`（`rem` 框线 `─` + 中文「爱莉希雅」），这也是 `read` 直读 `start_all.bat` 报 `invalid UTF-8 text` 的原因。ASCII 化后：`len=2912 / CR=50 / LF=50 / nonASCII=0`（`starts=4`、`cmd_window_starts=3`）。
+- 编码做法：ASCII 源 `.tmp\start_all_src.txt`（注释与提示全英文，框线字符换成 ASCII `----`，因为 ASCII 编码会把 `─` 变 `?`）→ `.tmp\conv.ps1` 用 `(行 -join "`r`n") + "`r`n" | Set-Content -Encoding Ascii` 生成 `start_all.bat`，并逐字节统计 `CR/LF/nonASCII` 写日志。
+- 窗口写法定稿：**`start "标题" cmd /k "cd /d %~dp0... & set ... & 程序"` 单行形式**（旧的 `start "标题" cmd /k ( 多行 )` 括号复合不可靠，已废弃）。路径全用 `%~dp0`（无空格、无中文），所以 `cmd /k` 内不需要嵌套引号；4 个窗口：`llama.cpp :8080` / `GPT-SoVITS :9880` / `AiliXiya :7860` / `Jarvis Status`（第 4 窗，PowerShell 每 5 s 刷新 8080/9880/7860 监听 pid + `GET /api/health`）。
+- 幂等：每段先 `netstat` 查端口，已 `LISTENING` 就打印 `[Skip] :NNNN already in use` 并跳过启动，双击两次不会堆出重复服务或多余窗口。
+- 3 轮验证全 PASS（`tests/2026-11-09-21-19-29_cc/`，累积见 `tests/opinion.md`）：① 字节属性；② 双击后窗口标题实测 `GPT-SoVITS :9880 - ..\.venv-gsv\Scripts\python.exe -X utf8 api_v2.py`、`AiliXiya :7860 - .venv\Scripts\python.exe -u -m jarvis.main`、`Jarvis Status`，`:8080` 占用时仅 `[Skip]` 且未多开窗口；③ 脚本开出的窗口确实把服务拉起：`:7860` pid 4920、`:9880` pid 7028、`:8080` pid 13808 全 LISTENING，`/api/health` 四灯 `online:true`（`asr.warm=true`，`wake.last_detect=21:37:48`）。全程零截图（`netstat`/`tasklist`/`curl` + 窗口标题文本）。
+- 小坑：`call start_all.bat` 后父脚本尾部输出未落盘（`exit /b 0` 与 `call` 的交互），采集数据改用独立 bat 补齐；关窗即停该服务。
+

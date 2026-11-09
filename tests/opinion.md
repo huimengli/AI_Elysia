@@ -98,3 +98,10 @@
 - 方法学：全程零截图，`curl` + `Select-String` + `.tmp/*.log`（UTF-8 转码后读）；重启走 `.tmp\bats\run28.bat`（`Get-NetTCPConnection -LocalPort 7860` 定位 pid 后杀，再 `Start-Process` 隐藏窗口拉起），执行通道沿用 15-37 批次定稿的「运行(R)」+ 安全警告 Alt+R 放行。
 - 结论：唤醒灯数据源与 UI 两侧闭合，在线 / 离线 / 让麦克风三态语义明确；`asr/llm/tts` 零回归。遗留：`threshold` 改后需重启 Jarvis 才刷新 `state`；灯为 5 s 轮询、`peak` 为 3 s 日志窗峰值。
 
+# 批次结论（tests/2026-11-09-21-19-29_cc，验证 3 轮）
+
+- 需求：`start_all.bat` 必须 CRLF + ASCII，且用 `start` 打开三个（或更多）cmd 界面（`records/2026-11-09-21-19-29.md`）。
+- 3 轮全 PASS：① 字节统计改后 `len=2912 / CR=50 / LF=50 / nonASCII=0`，改前 `nonASCII=250`（框线 `─` + 中文），换行本来就是 CRLF；`starts=4`、`cmd_window_starts=3`；② 双击后窗口标题实测 `GPT-SoVITS :9880 - ..\.venv-gsv\Scripts\python.exe -X utf8 api_v2.py`、`AiliXiya :7860 - .venv\Scripts\python.exe -u -m jarvis.main`、`Jarvis Status`（第 4 窗），`:8080` 已占用时只打印 `[Skip]` 且不多开窗口（幂等）；③ 脚本开出的窗口确实把服务拉起：`:7860` pid 4920、`:9880` pid 7028、`:8080` pid 13808 全 LISTENING，`/api/health` 四灯 `online:true`（`asr.warm=true`，`wake.last_detect=21:37:48`）。
+- 方法学定稿：`start "标题" cmd /k "cd /d %~dp0... & set ... & 程序"` 单行形式（旧的 `cmd /k ( 多行 )` 括号复合废弃）；路径全用 `%~dp0`（无空格无中文）故 `cmd /k` 内不需嵌套引号；ASCII 化用 `Set-Content -Encoding Ascii` + 显式 `\r\n`，注释与提示一律英文。全程零截图（`netstat`/`tasklist`/`curl` + 窗口标题文本）。
+- 结论：编码与窗口两条要求闭合，四窗口 = llama :8080 / GPT-SoVITS :9880 / Jarvis :7860 / Status 面板；关窗即停对应服务。遗留：`call start_all.bat` 后父脚本尾部输出未落盘（`exit /b 0` 交互，不影响双击），第 4 个状态窗口不需要时可自行关闭。
+

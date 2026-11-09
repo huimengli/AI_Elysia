@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-09-21-08（新增 `records/2026-11-09-20-35-43.md` 与 `tests/2026-11-09-20-35-43_cc/`（5 个文件），共 146 项；`jarvis/wake.py`、`jarvis/web.py`、`jarvis/static/index.html` 为本轮改动（唤醒灯）。本文件由 `git ls-files`（138 项，`start_all.bat` 已修改）+ 未跟踪的非忽略文件（2 项）+ 本轮新增 6 项重建；`.tmp/` 被 `.gitignore` 排除，不列出）
+更新时间: 2026-11-09-21-40（新增 `records/2026-11-09-21-19-29.md` 与 `tests/2026-11-09-21-19-29_cc/`（5 个文件），共 152 项；`start_all.bat` 为本轮改动（ASCII + CRLF + `start` 四窗口）。本文件由 `git ls-files` + 未跟踪的非忽略文件（2 项）+ 本轮新增重建；`.tmp/` 被 `.gitignore` 排除，不列出）
 
 ```
 JarvisAi/
@@ -21,7 +21,7 @@ JarvisAi/
 ├── progress.md
 ├── requirements.txt
 ├── start.bat
-├── start_all.bat              (本次修改：MPLCONFIGDIR + llama :8080 启动段)
+├── start_all.bat              (本次修改：ASCII + CRLF + start 开 4 个 cmd 窗口)
 ├── todo.md
 ├── tree.md
 ├── ai_buckup
@@ -99,7 +99,8 @@ JarvisAi/
 │   ├── 2026-11-08-20-44-17.md
 │   ├── 2026-11-09-15-37-58.md
 │   ├── 2026-11-09-19-45-46.md
-│   └── 2026-11-09-20-35-43.md
+│   ├── 2026-11-09-20-35-43.md
+│   └── 2026-11-09-21-19-29.md
 └── tests
     ├── __init__.py
     ├── opinion.md
@@ -120,7 +121,8 @@ JarvisAi/
     ├── 2026-11-08-19-52-59_cc (opinion.md + record_1..3)
     ├── 2026-11-08-20-22-00_cc (opinion.md + record_1..3)
     ├── 2026-11-09-15-37-58_cc (opinion.md + record_1..3)
-    └── 2026-11-09-20-35-43_cc (opinion.md + record_1..3)
+    ├── 2026-11-09-20-35-43_cc (opinion.md + record_1..3)
+    └── 2026-11-09-21-19-29_cc (opinion.md + record_1..3)
 ```
 
-注：`jarvis/wake.py`、`jarvis/web.py`、`jarvis/static/index.html` 为唤醒灯改动（2026-11-09-20-35-43）。
+注：`start_all.bat` 为编码/窗口改动（2026-11-09-21-19-29）；`jarvis/wake.py`、`jarvis/web.py`、`jarvis/static/index.html` 为唤醒灯改动（2026-11-09-20-35-43）。
