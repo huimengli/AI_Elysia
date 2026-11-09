@@ -291,6 +291,7 @@
       <span id="statusText">启动中</span>
       <!-- 右侧三盏灯：语音识别 / LLM / TTS（/api/health，5 s 轮询） -->
       <div class="svc-lamps" id="svcLamps">
+        <div class="svc-lamp off" id="lamp-wake" title="唤醒：openWakeWord 模型是否已加载并在监听"><span class="dot"></span>唤醒</div>
         <div class="svc-lamp off" id="lamp-asr" title="语音识别：faster-whisper（进程内，首次识别后常驻）"><span class="dot"></span>语音识别</div>
         <div class="svc-lamp off" id="lamp-llm" title="LLM：当前 provider 的 base_url 是否可连"><span class="dot"></span>LLM</div>
         <div class="svc-lamp off" id="lamp-tts" title="TTS：GPT-SoVITS :9880 是否可连"><span class="dot"></span>TTS</div>
@@ -735,10 +736,12 @@ async function pollEvents() {
 setInterval(pollEvents, 2000);
 
 // 服务三盏灯（语音识别 / LLM / TTS）：5 s 拉一次 /api/health
-// （用户定稿 2026-11-09-15-37-58：状态显示器右边加「语音识别/LLM/TTS 是否在线」）。
-// asr 在 jarvis 进程内（whisper 首次识别后才常驻）→ 用 warm 黄灯；llm/tts 是
-// 外部服务（:8080 / :9880）→ 连不上就灰灯。
-const lamps = { asr: document.getElementById('lamp-asr'), llm: document.getElementById('lamp-llm'), tts: document.getElementById('lamp-tts') };
+// （用户定稿 2026-11-09-15-37-58：状态显示器右边加「语音识别/LLM/TTS 是否在线」；
+// 2026-11-09-20-35-43 在最左侧加「唤醒」= openWakeWord 是否在线并在监听）。
+// wake/asr 在 jarvis 进程内（whisper 首次识别后才常驻）→ 用 warm 黄灯；llm/tts 是
+// 外部服务（:8080 / :9880）→ 连不上就灰灯。wake 在 STT 录音时把麦克风让出去，
+// 这段时间 listening=false，用黄灯而不是红灯，避免被读成「唤醒挂了」。
+const lamps = { wake: document.getElementById('lamp-wake'), asr: document.getElementById('lamp-asr'), llm: document.getElementById('lamp-llm'), tts: document.getElementById('lamp-tts') };
 function setLamp(el, cls, title) {
   if (!el) return;
   el.classList.remove('on'); el.classList.remove('off'); el.classList.remove('warm');
@@ -749,14 +752,15 @@ async function pollHealth() {
   try {
     const r = await fetch('/api/health');
     const d = await r.json();
-    for (const k of ['asr', 'llm', 'tts']) {
+    for (const k of ['wake', 'asr', 'llm', 'tts']) {
       const s = d[k] || {};
       if (!s.online) setLamp(lamps[k], 'off', (s.detail || '') + '（离线）');
       else if (k === 'asr' && s.warm === false) setLamp(lamps[k], 'warm', s.detail || '');
+      else if (k === 'wake' && s.listening === false) setLamp(lamps[k], 'warm', (s.detail || '') + '（麦克风让给语音识别）');
       else setLamp(lamps[k], 'on', s.detail || '');
     }
   } catch (e) {
-    for (const k of ['asr', 'llm', 'tts']) setLamp(lamps[k], 'off', '无法连接 Jarvis 服务（:7860）');
+    for (const k of ['wake', 'asr', 'llm', 'tts']) setLamp(lamps[k], 'off', '无法连接 Jarvis 服务（:7860）');
   }
 }
 pollHealth();

@@ -30,6 +30,22 @@ def resume_wake_mic() -> None:
     _mic_pause.clear()
 
 
+# ─── Live wake-word state, read by GET /api/health (2026-11-09-20-35-43) ───
+# Everything the wake loop knows about itself, published for the UI's 唤醒 lamp.
+# Model construction sets online; the mic-pause window (STT holds the device)
+# sets listening=False; each chunk updates score, the rolling window updates
+# peak, and a threshold crossing updates last_detect.
+state = {
+    "online": False,
+    "listening": False,
+    "model": "",
+    "threshold": None,
+    "score": 0.0,
+    "peak": 0.0,
+    "last_detect": 0.0,
+}
+
+
 def listen_for_wake_word(callback) -> None:
     """
     Continuously listen for wake word. Calls callback() when detected.
@@ -52,6 +68,10 @@ def listen_for_wake_word(callback) -> None:
     # "hey_jarvis_v0.1"). Mirror that resolution here.
     _model_spec = cfg["model"]
     _model_key = Path(_model_spec).stem if Path(_model_spec).exists() else _model_spec
+    state["online"] = True
+    state["model"] = Path(_model_spec).name
+    state["threshold"] = cfg["threshold"]
+    state["listening"] = True
 
     audio = pyaudio.PyAudio()
     mic = audio.open(
@@ -73,6 +93,7 @@ def listen_for_wake_word(callback) -> None:
         while True:
             # ── Mic pause: STT is recording, yield the hardware ──
             if _mic_pause.is_set():
+                state["listening"] = False
                 if mic.is_active():
                     mic.stop_stream()
                     print("[Wake] Mic paused for STT recording.")
@@ -80,6 +101,7 @@ def listen_for_wake_word(callback) -> None:
                     time.sleep(0.05)
                 # Resume after STT is done
                 mic.start_stream()
+                state["listening"] = True
                 oww.reset()  # Clear stale predictions
                 # The user usually keeps talking right after the capture; that speech
                 # scores above the threshold and used to abort the turn 1-2s later
@@ -104,10 +126,12 @@ def listen_for_wake_word(callback) -> None:
                 time.sleep(0.5)
                 continue
             score = predictions.get(_model_key, 0)
+            state["score"] = float(score)
 
             # Throttled sensitivity log. Without it a non-triggering wake is
             # indistinguishable from a dead mic (records/2026-11-08-19-25-48.md).
             _peak = max(_peak, score)
+            state["peak"] = float(_peak)
             if time.time() - _last_log >= 3.0:
                 print(f"[Wake] peak {_peak:.3f} / threshold {cfg['threshold']}")
                 _peak = 0.0
@@ -118,6 +142,7 @@ def listen_for_wake_word(callback) -> None:
 
             oww.reset()
             now = time.time()
+            state["last_detect"] = now
 
             # Skip if in cooldown window (prevents echo re-trigger)
             if now < _ignore_until[0]:

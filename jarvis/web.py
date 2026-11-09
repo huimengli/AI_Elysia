@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import threading
+import time
 from pathlib import Path
 
 import uvicorn
@@ -210,19 +211,39 @@ def _tcp_probe(host: str, port: int, timeout: float = 0.8) -> bool:
 
 
 def _health_snapshot() -> dict:
-    """Resolve the three lamps: asr / llm / tts.
+    """Resolve the four lamps: wake / asr / llm / tts.
 
-    asr lives *inside this process* — faster-whisper is loaded lazily by
-    jarvis.stt on the first transcription — so "online" means the jarvis
-    process itself is answering (which it is, by definition), and "warm" says
-    whether the whisper model is already resident. llm (:8080 llama.cpp) and
-    tts (:9880 GPT-SoVITS) are out-of-process servers, so they get a TCP probe
-    against the base_url / api_url declared in config.yaml.
+    wake and asr live *inside this process*: openWakeWord publishes its live
+    state into ``jarvis.wake.state`` (model loaded, mic listening, latest score
+    / peak / last trigger), and faster-whisper is loaded lazily by jarvis.stt
+    on the first transcription, so "online" means the jarvis process is
+    answering (which it is, by definition) and "warm" says whether the whisper
+    model is already resident. llm (:8080 llama.cpp) and tts (:9880 GPT-SoVITS)
+    are out-of-process servers, so they get a TCP probe against the
+    base_url / api_url declared in config.yaml.
     """
     from jarvis.main import _load_config
     import jarvis.stt as stt_mod
+    import jarvis.wake as wake_mod
 
     cfg = _load_config()
+    w = getattr(wake_mod, "state", {}) or {}
+    last = w.get("last_detect", 0.0) or 0.0
+    wake = {
+        "online": bool(w.get("online", False)),
+        "listening": bool(w.get("listening", False)),
+        "model": w.get("model", ""),
+        "threshold": w.get("threshold"),
+        "score": round(float(w.get("score", 0.0)), 3),
+        "peak": round(float(w.get("peak", 0.0)), 3),
+        "last_detect": (time.strftime("%H:%M:%S", time.localtime(last)) if last else ""),
+        "detail": (
+            f"{w.get('model', '')} / threshold {w.get('threshold')} / "
+            f"peak {round(float(w.get('peak', 0.0)), 3)}"
+            + (f" / 上次触发 {time.strftime('%H:%M:%S', time.localtime(last))}" if last else "")
+        ),
+    }
+
     llm_cfg = cfg.get("llm", {})
     active = llm_cfg.get("active_provider", "ollama")
     prov = (llm_cfg.get("providers") or {}).get(active, {})
@@ -265,12 +286,12 @@ def _health_snapshot() -> dict:
             f"{stt_cfg.get('language', 'zh')}（模型已加载={loaded}）"
         ),
     }
-    return {"asr": asr, "llm": llm, "tts": tts}
+    return {"wake": wake, "asr": asr, "llm": llm, "tts": tts}
 
 
 @app.get("/api/health")
 async def api_health():
-    """Three lamps for the UI: 语音识别 / LLM / TTS."""
+    """Four lamps for the UI: 唤醒 / 语音识别 / LLM / TTS."""
     import asyncio
     return JSONResponse(await asyncio.to_thread(_health_snapshot))
 

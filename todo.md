@@ -92,4 +92,5 @@
   - [x] 插件三问评估落盘（口碑 / 恶意执行 / 数据外发）：Playwright MCP `--cdp-endpoint` **通过（推荐）**、Chrome DevTools MCP **通过**、Browser MCP（云 relay）**拒绝**
   - [ ] 插件**安装/配置**（`mcp_connector_configure` + Chrome `--remote-debugging-port=9222`）——需用户明确授权后执行
 - [ ] 2026-11-09-19-45-46 修一键启动：`start_all.bat` 设 `MPLCONFIGDIR` 消除 matplotlib `WinError 5` 警告 + 补 llama `:8080` 启动段（双击起齐三服务），实测三端口监听 + `/api/health` 三灯 (→ records/2026-11-09-19-45-46.md)
+- [x] 2026-11-09-20-35-43 状态灯新增「唤醒」，排在语音识别左侧（`wake.state` + `/api/health` 四灯 + `lamp-wake`），重启 Jarvis 后 3 轮验证 (→ records/2026-11-09-20-35-43.md)
 

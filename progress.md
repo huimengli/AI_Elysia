@@ -69,3 +69,13 @@
 - 修复（commit `324fe25`）：`start_all.bat` 顶部 `set "MPLCONFIGDIR=%~dp0.tmp\mplconfig"` + 预建目录；新增 llama.cpp `:8080` 启动段（与 `.tmp\start_services.ps1` 同款参数：`-c 65536 -ngl 99 -fa 1 --load-mode none --jinja --reasoning-format deepseek --reasoning-preserve --cache-type-k/v q4_0 --mmproj`）+ `:8080` 占用检查。现在双击一次起齐 llama / GPT-SoVITS / Jarvis。
 - 观测方式延续零截图：`netstat`/`tasklist`/`curl /api/health` 全部写进 `.tmp\bats\*.log` 再用 `read` 读；`Out-File -Encoding utf8` 解决 CJK 日志。
 
+## 2026-11-09-20-35 状态灯加「唤醒」（语音识别左侧）
+
+- 需求（用户原话「语音识别左边再加一个 '唤醒'」）→ `records/2026-11-09-20-35-43.md` + `todo.md` 追加后开工。
+- 关键障碍：`jarvis/wake.py` 的模型对象与 `_peak`/`_last_detect` 都是 `listen_for_wake_word()` 里的**函数局部变量**，健康接口读不到。解法：模块级 `state` 字典发布 `online / listening / model / threshold / score / peak / last_detect`，由唤醒线程在各阶段就地写入（模型构造后置 `online`、每块音频更新 `score/peak`、阈值穿越写 `last_detect`、`_mic_pause` 窗口置 `listening=false`）。
+- `jarvis/web.py`：`_health_snapshot()` 从三灯变四灯，`wake` 排在 `asr` 前（补 `import time`，`last_detect` 用 `time.strftime` 本地化，0 值时置 `""` 以免显示假「上次触发 00:00:00」）。
+- `jarvis/static/index.html`：`lamp-wake` 插在 `lamp-asr` **之前** → 灯序 `唤醒 / 语音识别 / LLM / TTS`；复用现有 `.svc-lamp`（`on` 粉 / `warm` 金 / `off` 灰），`pollHealth` keys 加 `wake`；STT 录音期间 `listening=false` → **黄灯**附「麦克风让给语音识别」，不显示为离线。
+- 重启方式升级：`.tmp\bats\run28.bat` 用 `Get-NetTCPConnection -LocalPort 7860 -State Listen` 找 pid 后 `Stop-Process`，再 `Start-Process` 隐藏窗口拉起 `.venv\Scripts\python.exe -u -m jarvis.main`（比杀全部 python 精确，不伤 GPT-SoVITS）。
+- 3 轮验证全 PASS（`tests/2026-11-09-20-35-43_cc/`，累积见 `tests/opinion.md`）：`/api/health` 四灯真值（`wake online=true/listening=true/threshold 0.65/last_detect 21:03:00`）、服务端 HTML 灯序与 JS 绑定（`lamp-wake` 行紧邻 `lamp-asr` 前）、进程内快照核对 `keys=["wake","asr","llm","tts"]` 与未加载态优雅退化。全程零截图。
+- 小坑：`.tmp\probe.py` 直调快照时 `ModuleNotFoundError: No module named 'jarvis'`（`sys.path[0]` 是脚本目录），在 bat 里 `set "PYTHONPATH=%CD%"` 解决。
+

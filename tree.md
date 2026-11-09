@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-09-17-32（新增 records/2026-11-09-15-37-58.md、tests/2026-11-09-15-37-58_cc/、ai_buckup/progress.md_2026-11-09-17-25-00.md；本文件由 `git ls-files` + 未跟踪的非忽略文件重建，`.tmp/` 被 `.gitignore` 排除，不列出）
+更新时间: 2026-11-09-21-08（新增 `records/2026-11-09-20-35-43.md` 与 `tests/2026-11-09-20-35-43_cc/`（5 个文件），共 146 项；`jarvis/wake.py`、`jarvis/web.py`、`jarvis/static/index.html` 为本轮改动（唤醒灯）。本文件由 `git ls-files`（138 项，`start_all.bat` 已修改）+ 未跟踪的非忽略文件（2 项）+ 本轮新增 6 项重建；`.tmp/` 被 `.gitignore` 排除，不列出）
 
 ```
 JarvisAi/
@@ -11,8 +11,19 @@ JarvisAi/
 ├── PROJECT_SUMMARY.txt
 ├── README.md
 ├── _chat_template.jinja
+├── config.yaml
+├── design.md
+├── hard_bug.md
+├── install.bat
 ├── jarvis_screen.png          (未跟踪，非 .gitignore)
 ├── love_silvia.txt            (未跟踪，非 .gitignore)
+├── need_user.md
+├── progress.md
+├── requirements.txt
+├── start.bat
+├── start_all.bat              (本次修改：MPLCONFIGDIR + llama :8080 启动段)
+├── todo.md
+├── tree.md
 ├── ai_buckup
 │   ├── hard_bug.md_2026-10-13-17-45.md
 │   ├── need_user.md_2026-10-13-09-56-54.md
@@ -23,13 +34,9 @@ JarvisAi/
 │   ├── progress.md_2026-11-08-18-48.md
 │   ├── progress.md_2026-11-08-20-14.md
 │   └── progress.md_2026-11-09-17-25-00.md
-├── config.yaml
-├── design.md
 ├── dsh-my-presets
 │   ├── cordis.patch.yml
 │   └── package.json
-├── hard_bug.md
-├── install.bat
 ├── jarvis
 │   ├── __init__.py
 │   ├── context.py
@@ -57,13 +64,11 @@ JarvisAi/
 │   ├── startLlama.ps1
 │   ├── startLlamaCpu.ps1
 │   └── startLlamaVulkanTest.ps1
-├── need_user.md
 ├── openWakeWord
 │   ├── generate_samples.py
 │   └── output
 │       └── aili_xiya_v0.3
 │           └── aili_xiya_v0.3.onnx
-├── progress.md
 ├── records
 │   ├── 2026-10-12-12-28-30.md
 │   ├── 2026-10-13-11-45.md
@@ -91,57 +96,31 @@ JarvisAi/
 │   ├── 2026-11-08-19-25-48.md
 │   ├── 2026-11-08-19-52-59.md
 │   ├── 2026-11-08-20-22-00.md
-│   ├── 2026-11-08-20-44-17.md   (未跟踪，非 .gitignore)
-│   └── 2026-11-09-15-37-58.md
-├── requirements.txt
-├── start.bat
-├── start_all.bat
-├── tests
-│   ├── __init__.py
-│   ├── opinion.md
-│   ├── test_context.py
-│   ├── test_llm.py
-│   ├── test_memory.py
-│   ├── test_stt.py
-│   ├── test_tools.py
-│   ├── test_tts.py
-│   ├── 2026-11-08-14-12-32_cc
-│   │   ├── opinion.md
-│   │   ├── record_1.md
-│   │   ├── record_2.md
-│   │   └── record_3.md
-│   ├── 2026-11-08-15-16-18_cc
-│   │   ├── opinion.md
-│   │   ├── record_1.md … record_6.md
-│   ├── 2026-11-08-17-29-39_cc
-│   │   ├── opinion.md
-│   │   └── record_1.md … record_3.md
-│   ├── 2026-11-08-17-53-00_cc
-│   │   ├── opinion.md
-│   │   └── record_1.md … record_3.md
-│   ├── 2026-11-08-18-16-33_cc
-│   │   ├── opinion.md
-│   │   └── record_1.md … record_3.md
-│   ├── 2026-11-08-18-39-40_cc
-│   │   ├── opinion.md
-│   │   └── record_1.md … record_3.md
-│   ├── 2026-11-08-18-54-18_cc
-│   │   ├── opinion.md
-│   │   └── record_1.md … record_3.md
-│   ├── 2026-11-08-19-25-48_cc
-│   │   ├── opinion.md
-│   │   └── record_1.md … record_3.md
-│   ├── 2026-11-08-19-52-59_cc
-│   │   ├── opinion.md
-│   │   └── record_1.md … record_3.md
-│   ├── 2026-11-08-20-22-00_cc
-│   │   ├── opinion.md
-│   │   └── record_1.md … record_3.md
-│   └── 2026-11-09-15-37-58_cc
-│       ├── opinion.md
-│       ├── record_1.md
-│       ├── record_2.md
-│       └── record_3.md
-├── todo.md
-└── tree.md
+│   ├── 2026-11-08-20-44-17.md
+│   ├── 2026-11-09-15-37-58.md
+│   ├── 2026-11-09-19-45-46.md
+│   └── 2026-11-09-20-35-43.md
+└── tests
+    ├── __init__.py
+    ├── opinion.md
+    ├── test_context.py
+    ├── test_llm.py
+    ├── test_memory.py
+    ├── test_stt.py
+    ├── test_tools.py
+    ├── test_tts.py
+    ├── 2026-11-08-14-12-32_cc (opinion.md + record_1..3)
+    ├── 2026-11-08-15-16-18_cc (opinion.md + record_1..6)
+    ├── 2026-11-08-17-29-39_cc (opinion.md + record_1..3)
+    ├── 2026-11-08-17-53-00_cc (opinion.md + record_1..3)
+    ├── 2026-11-08-18-16-33_cc (opinion.md + record_1..3)
+    ├── 2026-11-08-18-39-40_cc (opinion.md + record_1..3)
+    ├── 2026-11-08-18-54-18_cc (opinion.md + record_1..3)
+    ├── 2026-11-08-19-25-48_cc (opinion.md + record_1..3)
+    ├── 2026-11-08-19-52-59_cc (opinion.md + record_1..3)
+    ├── 2026-11-08-20-22-00_cc (opinion.md + record_1..3)
+    ├── 2026-11-09-15-37-58_cc (opinion.md + record_1..3)
+    └── 2026-11-09-20-35-43_cc (opinion.md + record_1..3)
 ```
+
+注：`jarvis/wake.py`、`jarvis/web.py`、`jarvis/static/index.html` 为唤醒灯改动（2026-11-09-20-35-43）。
