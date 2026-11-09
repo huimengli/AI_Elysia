@@ -24,6 +24,8 @@ _*.yaml
 .pip-cache/
 .hf-cache/
 .chroma-models/
+# 会话临时产物（截图 / 探针日志 / OCR 中间件），不入库
+.tmp/
 
 *.log
 *.wav

@@ -79,7 +79,20 @@
     background:var(--glass);border:1px solid var(--line-2);font-size:12px;color:var(--text-dim);}
   .status-dot{width:9px;height:9px;border-radius:50%;background:var(--lilac);box-shadow:0 0 10px var(--lilac);}
   .status-dot.online{background:var(--pink-2);box-shadow:0 0 12px var(--pink);}
+.state-display{display:flex;gap:4px;flex-wrap:wrap;}
+.state-chip{font-size:10px;letter-spacing:1px;padding:2px 7px;border:1px solid rgba(248,169,153,.25);border-radius:999px;color:#9a8fa8;opacity:.5;white-space:nowrap;}
+.state-chip.active{color:var(--pink);border-color:var(--pink-2);opacity:1;box-shadow:0 0 10px rgba(248,169,153,.35);}
   .status-dot.thinking{background:var(--gold);box-shadow:0 0 12px var(--gold);}
+  /* 服务在线小灯（语音识别 / LLM / TTS），由 /api/health 5s 轮询驱动 */
+  .svc-lamps{display:flex;align-items:center;gap:7px;margin-left:6px;}
+  .svc-lamp{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-dim);
+    padding:3px 9px;border:1px solid var(--line-2);border-radius:999px;background:var(--glass);white-space:nowrap;}
+  .svc-lamp .dot{width:7px;height:7px;border-radius:50%;background:#5f5566;transition:background .2s,box-shadow .2s;}
+  .svc-lamp.off{color:#8b7f8c;} .svc-lamp.off .dot{background:#5f5566;box-shadow:none;}
+  .svc-lamp.warm{color:var(--gold);} .svc-lamp.warm .dot{background:var(--gold);box-shadow:0 0 8px var(--gold);}
+  .svc-lamp.on{color:var(--pink-2);border-color:var(--pink-2);}
+  .svc-lamp.on .dot{background:var(--pink-2);box-shadow:0 0 9px var(--pink);}
+
   .header-right{display:flex;align-items:center;gap:12px;}
   .model-select{
     appearance:none;padding:7px 14px;border-radius:12px;color:var(--text);font-size:13px;
@@ -265,8 +278,25 @@
     </div>
     <div class="status-badge">
       <div class="status-dot" id="statusDot"></div>
+      <!-- 用户定稿（2026-11-09-15-37-58）：顶部状态显示器 = 待命中 / 已离线 / 聆听中 /
+           说话中 / 执行中 / 思考中；statusText 保留为细粒度说明（工具名、在。…） -->
+      <div class="state-display" id="stateDisplay">
+        <span class="state-chip active" data-state="idle">待命中</span>
+        <span class="state-chip" data-state="offline">已离线</span>
+        <span class="state-chip" data-state="listening">聆听中</span>
+        <span class="state-chip" data-state="speaking">说话中</span>
+        <span class="state-chip" data-state="acting">执行中</span>
+        <span class="state-chip" data-state="thinking">思考中</span>
+      </div>
       <span id="statusText">启动中</span>
+      <!-- 右侧三盏灯：语音识别 / LLM / TTS（/api/health，5 s 轮询） -->
+      <div class="svc-lamps" id="svcLamps">
+        <div class="svc-lamp off" id="lamp-asr" title="语音识别：faster-whisper（进程内，首次识别后常驻）"><span class="dot"></span>语音识别</div>
+        <div class="svc-lamp off" id="lamp-llm" title="LLM：当前 provider 的 base_url 是否可连"><span class="dot"></span>LLM</div>
+        <div class="svc-lamp off" id="lamp-tts" title="TTS：GPT-SoVITS :9880 是否可连"><span class="dot"></span>TTS</div>
+      </div>
     </div>
+
   </div>
   <div class="header-right">
     <select class="model-select" id="modelSelect" title="当前 LLM 提供方">
@@ -469,6 +499,10 @@ const sendBtn = document.getElementById('sendBtn');
 const stopBtn = document.getElementById('stopBtn');
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
+const stateChips = Array.from(document.querySelectorAll('.state-chip'));
+function setAppState(s) { stateChips.forEach(c => c.classList.toggle('active', c.dataset.state === s)); }
+const seenEvents = new Set();
+let lastStopAt = 0;
 const toolLog = document.getElementById('toolLog');
 const toolEmpty = document.getElementById('toolEmpty');
 const liveFeed = document.getElementById('liveFeed');
@@ -532,10 +566,11 @@ function setReactorState(state) {
     case 'thinking': reactor.classList.add('thinking'); reactorLabel.textContent = '处理中'; break;
     case 'listening': reactor.classList.add('listening'); reactorLabel.textContent = '聆听中'; break;
     case 'speaking': reactor.classList.add('speaking'); reactorLabel.textContent = '说话中'; break;
-    case 'online': reactorLabel.textContent = '已上线'; break;
-    default: reactorLabel.textContent = '待机';
+    case 'offline': reactorLabel.textContent = '已离线'; break;
+    default: reactorLabel.textContent = '待命';
   }
 }
+
 
 function showActivity(text) { activityBar.classList.add('active'); activityText.textContent = text.toUpperCase(); }
 function hideActivity() { activityBar.classList.remove('active'); toolStepCount = 0; activitySteps.innerHTML = ''; }
@@ -550,14 +585,14 @@ let wsPing = null;
 function connect() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   ws = new WebSocket(`${proto}://${location.host}/ws`);
-  ws.onopen = () => { statusDot.className = 'status-dot online'; statusText.textContent = '已上线'; setReactorState('online'); loadProviders(); loadMuteState(); loadHistory();
+  ws.onopen = () => { statusDot.className = 'status-dot online'; statusText.textContent = '待命中'; setReactorState('idle'); setAppState('idle'); loadProviders(); loadMuteState(); loadHistory();
     // Heartbeat keeps the socket lively and history is re-pulled on every
     // (re)connect, so a quiet socket drop does not leave the page stale until a
     // manual reload (records/2026-11-08-19-25-48.md).
     clearInterval(wsPing);
     wsPing = setInterval(() => { try { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'ping' })); } catch (e) {} }, 20000);
   };
-  ws.onclose = () => { statusDot.className = 'status-dot'; statusText.textContent = '离线'; setReactorState('offline'); hideActivity(); clearInterval(wsPing); setTimeout(connect, 3000); };
+  ws.onclose = () => { statusDot.className = 'status-dot'; statusText.textContent = '已离线'; setReactorState('offline'); setAppState('offline'); hideActivity(); clearInterval(wsPing); setTimeout(connect, 3000); };
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
     console.log('[WS]', msg.type, msg.text || msg.message || '');
@@ -570,27 +605,35 @@ function connect() {
         // so the page looked frozen until a manual reload (user report
         // 2026-11-08-20-22, records/2026-11-08-19-25-48.md).
         const st = msg.message || '';
-        if (st === '思考中…' || st === 'Thinking...') { setThinking(true); showActivity('分析中'); setReactorState('thinking'); setStatusText('处理中'); }
-        else if (st === '正在聆听…' || st === 'Listening...') { setThinking(false); hideActivity(); setReactorState('listening'); setStatusText('聆听中'); }
-        else if (st === '正在说话…' || st === 'Speaking...') { setThinking(false); hideActivity(); setReactorState('speaking'); setStatusText('说话中'); }
-        else if (st === '在。') { setThinking(false); setReactorState('listening'); setStatusText('在。'); addMsg('system', '🎙 在。'); }
-        else if (st === 'Wake.') { setThinking(false); hideActivity(); setReactorState('listening'); setStatusText('聆听中'); addMsg('system', '🎤 聆听中…'); }
-        else if (st === '已停止。' || st === 'Stopped.') { setThinking(false); hideActivity(); setReactorState('online'); setStatusText('待命'); addMsg('system', '⏹ 已停止'); }
-        else if (st.startsWith('主模型失败')) { showActivity('备用模型'); setStatusText('主模型失败，改用备用…'); addMsg('system', '⚠ ' + st); }
-        else if (st === '就绪。' || st === 'Ready.') { setThinking(false); hideActivity(); setReactorState('online'); setStatusText('待命'); }
-        else { setThinking(false); hideActivity(); setReactorState('online'); setStatusText(st || '待命'); }
+        if (st === '思考中…' || st === 'Thinking...') { setThinking(true); showActivity('分析中'); setReactorState('thinking'); setAppState('thinking'); setStatusText('处理中'); }
+        else if (st === '正在聆听…' || st === 'Listening...') { setThinking(false); hideActivity(); setReactorState('listening'); setAppState('listening'); setStatusText('聆听中'); }
+        else if (st === '正在说话…' || st === 'Speaking...') { setThinking(false); hideActivity(); setReactorState('speaking'); setAppState('speaking'); setStatusText('说话中'); }
+        else if (st === '在。') { setThinking(false); setReactorState('listening'); setAppState('listening'); setStatusText('在。'); addMsg('system', '🎙 在。'); }
+        else if (st === 'Wake.') { setThinking(false); hideActivity(); setReactorState('listening'); setAppState('listening'); setStatusText('聆听中'); addMsg('system', '🎤 聆听中…'); }
+        else if (st === '已停止。' || st === 'Stopped.') {
+          setThinking(false); hideActivity(); setReactorState('idle'); setAppState('idle'); setStatusText('待命');
+          // One 已停止 bubble per turn: abort_all() can fire several times inside a
+          // turn (wake barge-in + UI 中止 + WS interrupt), and the UI used to add 2-3
+          // 「已停止」 bubbles (records/2026-11-08-20-44-17).
+          const nowMs = Date.now();
+          if (nowMs - lastStopAt > 4000) { lastStopAt = nowMs; addMsg('system', '⏹ 已停止'); }
+        }
+        else if (st.startsWith('主模型失败')) { setThinking(true); setAppState('thinking'); showActivity('备用模型'); setStatusText('主模型失败，改用备用…'); addMsg('system', '⚠ ' + st); }
+        else if (st === '就绪。' || st === 'Ready.') { setThinking(false); hideActivity(); setReactorState('idle'); setAppState('idle'); setStatusText('待命'); }
+        else { setThinking(false); hideActivity(); setReactorState('idle'); setAppState('idle'); setStatusText(st || '待命'); }
         break;
       case 'user': {
         const isOurs = pendingWebText && pendingWebText === msg.text;
         if (!isOurs) addMsg('user', msg.text, 'voice');
         pendingWebText = null;
         addLiveFeed('user', msg.text);
+        seenEvents.add('user|' + msg.text);   // keep the 2s poller from duplicating
         break;
       }
-      case 'wake': addLiveFeed('system', '[WAKE] ' + (msg.text || '')); break;
-      case 'tool': setStatusText('工具: ' + msg.name.toUpperCase()); showActivity('执行: ' + msg.name); addActivityStep(); addToolCall(msg.name, msg.args); addLiveFeed('tool', '[Tool: ' + msg.name + ']'); break;
+      case 'wake': addLiveFeed('system', '[WAKE] ' + (msg.text || '')); seenEvents.add('wake|' + (msg.text || '')); break;
+      case 'tool': setAppState('acting'); setStatusText('工具: ' + msg.name.toUpperCase()); showActivity('执行: ' + msg.name); addActivityStep(); addToolCall(msg.name, msg.args); addLiveFeed('tool', '[Tool: ' + msg.name + ']'); break;
       case 'tool_result': updateToolResult(msg.name, msg.result); break;
-      case 'response': setThinking(false); hideActivity(); setReactorState('speaking'); setStatusText('说话中'); addMsg('assistant', msg.text); addLiveFeed('assistant', msg.text); break;
+      case 'response': setThinking(false); hideActivity(); setReactorState('speaking'); setAppState('speaking'); setStatusText('说话中'); addMsg('assistant', msg.text); addLiveFeed('assistant', msg.text); seenEvents.add('assistant|' + msg.text); break;
       case 'mute': isMuted = msg.muted; updateMuteUI(); addMsg('system', msg.muted ? '🔇 已静音' : '🔊 已解除静音'); break;
       case 'provider_changed': loadProviders(); break;
     }
@@ -661,12 +704,63 @@ async function loadHistory() {
     const d = await r.json();
     for (const ev of d.events || []) {
       const time = (ev.ts || '').slice(5, 16);
+      seenEvents.add(ev.kind + '|' + (ev.text || ''));
       if (ev.kind === 'user') addMsg('user', ev.text, ev.source || 'voice');
       else if (ev.kind === 'assistant') addMsg('assistant', ev.text, ev.source || 'voice');
       else addLiveFeed('system', '[' + time + '] ' + (ev.text || ev.kind));
     }
   } catch (e) {}
 }
+
+// Live content needs a channel that survives a dead WebSocket: the page pulls
+// /api/events every 2s and renders anything unseen (user report 2026-11-08-20-44-17,
+// records/2026-11-08-20-44-17.md — WS-only rendering meant content appeared only
+// after a manual reload).
+async function pollEvents() {
+  try {
+    const r = await fetch('/api/events?limit=30');
+    const d = await r.json();
+    for (const ev of (d.events || []).slice().reverse()) {
+      const key = ev.kind + '|' + (ev.text || '');
+      if (seenEvents.has(key)) continue;
+      seenEvents.add(key);
+      const time = (ev.ts || '').slice(5, 16);
+      if (ev.kind === 'user') addMsg('user', ev.text, ev.source || 'voice');
+      else if (ev.kind === 'assistant') addMsg('assistant', ev.text, ev.source || 'voice');
+      else addLiveFeed('system', '[' + time + '] ' + (ev.text || ev.kind));
+    }
+    while (seenEvents.size > 300) seenEvents.delete(seenEvents.values().next().value);
+  } catch (e) {}
+}
+setInterval(pollEvents, 2000);
+
+// 服务三盏灯（语音识别 / LLM / TTS）：5 s 拉一次 /api/health
+// （用户定稿 2026-11-09-15-37-58：状态显示器右边加「语音识别/LLM/TTS 是否在线」）。
+// asr 在 jarvis 进程内（whisper 首次识别后才常驻）→ 用 warm 黄灯；llm/tts 是
+// 外部服务（:8080 / :9880）→ 连不上就灰灯。
+const lamps = { asr: document.getElementById('lamp-asr'), llm: document.getElementById('lamp-llm'), tts: document.getElementById('lamp-tts') };
+function setLamp(el, cls, title) {
+  if (!el) return;
+  el.classList.remove('on'); el.classList.remove('off'); el.classList.remove('warm');
+  el.classList.add(cls);
+  if (title) el.title = title;
+}
+async function pollHealth() {
+  try {
+    const r = await fetch('/api/health');
+    const d = await r.json();
+    for (const k of ['asr', 'llm', 'tts']) {
+      const s = d[k] || {};
+      if (!s.online) setLamp(lamps[k], 'off', (s.detail || '') + '（离线）');
+      else if (k === 'asr' && s.warm === false) setLamp(lamps[k], 'warm', s.detail || '');
+      else setLamp(lamps[k], 'on', s.detail || '');
+    }
+  } catch (e) {
+    for (const k of ['asr', 'llm', 'tts']) setLamp(lamps[k], 'off', '无法连接 Jarvis 服务（:7860）');
+  }
+}
+pollHealth();
+setInterval(pollHealth, 5000);
 
 function esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
 
@@ -681,7 +775,7 @@ function send() {
 
 sendBtn.onclick = send;
 inputEl.onkeydown = (e) => { if (e.key === 'Enter') send(); };
-stopBtn.onclick = () => { if (ws) ws.send(JSON.stringify({ type: 'interrupt' })); hideActivity(); setReactorState('online'); };
+stopBtn.onclick = () => { if (ws) ws.send(JSON.stringify({ type: 'interrupt' })); hideActivity(); setReactorState('idle'); setAppState('idle'); setStatusText('待命'); };
 document.querySelectorAll('.quick-btn').forEach(btn => { btn.onclick = () => { inputEl.value = btn.dataset.cmd; send(); }; });
 
 // ─── Settings & Provider Management ───

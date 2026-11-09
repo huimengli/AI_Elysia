@@ -85,7 +85,10 @@ def record_until_silence(
     chunk = int(sample_rate * 0.3)  # 300ms chunks
     recording = []
     silent_chunks = 0
-    silent_chunks_needed = 7  # ~2.1s of silence to stop
+    # 10 chunks = 3.0s of silence to end the capture. At 7 chunks (2.1s) a normal
+    # mid-sentence pause ended the recording, so the user's sentence was cut off
+    # (records/2026-11-08-20-44-17).
+    silent_chunks_needed = 10  # ~2.1s of silence to stop
     heard_speech = False
     speech_threshold = 0.015  # louder than silence — confirms user is talking
 

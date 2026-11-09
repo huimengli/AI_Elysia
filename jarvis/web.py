@@ -186,8 +186,97 @@ async def api_get_events(limit: int = 100):
     from jarvis.main import event_log
     return JSONResponse({"events": event_log.recent(min(max(limit, 1), 500))})
 
+# ─── Health API (2026-11-09-15-37-58: 顶部状态显示器右侧的三盏灯) ───
+
+def _split_hostport(url: str) -> tuple[str, int]:
+    from urllib.parse import urlparse
+    p = urlparse(url)
+    port = p.port
+    if port is None:
+        port = 443 if p.scheme == "https" else 80
+    return (p.hostname or "", int(port))
+
+
+def _tcp_probe(host: str, port: int, timeout: float = 0.8) -> bool:
+    """True when something is listening on host:port (loopback probes are cheap)."""
+    if not host or port <= 0:
+        return False
+    import socket
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except Exception:
+        return False
+
+
+def _health_snapshot() -> dict:
+    """Resolve the three lamps: asr / llm / tts.
+
+    asr lives *inside this process* — faster-whisper is loaded lazily by
+    jarvis.stt on the first transcription — so "online" means the jarvis
+    process itself is answering (which it is, by definition), and "warm" says
+    whether the whisper model is already resident. llm (:8080 llama.cpp) and
+    tts (:9880 GPT-SoVITS) are out-of-process servers, so they get a TCP probe
+    against the base_url / api_url declared in config.yaml.
+    """
+    from jarvis.main import _load_config
+    import jarvis.stt as stt_mod
+
+    cfg = _load_config()
+    llm_cfg = cfg.get("llm", {})
+    active = llm_cfg.get("active_provider", "ollama")
+    prov = (llm_cfg.get("providers") or {}).get(active, {})
+    base_url = prov.get("base_url", "")
+    host, port = _split_hostport(base_url)
+    llm = {
+        "online": _tcp_probe(host, port),
+        "provider": active,
+        "label": prov.get("label", active),
+        "url": base_url,
+        "detail": f"{prov.get('label', active)} @ {base_url}",
+    }
+
+    tts_cfg = cfg.get("tts", {})
+    tts_provider = tts_cfg.get("provider", "kokoro")
+    if tts_provider == "gptsovits":
+        tts_url = (tts_cfg.get("gptsovits") or {}).get("api_url", "")
+        th, tp = _split_hostport(tts_url)
+        online = _tcp_probe(th, tp)
+        detail = f"GPT-SoVITS @ {tts_url}"
+    else:
+        # In-process TTS (kokoro): the jarvis process serves it.
+        tts_url = ""
+        online = True
+        detail = f"本地进程内 ({tts_provider})"
+    tts = {"online": online, "provider": tts_provider, "url": tts_url, "detail": detail}
+
+    stt_cfg = cfg.get("stt", {})
+    loaded = getattr(stt_mod, "_model", None) is not None
+    device = getattr(stt_mod, "_model_device", None)
+    asr = {
+        "online": True,
+        "warm": loaded,
+        "model": stt_cfg.get("model", "small"),
+        "language": stt_cfg.get("language", "zh"),
+        "device": device or stt_cfg.get("device", "cpu"),
+        "detail": (
+            f"faster-whisper {stt_cfg.get('model', 'small')} / "
+            f"{device or stt_cfg.get('device', 'cpu')} / "
+            f"{stt_cfg.get('language', 'zh')}（模型已加载={loaded}）"
+        ),
+    }
+    return {"asr": asr, "llm": llm, "tts": tts}
+
+
+@app.get("/api/health")
+async def api_health():
+    """Three lamps for the UI: 语音识别 / LLM / TTS."""
+    import asyncio
+    return JSONResponse(await asyncio.to_thread(_health_snapshot))
+
 
 # ─── WebSocket ───
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):

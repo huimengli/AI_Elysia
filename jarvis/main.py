@@ -62,6 +62,7 @@ class _Aborted(Exception):
 
 def abort_all() -> None:
     """Stop everything 爱莉希雅 is doing right now."""
+    was_set = _abort.is_set()
     _abort.set()
     # Name the caller: the 0.3s captures in records/2026-11-08-19-25-48.md
     # gave no way to tell who set the flag mid-recording (wake barge-in, UI 中止,
@@ -71,7 +72,12 @@ def abort_all() -> None:
     site = frames[-1] if frames else None
     print(f"[ABORT] set by {site.name}:{site.lineno} thread={threading.current_thread().name}" if site else "[ABORT] set")
     stop_speaking()
-    _broadcast({"type": "status", "message": "已停止。"})
+    # Broadcast 已停止。 only on the unset→set transition. The user's own
+    # speech scores 0.65-0.78 around the wake threshold, so a single turn used to
+    # fire abort_all() two/three times and the UI got 2-3 「已停止」 bubbles
+    # (records/2026-11-08-20-44-17).
+    if not was_set:
+        _broadcast({"type": "status", "message": "已停止。"})
 
 
 def _is_stop_command(text: str) -> bool:
@@ -172,6 +178,11 @@ def _system_prompt() -> str:
         "After a tool call, report the outcome as one short Chinese sentence — "
         "never answer with a bare 'Done.', 'OK' or '已完成'; the user hears this text, "
         "so it must say what you did. "
+        "NEVER invent a tool result, a file, a web page, or an action you did not "
+        "perform. If a tool fails, say plainly 「XX 失败了：<原因>」 and stop; do not "
+        "describe tools you did not call. If the user's speech looks like fragments "
+        "(numbers with no question, half words), ask them to repeat instead of "
+        "guessing what they meant. "
         f"Current date and time: {now}."
     )
 

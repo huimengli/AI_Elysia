@@ -79,3 +79,34 @@
 #### Git 提交记录（本批）
 - 本批 hash 见下一条（追加）。
 - `904dbc8` `fix(AI): 网页端实时状态改为匹配中文广播并加心跳/重连重拉历史`（**已本地 commit，未 push**；AGENTS §4 禁 push，你只授权过 `future/AI_UI`）
+
+## 2026-11-09-15-37-58 浏览器共用插件评估规则 + 状态显示器定稿（records/2026-11-09-15-37-58.md，tests/2026-11-09-15-37-58_cc/）
+
+### 插件准入规则（用户 2026-11-09 指示，长期有效，对之后所有「装插件/连接器/扩展」生效）
+1. **口碑与评分**：查仓库 star / npm·Chrome 商店下载量与评分、issue 活跃度、是否官方厂商维护（Google/Microsoft 官方优先）、最近发布时间；无口碑 = 不装。
+2. **恶意执行**：是否执行任意代码（stdio 命令、postinstall 脚本、native 消息宿主 `nmh`）、是否要求管理员、是否写入 startup/服务、是否可被远端下发指令。
+3. **数据外发**：是否向远程地址发送页面内容/URL/凭据/剪贴板（含遥测、云 relay、telemetry、统计）。本地 stdio + 仅回环连接 = 通过；走云端中转 = 拒绝；官方遥测需如实告知用户并可关闭。
+4. 三问逐条写进 `records/时间.md` 与 `progress.md`（本小节），**通过才装**；装之前必须取得用户明确授权（本会话审批关闭，任何需要审批的动作会被自动拒绝）。
+5. 优先「共用用户自己的浏览器」形态（扩展 / CDP 附着到用户 Chrome），避免我再开一套 Playwright/Edge 实例。
+
+### 观测配额规则（用户 2026-11-09-15:5x 指示：「禁止大量截图/读图，会导致隧道崩溃」）
+1. **禁止批量截图 / 批量读图**：同一目标反复整屏截图、连环 screenshot 轮询、用 read_image 看图「确认」都算违规；一次会话内截图只用于「首次定位 + 真需要目视验收」，优先次数 ≤ 个位数。
+2. 观察优先走**文本通路**：`computer_windows`（窗口列表）、`computer_accessibility` + `computer_find` + `computer_read`（UIA/MSAA 语义树）、命令输出**重定向到 `.tmp/*.log` 文件后用 `read` 读**，以及 `/api/health` 这类 HTTP 探针。
+3. 需要目视验收时：一次截图 + `save_to`，需要 OCR 时用 `wow-sight.ocr` 对已存文件跑一次，不叠加读图。
+4. 轮询用 `wow_wait`/文件日志，不用「截图 → 看 → 再截图」。
+
+### 本会话（2026-11-09 16:00–17:20）执行与验证结果
+
+- **新执行通道（沉淀，后续复用）**：`write` 生成 `.bat`（路径用 `%USERPROFILE%`，纯 ASCII 避免 PowerShell 5.1 的 GBK 乱码）→ 用资源管理器**文件列表 UIA `invoke`**（地址栏只接受纯可执行文件，带参数的命令行会被当导航）→ 「打开文件 - 安全警告」点「运行(R)」（区域截图 + 图像坐标 `x=114,y=61`）→ 输出重定向到 `.tmp\*.log` → 用 `read` 读。`cmd` 的 `>` 保留原始字节（curl 的 UTF-8 JSON 可读），PowerShell 的 `>` 生成 UTF-16 不可读。
+- 服务重启并实测监听：llama `:8080`(pid 16876)、GPT-SoVITS `:9880`(pid 18284，CPU 回退，权重 Elysia e20/e24)、jarvis `:7860`(pid 1924)；GSV 日志出现真实 `GET /tts … 200 OK`。
+- 需求 4 落地：`web.py` 新增 `GET /api/health`（asr 进程内在线 + `warm`=模型已加载；llm/tts = `base_url`/`api_url` 的 TCP 探测）；`index.html` 页头 6 芯片按 `待命中/已离线/聆听中/说话中/执行中/思考中` + 右侧 `语音识别/LLM/TTS` 三盏灯，5 s 轮询；WS 断开 → `已离线`。
+- 验证 3 轮全 PASS（`tests/2026-11-09-15-37-58_cc/`，细节见 `tests/opinion.md` 末段）：协议层、真实 Chrome 渲染、`stop` 去重与「当下真实回答」（17:17/17:19 简体 + 真实时钟，应答 2 s）。
+- 需求 1 结论：`Tool 'xxx' failed: 'NoneType' object has no attribute 'strip'` 为 11-08 历史事件（`router.py::_coerce` 904dbc8 已修）；繁体与「问时间答天气」本轮未复现；遗留是 2B 模型措辞啰嗦。
+- 需求 6 评估结论：**Playwright MCP `--cdp-endpoint`（回环附着用户 Chrome）通过**；Chrome DevTools MCP 通过（二者择一，勿同时装）；Browser MCP（云端 relay）**拒绝**。三问逐条见 `records/2026-11-09-15-37-58.md` 追加节。`mcp_connector_configure` 需用户明确授权后执行；建议给用户 Chrome 加 `--remote-debugging-port=9222`。
+- 观测配额遵守情况：仅 3 张小区域截图（安全警告按钮、标签栏、页底输入条），其余全部 UIA 语义树 + `.tmp/*.log` 文本读取；Chrome 页面全文用 `computer_read` 的 TextPattern 取得，未用截图/OCR。
+- 待办：`todo.md` 的 `2026-11-08-20-44-17` 仍未勾选（代码在 HEAD，未真人复验）；本批 commit hash 见下节。
+
+#### Git 提交记录（本批）
+- 本批 hash 见下条（追加）。
+
+

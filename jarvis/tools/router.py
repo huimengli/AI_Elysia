@@ -279,12 +279,47 @@ TOOL_SCHEMAS = [
 ]
 
 
+_SCHEMA_PARAMS = {s["function"]["name"]: s["function"].get("parameters", {}).get("properties", {})
+                   for s in TOOL_SCHEMAS}
+
+
+def _coerce(tool_name: str, tool_args: dict) -> dict:
+    """Force tool arguments to the types the schema declares.
+
+    The 2B model emits {"title": null} and omits required string args, which made
+    tools die with 'NoneType' object has no attribute 'strip' — that failure string
+    was then fed back to the model as its "fact" (events.db rows 242/245,
+    records/2026-11-08-20-44-17.md). Coercing to ""/0 keeps the tool running and
+    keeps the hallucination channel shut.
+    """
+    props = _SCHEMA_PARAMS.get(tool_name, {})
+    out = dict(tool_args) if isinstance(tool_args, dict) else {}
+    for key, spec in props.items():
+        t = spec.get("type")
+        v = out.get(key)
+        if t == "string":
+            out[key] = "" if v is None else str(v)
+        elif t == "integer":
+            try:
+                out[key] = int(v)
+            except (TypeError, ValueError):
+                out[key] = 0
+        elif t == "number":
+            try:
+                out[key] = float(v)
+            except (TypeError, ValueError):
+                out[key] = 0.0
+        elif t == "boolean":
+            out[key] = bool(v)
+    return out
+
+
 def dispatch(tool_name: str, tool_args: dict) -> str:
     """Execute a named tool and return string result."""
     fn = TOOL_MAP.get(tool_name)
     if fn is None:
         return f"Unknown tool: {tool_name}"
     try:
-        return str(fn(tool_args))
+        return str(fn(_coerce(tool_name, tool_args)))
     except Exception as e:
         return f"Tool '{tool_name}' failed: {e}"

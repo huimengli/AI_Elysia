@@ -65,6 +65,7 @@ def listen_for_wake_word(callback) -> None:
     _busy = threading.Lock()
     _ignore_until = [0.0]
     _peak = 0.0
+    _last_detect = [0.0]
     _last_log = time.time()
 
     print("[爱莉希雅] Listening for wake word...")
@@ -80,6 +81,10 @@ def listen_for_wake_word(callback) -> None:
                 # Resume after STT is done
                 mic.start_stream()
                 oww.reset()  # Clear stale predictions
+                # The user usually keeps talking right after the capture; that speech
+                # scores above the threshold and used to abort the turn 1-2s later
+                # (records/2026-11-08-20-44-17). Give the turn 4s of grace.
+                _ignore_until[0] = time.time() + 4.0
                 print("[Wake] Mic resumed.")
                 continue
 
@@ -131,9 +136,18 @@ def listen_for_wake_word(callback) -> None:
                 if is_recording():
                     _ignore_until[0] = now + 2.0
                 else:
-                    _ignore_until[0] = now + 3.0
-                    abort_all()
-                    print("[爱莉希雅] Stopped. (voice interrupt)")
+                    # Abort needs TWO detections inside 1.0s. A single hit is the user's
+                    # own speech crossing the 0.65 threshold (measured peaks 0.65-0.78),
+                    # and one-hit aborts produced the 2-3 「已停止」 bubbles per turn.
+                    if now - _last_detect[0] <= 1.0:
+                        _last_detect[0] = 0.0
+                        _ignore_until[0] = now + 4.0
+                        abort_all()
+                        print("[爱莉希雅] Stopped. (voice interrupt)")
+                    else:
+                        _last_detect[0] = now
+                        _ignore_until[0] = now + 0.6
+                        print("[Wake] barge-in candidate 1/2 (no abort yet)")
             else:
                 from jarvis.main import is_speaking, stop_speaking
                 if is_speaking():
