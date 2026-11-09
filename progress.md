@@ -48,6 +48,8 @@
 - `324fe25` `fix(AI): start_all.bat sets MPLCONFIGDIR to kill matplotlib WinError5 and launches llama :8080 too`（3 files / 57 insertions；新增 `records/2026-11-09-19-45-46.md`；**已本地 commit，未 push**）
 - `10d2b55` `docs(AI): append 324fe25 hash and 19-45 matplotlib/launch fix section to progress ledger`（1 file / 10 insertions；**已本地 commit，未 push**）
 - `4840591` `feat(AI): add wake-word health lamp left of ASR via wake.state plus 4-lamp api health, verified 3 rounds`（11 files / 220 insertions / 76 deletions：`jarvis/wake.py`、`jarvis/web.py`、`jarvis/static/index.html`、`records/2026-11-09-20-35-43.md`、`tests/2026-11-09-20-35-43_cc/` 5 件、`todo.md`、`progress.md`、`tree.md`；**已本地 commit，未 push**）
+- `c1f358e` `docs(AI): append 4840591 hash to progress ledger and add 20-35 batch conclusion to cumulative opinion`（2 files / 8 insertions；**已本地 commit，未 push**）
+- `387b320` `fix(AI): rewrite start_all.bat as pure ASCII CRLF with start-opened cmd windows for llama gptsovits jarvis and status panel, verified 3 rounds`（10 files / 158 insertions / 47 deletions：`start_all.bat`、`records/2026-11-09-21-19-29.md`、`tests/2026-11-09-21-19-29_cc/` 5 件、`tests/opinion.md`、`todo.md`、`progress.md`、`tree.md`；**已本地 commit，未 push**；本批起改用 `pwsh` 通道跑 git，不再走「运行(R)」弹窗）
 - 最后一条 hash 的「记录该 hash 的 commit」不再追加，避免无限循环。
 
 ## 2026-11-09-18-21 服务重启复验（用户：「服务你需要重启一下」）
