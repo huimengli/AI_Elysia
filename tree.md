@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-08-20:29（新增 records/2026-11-08-20-22-00.md、tests/2026-11-08-20-22-00_cc/）
+更新时间: 2026-11-09-17-32（新增 records/2026-11-09-15-37-58.md、tests/2026-11-09-15-37-58_cc/、ai_buckup/progress.md_2026-11-09-17-25-00.md；本文件由 `git ls-files` + 未跟踪的非忽略文件重建，`.tmp/` 被 `.gitignore` 排除，不列出）
 
 ```
 JarvisAi/
@@ -11,6 +11,8 @@ JarvisAi/
 ├── PROJECT_SUMMARY.txt
 ├── README.md
 ├── _chat_template.jinja
+├── jarvis_screen.png          (未跟踪，非 .gitignore)
+├── love_silvia.txt            (未跟踪，非 .gitignore)
 ├── ai_buckup
 │   ├── hard_bug.md_2026-10-13-17-45.md
 │   ├── need_user.md_2026-10-13-09-56-54.md
@@ -19,7 +21,8 @@ JarvisAi/
 │   ├── progress.md_2026-10-15-13-49-00.md
 │   ├── progress.md_2026-11-08-12-40-22.md
 │   ├── progress.md_2026-11-08-18-48.md
-│   └── progress.md_2026-11-08-20-14.md
+│   ├── progress.md_2026-11-08-20-14.md
+│   └── progress.md_2026-11-09-17-25-00.md
 ├── config.yaml
 ├── design.md
 ├── dsh-my-presets
@@ -87,64 +90,13 @@ JarvisAi/
 │   ├── 2026-11-08-18-54-18.md
 │   ├── 2026-11-08-19-25-48.md
 │   ├── 2026-11-08-19-52-59.md
-│   └── 2026-11-08-20-22-00.md
+│   ├── 2026-11-08-20-22-00.md
+│   ├── 2026-11-08-20-44-17.md   (未跟踪，非 .gitignore)
+│   └── 2026-11-09-15-37-58.md
 ├── requirements.txt
 ├── start.bat
 ├── start_all.bat
 ├── tests
-│   ├── 2026-11-08-14-12-32_cc
-│   │   ├── opinion.md
-│   │   ├── record_1.md
-│   │   ├── record_2.md
-│   │   └── record_3.md
-│   ├── 2026-11-08-15-16-18_cc
-│   │   ├── opinion.md
-│   │   ├── record_1.md
-│   │   ├── record_2.md
-│   │   ├── record_3.md
-│   │   ├── record_4.md
-│   │   ├── record_5.md
-│   │   └── record_6.md
-│   ├── 2026-11-08-17-29-39_cc
-│   │   ├── opinion.md
-│   │   ├── record_1.md
-│   │   ├── record_2.md
-│   │   └── record_3.md
-│   ├── 2026-11-08-17-53-00_cc
-│   │   ├── opinion.md
-│   │   ├── record_1.md
-│   │   ├── record_2.md
-│   │   └── record_3.md
-│   ├── 2026-11-08-18-16-33_cc
-│   │   ├── opinion.md
-│   │   ├── record_1.md
-│   │   ├── record_2.md
-│   │   └── record_3.md
-│   ├── 2026-11-08-18-39-40_cc
-│   │   ├── opinion.md
-│   │   ├── record_1.md
-│   │   ├── record_2.md
-│   │   └── record_3.md
-│   ├── 2026-11-08-18-54-18_cc
-│   │   ├── opinion.md
-│   │   ├── record_1.md
-│   │   ├── record_2.md
-│   │   └── record_3.md
-│   ├── 2026-11-08-19-25-48_cc
-│   │   ├── opinion.md
-│   │   ├── record_1.md
-│   │   ├── record_2.md
-│   │   └── record_3.md
-│   ├── 2026-11-08-19-52-59_cc
-│   │   ├── opinion.md
-│   │   ├── record_1.md
-│   │   ├── record_2.md
-│   │   └── record_3.md
-│   ├── 2026-11-08-20-22-00_cc
-│   │   ├── opinion.md
-│   │   ├── record_1.md
-│   │   ├── record_2.md
-│   │   └── record_3.md
 │   ├── __init__.py
 │   ├── opinion.md
 │   ├── test_context.py
@@ -152,8 +104,44 @@ JarvisAi/
 │   ├── test_memory.py
 │   ├── test_stt.py
 │   ├── test_tools.py
-│   └── test_tts.py
+│   ├── test_tts.py
+│   ├── 2026-11-08-14-12-32_cc
+│   │   ├── opinion.md
+│   │   ├── record_1.md
+│   │   ├── record_2.md
+│   │   └── record_3.md
+│   ├── 2026-11-08-15-16-18_cc
+│   │   ├── opinion.md
+│   │   ├── record_1.md … record_6.md
+│   ├── 2026-11-08-17-29-39_cc
+│   │   ├── opinion.md
+│   │   └── record_1.md … record_3.md
+│   ├── 2026-11-08-17-53-00_cc
+│   │   ├── opinion.md
+│   │   └── record_1.md … record_3.md
+│   ├── 2026-11-08-18-16-33_cc
+│   │   ├── opinion.md
+│   │   └── record_1.md … record_3.md
+│   ├── 2026-11-08-18-39-40_cc
+│   │   ├── opinion.md
+│   │   └── record_1.md … record_3.md
+│   ├── 2026-11-08-18-54-18_cc
+│   │   ├── opinion.md
+│   │   └── record_1.md … record_3.md
+│   ├── 2026-11-08-19-25-48_cc
+│   │   ├── opinion.md
+│   │   └── record_1.md … record_3.md
+│   ├── 2026-11-08-19-52-59_cc
+│   │   ├── opinion.md
+│   │   └── record_1.md … record_3.md
+│   ├── 2026-11-08-20-22-00_cc
+│   │   ├── opinion.md
+│   │   └── record_1.md … record_3.md
+│   └── 2026-11-09-15-37-58_cc
+│       ├── opinion.md
+│       ├── record_1.md
+│       ├── record_2.md
+│       └── record_3.md
 ├── todo.md
 └── tree.md
 ```
-
