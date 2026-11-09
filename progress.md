@@ -44,6 +44,8 @@
 - `a0ecd92` `fix(AI): add status display + ASR/LLM/TTS health lamps, restart services and verify realtime UI in 3 rounds`（16 files，含 records/tests/progress/todo + `web.py`/`index.html`/`main.py`/`stt.py`/`wake.py`/`router.py`/`.gitignore`；commit 主题用 ASCII，因 `cmd` 会把中文当 GBK 写入）
 - `1e16ca6` `docs(AI): rebuild tree.md, archive+compact progress.md, todo status, add untracked record 2026-11-08-20-44-17`（4 files；`tree.md` 由 `git ls-files` + 未跟踪的非忽略文件重建；`records/2026-11-08-20-44-17.md` 从「未跟踪」补入库；**已本地 commit，未 push**）
 - `cc6830a` `docs(AI): record 1e16ca6 hash, 18-21 service restart re-verification, Alt+R run channel fix`（2 files / 16 insertions；**已本地 commit，未 push**）
+- `9939d8d` `docs(AI): append cc6830a commit hash to progress ledger`（1 file；**已本地 commit，未 push**）
+- `324fe25` `fix(AI): start_all.bat sets MPLCONFIGDIR to kill matplotlib WinError5 and launches llama :8080 too`（3 files / 57 insertions；新增 `records/2026-11-09-19-45-46.md`；**已本地 commit，未 push**）
 - 下一条（追加）：本条 hash 的 commit。
 
 ## 2026-11-09-18-21 服务重启复验（用户：「服务你需要重启一下」）
@@ -57,4 +59,12 @@
   - 启动时 `startup 爱莉希雅 online`(18:35:08)；18:35:14 唤醒触发 → 18:36:12 `Wake: no voice recognized`（真人录音 30 s 上限，无语音 → 空转录，属已知行为）。
 - **执行通道修正（重要）**：「打开文件 - 安全警告」弹窗对 UIA `invoke` 与鼠标点击均无效（多次「Performed invoke」/「Clicked」后弹窗仍在）；**`Alt+R`（运行(R) 的助记键）才生效**。键盘注入到弹窗前必须先 `list` 取新 window_id。`Win+R` 可作为无 Explorer 时的启动入口（Run 对话框接受 `.bat` 全路径）。
 - 中文路径在 `.bat` 里会被 cmd 当 GBK（`cd /d "C:\Users\楼听\..."` 失效）；一律用 `%USERPROFILE%`。PowerShell 重定向产生的 CJK 日志用 `read` 会报 invalid UTF-8 → 用 `Get-Content | Out-File -Encoding utf8` 转一层再读。
+
+## 2026-11-09-19-45 一键启动：matplotlib 警告 + 补 llama 启动段
+
+- 用户双击 `start_all.bat`，贴出窗口里的 `mkdir -p failed for path C:\Users\楼听\AppData\Local\matplotlib: [WinError 5] 拒绝访问` 与 Matplotlib 建议设置 `MPLCONFIGDIR` 的提示；随后 GPT-SoVITS 正常加载 Elysia 权重、`Uvicorn running on http://127.0.0.1:9880`，浏览器 `GET /`、`GET /favicon.ico` 均 404。
+- **判定：这些输出全部无害**。`WinError 5` 只说明 Matplotlib 的字体缓存目录不可写，它自动退回临时目录（`GPT-SoVITS-main\matplotlib-xxxx`）继续跑；`torch.jit.script` FutureWarning 是 PyTorch 2.x 的例行提示；`_IncompatibleKeys(missing_keys=['enc_q...'], unexpected_keys=[])` 是 v2 API 模式的正常现象（推理只用 GPT 侧，`enc_q` 编码头不加载，缺权重不影响合成）；`GET /` 404 是 TTS API 只暴露 `/tts` 的正常行为。
+- **真正的问题**：`start_all.bat` 没有设置 `MPLCONFIGDIR`（每次启动都要重建字体缓存，并弹出上述警告），且**不启动 llama.cpp `:8080`**；`cmd /k` 窗口一关，对应 python 进程立刻消失。19:46 实测（`.tmp\bats\chk2.log`）三端口全无监听、无 `llama-server`/`python.exe`。
+- 修复（commit `324fe25`）：`start_all.bat` 顶部 `set "MPLCONFIGDIR=%~dp0.tmp\mplconfig"` + 预建目录；新增 llama.cpp `:8080` 启动段（与 `.tmp\start_services.ps1` 同款参数：`-c 65536 -ngl 99 -fa 1 --load-mode none --jinja --reasoning-format deepseek --reasoning-preserve --cache-type-k/v q4_0 --mmproj`）+ `:8080` 占用检查。现在双击一次起齐 llama / GPT-SoVITS / Jarvis。
+- 观测方式延续零截图：`netstat`/`tasklist`/`curl /api/health` 全部写进 `.tmp\bats\*.log` 再用 `read` 读；`Out-File -Encoding utf8` 解决 CJK 日志。
 
