@@ -43,7 +43,8 @@
 - `904dbc8` `fix(AI): 网页端实时状态改为匹配中文广播并加心跳/重连重拉历史`；`104045f` `docs(AI): 网页实时批次提交台账（904dbc8）`
 - `a0ecd92` `fix(AI): add status display + ASR/LLM/TTS health lamps, restart services and verify realtime UI in 3 rounds`（16 files，含 records/tests/progress/todo + `web.py`/`index.html`/`main.py`/`stt.py`/`wake.py`/`router.py`/`.gitignore`；commit 主题用 ASCII，因 `cmd` 会把中文当 GBK 写入）
 - `1e16ca6` `docs(AI): rebuild tree.md, archive+compact progress.md, todo status, add untracked record 2026-11-08-20-44-17`（4 files；`tree.md` 由 `git ls-files` + 未跟踪的非忽略文件重建；`records/2026-11-08-20-44-17.md` 从「未跟踪」补入库；**已本地 commit，未 push**）
-- 下一条（追加）：本会话「服务重启复验」的 commit。
+- `cc6830a` `docs(AI): record 1e16ca6 hash, 18-21 service restart re-verification, Alt+R run channel fix`（2 files / 16 insertions；**已本地 commit，未 push**）
+- 下一条（追加）：本条 hash 的 commit。
 
 ## 2026-11-09-18-21 服务重启复验（用户：「服务你需要重启一下」）
 
