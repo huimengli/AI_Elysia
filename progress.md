@@ -69,3 +69,12 @@
 - 第 ① 点修复：`record_until_silence` 新增 `no_speech_seconds`（默认 2.0，`config.yaml` `stt.no_speech_seconds`，`main.py` 传入）。模拟 3 例（`nospeech.log`）：无人说话 2.10 s 退出 / 说话后安静 4.20 s（保留 3.0 s 收尾，2026-11-08 的 2.1 s 教训不回归）/ 持续说话 30.00 s。21:48 重启后线上实测 `[STT] No speech in 2.0s, stopping early (max rms=0.0018)` → `Recorded 2.1s`，18:03 那类「噪声误触发后录满 30 s」已消除。
 - 3 轮验证（`tests/2026-11-10-21-02-16_cc/`，累积见 `tests/opinion.md`）：① 分段与标注（部分达标：4 次呼唤定位，数量远少于「多次」）；② v0.4 矩阵 FAIL（真人 rec 0.50）；③ v0.5 抗干扰矩阵 FAIL（recall 塌陷、带噪 fp 归零）。全程零截图、无子智能体。
 - 新登记遗留：v0.4/v0.5 的 ONNX 与 npy/clip 数据留在 `openWakeWord/output/`（**未 commit**，等补录后作基线）；`tree.md` 需为 6 个新脚本/配置重建；`todo.md` 已归档 compact（>100 行）。
+
+## 2026-11-10-22-17 真人录音重标（13 次全为正样本）→ aili_xiya_v0.6 重训练 + 抗干扰后训练方向纠正
+
+- 用户答复（Q8 status done）：「这段录音总计 13 次, 没有噪音,平均2-3秒一次, 补录的活明天弄」。原话入 records/2026-11-10-22-17-39.md。
+- 根因确认：上一批把 8 段真呼唤（negx_tr_1000-1005 / negx_te_1000-1002 及带噪版 negx_*_11xx）当**负样本**训练 = 教模型拒绝唤醒词，这是 v0.4/v0.5 recall 塌陷主因；whisper 24 s 的 prompt 词幻觉不代表「无语音」，v0.3 的 14.9 s 峰 0.753 是真呼唤。
+- 重标：v0.3 分数局部峰检出**恰好 13** 个呼唤（0.56–34.40 s，间隔 2.0–3.9 s），全部作正样本（10 训练 posx_tr_1200-1209 + 3 留出 pos_te_1200-1202，逐 clip 断言不重叠），真人特征行 24 → **1195**。新脚本 _t2_v06_clips.py（含程序化「低分区」函数）、_t2_v06_noisy_clips.py（13 条呼唤 × SNR -5/0/5/10 dB，作正样本，52 条 + 8 条定标纯噪声负样本）、_t2_v06_features.py（与 **v0.3** 合成特征合并，丢弃 v0.4/v0.5 错标数据）、openWakeWord/train_config_v06.yaml（steps 2500、max_negative_weight 1）。
+- 关键新发现：**两峰之间的间隙不能当负样本**（noise_tr_1200 的 v0.3 窗口最高分 0.822 > 多数真呼唤）；程序化低分区（平滑分<0.25、≥0.8 s、剔除呼唤窗）在本录音返回 0 段 → **本录音无真人负样本、无干净静音负样本**（显式 N/A，等明日补录 Q9）。
+- 验收矩阵（阈值 0.7，v06verify.log / v06fp.log）：**v0.6 = 真人留出 rec 1.00(m0.730) / 带噪真人 0.83 / 纯噪声 fp 0.00 / 合成 rec 0.92–0.97 / 对抗子集 fp 0.17**，训练自带 Final Model False Positives per Hour: 0.0；v0.3（现役）= 0.67 / 0.50 / 0.25 / 0.97 / 0.30；v0.4 = 0.33 / 0.33 / 0.25；v0.5 = 0.00。v0.6 在全部真人维度严格优于现役，但按写死判据（带噪 rec ≥0.9、合成 fp ≤0.1）仍 FAIL，**config.yaml 未改**，Jarvis 仍用 aili_xiya_v0.3.onnx + 0.7；是否切换写入 need_user.md Q10（推荐切 v0.6，阈值必须 0.7——0.6 时合成 fp 0.73–0.85）。
+- 3 轮（tests/2026-11-10-22-17-39_cc/，累积 tests/opinion.md）：① 重标 PASS；② 特征+训练 PASS（25195 正 / 57696 负行，aili_xiya_v0.6.onnx 13,735 bytes）；③ 矩阵部分 PASS。全程零截图、无子智能体。归档：tests/opinion.md 末节因 PowerShell heredoc 吞反引号已重写修复（教训：含反引号的中文长文本用 write 工具，不用 pwsh heredoc）。

@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-10-21-58（新增 `records/2026-11-10-21-02-16.md`、`tests/2026-11-10-21-02-16_cc/`（5 个文件）、`ai_buckup/progress.md_2026-11-10-21-50-17.md`、`ai_buckup/todo.md_2026-11-10-21-52-25.md`，共 179 项；本轮改动 `config.yaml`（新增 `stt.no_speech_seconds`）、`jarvis/stt.py`（无人说话提前退出）、`jarvis/main.py`（传入该参数）。本文件由 `git ls-files` + 未跟踪的非忽略文件（2 项）+ 本轮新增重建；`.tmp/` 被 `.gitignore` 排除，不列出；`_t2_v04_real_clips.py`、`_t2_v04_features.py`、`_t2_v04_noisy_clips.py`、`_t2_v05_features.py` 与 `openWakeWord/train_config_v04.yaml`、`train_config_v05.yaml`、`openWakeWord/output/aili_xiya_v0.4|v0.5/` 均被 `.gitignore`（`_*.py`、`openWakeWord/*`、`*.wav`）排除，不列出）
+更新时间: 2026-11-10-22-40（新增 `records/2026-11-10-22-17-39.md`、`tests/2026-11-10-22-17-39_cc/`（5 个文件），共 185 项；本批无代码改动（`config.yaml` 未改，Jarvis 仍用 `aili_xiya_v0.3.onnx` + 0.7）。上一批（2026-11-10-21-02-16）改动 `config.yaml`（`stt.no_speech_seconds`）、`jarvis/stt.py`（无人说话 2 s 提前退出）、`jarvis/main.py`（传入该参数）。本文件由 `git ls-files` + 未跟踪的非忽略文件（2 项）+ 本轮新增重建；`.tmp/` 被 `.gitignore` 排除，不列出；`_t2_v04_real_clips.py`、`_t2_v04_features.py`、`_t2_v04_noisy_clips.py`、`_t2_v05_features.py`、`_t2_v06_clips.py`、`_t2_v06_noisy_clips.py`、`_t2_v06_features.py` 与 `openWakeWord/train_config_v04|v05|v06.yaml`、`openWakeWord/output/aili_xiya_v0.4|v0.5|v0.6/` 均被 `.gitignore`（`_*.py`、`openWakeWord/*`、`*.wav`）排除，不列出）
 
 ```
 JarvisAi/
@@ -106,7 +106,8 @@ JarvisAi/
 │   ├── 2026-11-09-21-55-14.md
 │   ├── 2026-11-10-17-31-10.md
 │   ├── 2026-11-10-17-43-08.md
-│   └── 2026-11-10-21-02-16.md
+│   ├── 2026-11-10-21-02-16.md
+│   └── 2026-11-10-22-17-39.md
 └── tests
     ├── __init__.py
     ├── opinion.md
@@ -132,7 +133,8 @@ JarvisAi/
     ├── 2026-11-09-21-55-14_cc (opinion.md + record_1..4)
     ├── 2026-11-10-17-31-10_cc (opinion.md + record_1..3)
     ├── 2026-11-10-17-43-08_cc (opinion.md + record_1..3)
-    └── 2026-11-10-21-02-16_cc (opinion.md + record_1..3)
+    ├── 2026-11-10-21-02-16_cc (opinion.md + record_1..3)
+    └── 2026-11-10-22-17-39_cc (opinion.md + record_1..3)
 ```
 
 注：本轮（2026-11-10-21-02-16）改动 `config.yaml`（`stt.no_speech_seconds: 2.0`）、`jarvis/stt.py`（`record_until_silence` 无人说话 2 s 提前退出）、`jarvis/main.py`（把该参数从配置传入）；唤醒词重训练的新脚本与 `aili_xiya_v0.4/v0.5` 数据被 `.gitignore` 排除，不入库。上一轮（2026-11-10-17-43-08）改动 `config.yaml`、`jarvis/stt.py`、`jarvis/main.py`、`jarvis/tools/{desktop,system,app_control,web_search,file_ops,code_exec,subagent,router}.py`（工具结果文案汉化 + 录音落盘 + ASR 参数）；`jarvis/main.py` 的 whisper 预热属 2026-11-10-17-31-10；`jarvis/tts.py`、`jarvis/tools/router.py`、`jarvis/static/index.html` 为 2026-11-09-21-55-14 改动。
