@@ -41,6 +41,7 @@
 
 ## 2026-11-10-22-48-24 commit 标题改中文（→ `records/2026-11-10-22-48-24.md`）
 
-- [ ] 长期约定写入 `progress.md`：以后 commit subject 一律中文（`type(AI): 中文标题`；type/scope 保持英文，与 AGENTS §4 的 Conventional Commits 兼容，AGENTS.md 本身只读不改）
-- [ ] 历史英文标题改写范围等 `need_user.md` **Q11** 用户确认（选项 1 推荐：本批 3 条 `4586671` / `d5c2f35` / `c85069d` 逐条 reword；选项 2 全部约 12 条英文标题；选项 3 仅最新 1 条 amend）
-- [ ] 改写后：新 hash 追加 `progress.md` 台账（旧 hash 保留并注明「标题改写」）、`tree.md` 增 `records/2026-11-10-22-48-24.md`（186 项）、commit 本次文档；全程本地、**禁止 push**
+- [x] 长期约定写入 `progress.md`：以后 commit subject 一律中文（`type(AI): 中文标题`；type/scope 保持英文，与 AGENTS §4 的 Conventional Commits 兼容，AGENTS.md 本身只读不改）
+- [x] 用户选定范围（`need_user.md` Q11，status done）：**最近 12 条**（含 HF 预热、barge-in、阈值 0.7 等）
+- [x] reword 执行：`git branch -f backup-before-reword HEAD` → `git rebase -i 8aada16~1` + `.tmp\reword\se.ps1` / `ed.ps1` / `msgmap.json`；12 条英文主题全改中文，14 commit 重放，`git diff backup-before-reword HEAD --stat` 为空（工作树逐文件一致）；旧→新 hash 对照写入 `progress.md`；`progress.md` 101 行 → 归档 `ai_buckup/progress.md_2026-11-10-23-00-30.md` 并压缩到 46 行；全程本地、**未 push**
+- [x] 补 commit 本次文档（`records/2026-11-10-22-48-24.md` 结果节 + `todo.md` + `need_user.md` Q11 done + `progress.md` + `tree.md` 187 项），中文主题

@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-10-22-52（新增 `records/2026-11-10-22-48-24.md`（commit 标题改中文，`need_user.md` Q11 待定范围），共 186 项；本批无代码改动（`config.yaml` 未改，Jarvis 仍用 `aili_xiya_v0.3.onnx` + 0.7）。上一批（2026-11-10-22-17-39）新增 `records/2026-11-10-22-17-39.md` 与 `tests/2026-11-10-22-17-39_cc/`（5 个文件）。本文件由 `git ls-files` + 未跟踪的非忽略文件（2 项）+ 本轮新增重建；`.tmp/` 被 `.gitignore` 排除，不列出；`_t2_v04_real_clips.py`、`_t2_v04_features.py`、`_t2_v04_noisy_clips.py`、`_t2_v05_features.py`、`_t2_v06_clips.py`、`_t2_v06_noisy_clips.py`、`_t2_v06_features.py` 与 `openWakeWord/train_config_v04|v05|v06.yaml`、`openWakeWord/output/aili_xiya_v0.4|v0.5|v0.6/` 均被 `.gitignore`（`_*.py`、`openWakeWord/*`、`*.wav`）排除，不列出）
+更新时间: 2026-11-10-23-10（新增 `records/2026-11-10-22-48-24.md`（commit 标题改中文，Q11 已答复并执行）与归档 `ai_buckup/progress.md_2026-11-10-23-00-30.md`，共 187 项；本批**无代码/配置改动**（`config.yaml` 未改，Jarvis 仍用 `aili_xiya_v0.3.onnx` + 0.7），Git 历史最近 12 条英文标题已 reword 成中文（旧→新 hash 对照见 `progress.md`，改写前历史保留在本地分支 `backup-before-reword`，未 push）。上一批（2026-11-10-22-17-39）新增 `records/2026-11-10-22-17-39.md` 与 `tests/2026-11-10-22-17-39_cc/`（5 个文件）。本文件由 `git ls-files` + 未跟踪的非忽略文件（2 项）+ 本轮新增重建；`.tmp/` 被 `.gitignore` 排除，不列出；`_t2_v04_real_clips.py`、`_t2_v04_features.py`、`_t2_v04_noisy_clips.py`、`_t2_v05_features.py`、`_t2_v06_clips.py`、`_t2_v06_noisy_clips.py`、`_t2_v06_features.py` 与 `openWakeWord/train_config_v04|v05|v06.yaml`、`openWakeWord/output/aili_xiya_v0.4|v0.5|v0.6/` 均被 `.gitignore`（`_*.py`、`openWakeWord/*`、`*.wav`）排除，不列出）
 
 ```
 JarvisAi/
@@ -35,6 +35,7 @@ JarvisAi/
 │   ├── progress.md_2026-11-08-20-14.md
 │   ├── progress.md_2026-11-09-17-25-00.md
 │   ├── progress.md_2026-11-10-21-50-17.md
+│   ├── progress.md_2026-11-10-23-00-30.md
 │   └── todo.md_2026-11-10-21-52-25.md
 ├── dsh-my-presets
 │   ├── cordis.patch.yml

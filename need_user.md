@@ -71,7 +71,7 @@
 
 **A**: （待用户回复）
 
-## Q11 2026-11-10-22-48 commit 标题改中文：改写范围（status: wait）
+## Q11 2026-11-10-22-48 commit 标题改中文：改写范围（status: done）
 
 **背景（为什么之前是英文）**：早期我用 `cmd` 跑 `git commit`，`cmd` 按 GBK 处理中文导致提交信息乱码，所以那几批刻意写了 ASCII 英文标题（`387b320`、`8aada16`、`4840591`、`d7d8132`、`5292ccd`、`4586671`）。现在执行通道是 `pwsh`（UTF-8），中文标题正常——仓库里已有中文标题的例子：`35984ac` `fix(AI): 修录音被自己的 barge-in 打断（1.5s 宽限 + 5s 冷却）并新增 get_time 工具`。**长期约定：以后所有 commit subject 用中文**（`type(AI): 中文标题`；type/scope 仍用英文，与 AGENTS §4 的 Conventional Commits 不冲突，AGENTS.md 我只读不改）。
 
@@ -81,7 +81,10 @@
 - **选项 2**：把全部英文标题（约 12 条：`387b320` / `8aada16` / `4840591` / `d7d8132` / `5292ccd` / `4586671` 等）全部 reword 成中文 → **整条历史 hash 全变**，`progress.md` 台账需整体重写（旧台账先归档到 `ai_buckup/`）。
 - **选项 3**：只改最新 1 条（`git commit --amend`）。
 
-**A**: （待用户回复）
+**A**: （2026-11-10 22:58 用户选定范围）「**最近 12 条（含 HF 预热、barge-in、阈值 0.7 等）**」。
+
+**执行结果（agent 记录）**：`git branch -f backup-before-reword HEAD`（保留改写前历史）→ `git rebase -i 8aada16~1`，配 `.tmp\reword\se.ps1`（todo 全 pick→reword）与 `.tmp\reword\ed.ps1`（按 `.tmp\reword\msgmap.json` 换中文主题）。12 条英文标题全部改成中文，14 个 commit 重放，`git diff backup-before-reword HEAD --stat` 为空（工作树逐文件一致）；旧→新 hash 对照写入 `progress.md` 台账。更早 25 条英文标题（`387b320`、`4ab19ea` 等）按用户范围保持原样。**全程本地，未 push**。
+**status: done**
 
 **问题**: 新 ASR 参数（`beam_size 10` + 简体中文 `initial_prompt` + `vad_filter` + 去头部静音）在合成语音 A/B 中 3/3 全对（旧参数输出繁体/丢字：`你能看得見屏幕嗎` → 新参数 `你能看得见屏幕吗?`）。真人第一轮只得到 `你看得见吗?`（你说的是「你能看得见屏幕吗？」，丢了「能」「屏幕」），该次录音 rms 仅 0.015，说明离麦克风远/音量大小说明采集电平偏低。要定论需你配合说 3 句，并由你决定是否换引擎。
 
