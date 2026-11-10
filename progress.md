@@ -40,6 +40,7 @@
 - `c1f358e` `docs(AI): append 4840591 hash to progress ledger and add 20-35 batch conclusion to cumulative opinion`（2 files / 8 insertions）
 - `387b320` `fix(AI): rewrite start_all.bat as pure ASCII CRLF with start-opened cmd windows for llama gptsovits jarvis and status panel, verified 3 rounds`（10 files / 158+ / 47-；本批起改用 `pwsh` 通道跑 git）
 - `4ab19ea` `docs(AI): append 387b320 hash to ledger, mark 21-19 start_all todo done`（2 files / 3+ / 1-）
+- `8aada16` `feat(AI): wake threshold 0.7, ack audio cached in memory with one warmed output stream, Chinese tool labels for tts and ui, verified 3 rounds`（15 files / 426+ / 95-：`config.yaml`、`jarvis/tts.py`、`jarvis/main.py`、`jarvis/tools/router.py`、`jarvis/static/index.html`、`records/2026-11-09-21-55-14.md`、`tests/2026-11-09-21-55-14_cc/` 5 件、`tests/opinion.md`、`progress.md`（已归档 `ai_buckup/progress.md_2026-11-10-16-56-00.md` 后 compact 至 104→本文件）、`todo.md`、`tree.md`；**已本地 commit，未 push**）
 - 最后一条 hash 的「记录该 hash 的 commit」不再追加，避免无限循环。
 
 ## 2026-11-09-20-35 状态灯加「唤醒」（语音识别左侧）
