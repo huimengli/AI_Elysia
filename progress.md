@@ -42,6 +42,7 @@
 - `4ab19ea` `docs(AI): append 387b320 hash to ledger, mark 21-19 start_all todo done`（2 files / 3+ / 1-）
 - `8aada16` `feat(AI): wake threshold 0.7, ack audio cached in memory with one warmed output stream, Chinese tool labels for tts and ui, verified 3 rounds`（15 files / 426+ / 95-：`config.yaml`、`jarvis/tts.py`、`jarvis/main.py`、`jarvis/tools/router.py`、`jarvis/static/index.html`、`records/2026-11-09-21-55-14.md`、`tests/2026-11-09-21-55-14_cc/` 5 件、`tests/opinion.md`、`progress.md`（已归档 `ai_buckup/progress.md_2026-11-10-16-56-00.md` 后 compact 至 104→本文件）、`todo.md`、`tree.md`；**已本地 commit，未 push**）
 - `f7abb54` `test(AI): add round 4 barge-in regression for cached ack playback path, update ledgers`（4 files / 26+ / 4-：`record_4.md`、批次 `opinion.md`、`progress.md`、`tree.md`；**已本地 commit，未 push**）
+- `d7d8132` `fix(AI): restore HF cache env vars on jarvis restart and add startup whisper warm-up so asr loads from repo .hf-cache, verified 3 rounds`（10 files / 136+ / 5-：`jarvis/main.py`、`records/2026-11-10-17-31-10.md`、`tests/2026-11-10-17-31-10_cc/` 5 件、`tests/opinion.md`、`progress.md`、`todo.md`、`tree.md`；**已本地 commit，未 push**）
 - 最后一条 hash 的「记录该 hash 的 commit」不再追加，避免无限循环。
 
 ## 2026-11-09-20-35 状态灯加「唤醒」（语音识别左侧）
