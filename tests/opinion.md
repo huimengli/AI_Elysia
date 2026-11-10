@@ -112,3 +112,10 @@
 - 方法学新增：`pwsh` 通道可直接跑 `git`/`netstat`/`Invoke-WebRequest`/python 探针（比「运行(R)+安全警告 Alt+R」弹窗便宜得多）；`cmd /c start_all.bat` 在 stdout 被重定向的管道里不会退出（子窗口继承管道），故脚本执行仍走双击/Run 弹窗语义；探针输出需 `PYTHONIOENCODING=utf-8` + `Out-File -Encoding utf8` 才能被 `read` 读。全程零截图。
 - 结论：三项要求都是「零新增网络调用、零新增推理」的实现路径；英文工具名保留在协议与事件里（检索/LLM schema 不变），中文只用于播报与 UI。本轮修掉两个真缺陷（`latency="small"` 抛 `TypeError`；首次唤醒仍付 3.4 s 建流成本 → 启动预热建流）。遗留登记：真实语音轮 STT 两次 `ConnectError WinError 10054`、`asr.warm=false`、VAD 录满 30 s 上限，属 STT/VAD 老问题，需另开需求。
 
+# 批次结论（tests/2026-11-10-17-31-10_cc，验证 3 轮）
+
+- 需求：查清「ASR 不能转写」是否 ASR 有问题（`records/2026-11-10-17-31-10.md`）。
+- 3 轮全 PASS：① 带 `HF_ENDPOINT/HF_HOME/HF_HUB_DISABLE_XET` 重启后启动日志 `[STT] Loaded small on cpu` + `whisper warmed in 2866 ms`，`asr.warm=true`（`.tmp\jarvis5.log:6-8`、`h8.log`）；② 真人语音轮 VAD 正常收尾（`Speech detected rms=0.0222` → `Silence detected` → `Recorded 7.5s`）并转写出文本、`press_key`/`get_time` 执行正常（`.tmp\jarvis5.log:16-25`）；③ WS 链路与中文 `label` 无回归（`ws2.log`）。
+- **定性结论：ASR 代码无缺陷。** 根因是重启通道丢了 HF 环境变量：whisper-small 快照在仓库内 `.hf-cache`（实测存在），默认用户缓存里没有，缺 `HF_HOME` 时 faster-whisper 去 huggingface.co 找快照被连接重置（`ConnectError 10054`）→ 加载失败 → 转写为空；`start_all.bat` 本就设了这三个变量，属我的操作失误。改动仅两处：运维约定（重启必带三变量，写入 progress 执行通道）+ `main.py` 新增 `_warm_stt()` 后台预加载，使 `warm` 启动即 true、加载失败在启动日志立刻暴露。
+- 顺带发现并登记：`config.yaml` 的 `device: cuda` 在本机不可用（`CUDA driver version is insufficient`，既有逻辑自动回 CPU，建议改配置为 `cpu`）；2B 模型把 11-10 答成「星期五」（`tool_result` 是 `星期二`）、转写/回答出现繁体 —— LLM 侧遗留，需另开需求。
+

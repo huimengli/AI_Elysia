@@ -95,4 +95,5 @@
 - [x] 2026-11-09-20-35-43 状态灯新增「唤醒」，排在语音识别左侧（`wake.state` + `/api/health` 四灯 + `lamp-wake`），重启 Jarvis 后 3 轮验证 (→ records/2026-11-09-20-35-43.md)
 - [x] 2026-11-09-21-19-29 `start_all.bat` 改纯 ASCII + CRLF（实测 `nonASCII=250`），三个 `start ... cmd /k (...)` 括号复合改单行 `start "标题" cmd /k "..."` 开 4 个 cmd 窗口（llama/GSV/Jarvis/Status）+ 端口占用时 `[Skip]`，3 轮验证 (→ records/2026-11-09-21-19-29.md)
 - [x] 2026-11-09-21-55-14 唤醒阈值改 0.7 + 唤醒提示音改播预生成音频（不走 TTS 实时合成）+ 工具执行播报汉化（`type_text→输入文本`、`press_key→按下按钮`），3 轮验证 (→ records/2026-11-09-21-55-14.md)
+- [x] 2026-11-10-17-31-10 查清 ASR「不能转写」真因＝重启时丢 `HF_ENDPOINT/HF_HOME` 导致 whisper 去联网找快照（`ConnectError 10054`）；重启带环境变量 + `main.py` 新增 `_warm_stt()` 启动预热，3 轮验证 (→ records/2026-11-10-17-31-10.md)
 

@@ -647,6 +647,18 @@ def _handle_typed_command(text: str) -> None:
         _abort.clear()
 
 
+def _warm_stt() -> None:
+    """Load faster-whisper at startup so the first transcription is not the
+    model-load moment, and the asr lamp's `warm` flips to true immediately."""
+    try:
+        t0 = time.perf_counter()
+        from jarvis.stt import _get_model
+        _get_model()
+        print(f"[STT] whisper warmed in {1000 * (time.perf_counter() - t0):.0f} ms")
+    except Exception as e:
+        print(f"[WARN] STT warm-up failed (first transcription will fail): {e}")
+
+
 def main() -> None:
     import webbrowser
     from jarvis.web import start_web_background
@@ -658,6 +670,10 @@ def main() -> None:
     print("[爱莉希雅] Web UI: http://localhost:7860")
 
     threading.Thread(target=_keyboard_listener, daemon=True).start()
+    # Load whisper in the background as soon as the server is up: the model lives
+    # in the repo-local .hf-cache, and a missing HF_HOME/HF_ENDPOINT is what made
+    # faster-whisper try to reach huggingface.co and die with ConnectError 10054.
+    threading.Thread(target=_warm_stt, daemon=True).start()
 
     webbrowser.open("http://localhost:7860")
 

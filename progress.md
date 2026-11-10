@@ -24,7 +24,7 @@
 - **首选 `pwsh` 工具通道**：直接跑 `git` / `netstat` / `Invoke-WebRequest` / `tasklist` / python 探针，无需前台、无需弹窗。`cmd /c start_all.bat` 在 stdout 被重定向时不会退出（子窗口继承管道），脚本类启动仍走双击 / `Win+R` 弹窗。
 - 弹窗通道（次选）：`write` 生成纯 ASCII `.bat` → `Win+R` 填全路径 →「打开文件 - 安全警告」用 **`Alt+R`（运行(R) 助记键）** 放行（UIA `invoke` 与鼠标点击对该弹窗无效）→ 输出重定向 `.tmp\*.log` → `read`。window_id 每次动作前重新 `list`（id 会被成功动作消耗/过期）。
 - 编码坑：中文路径在 `.bat` 里被 cmd 当 GBK → 用 `%USERPROFILE%`/`%~dp0`；PowerShell `>` 产生 UTF-16 不可读，CJK 日志需 `Get-Content | Out-File -Encoding utf8`；python 探针设 `PYTHONIOENCODING=utf-8`、`PYTHONPATH=%CD%`（否则 `No module named 'jarvis'`）；commit 主题用 ASCII。
-- 运维：重启 `:7860` 用 `Get-NetTCPConnection -LocalPort 7860 -State Listen` 找 pid → `Stop-Process` → `Start-Process -WindowStyle Hidden` 拉起 `.venv\Scripts\python.exe -u -m jarvis.main`（精确，不伤 GPT-SoVITS）。
+- 运维：重启 `:7860` 用 `Get-NetTCPConnection -LocalPort 7860 -State Listen` 找 pid → `Stop-Process` → `Start-Process -WindowStyle Hidden` 拉起 `.venv\Scripts\python.exe -u -m jarvis.main`（精确，不伤 GPT-SoVITS）。**重启 Jarvis 必须带 `HF_ENDPOINT=https://hf-mirror.com` + `HF_HOME=<repo>\.hf-cache` + `HF_HUB_DISABLE_XET=1`**：whisper-small 的快照只存在于仓库内 `.hf-cache`（默认用户缓存没有），漏了这三个变量 faster-whisper 会去 huggingface.co 找快照并抛 `ConnectError WinError 10054`，转写直接为空（`records/2026-11-10-17-31-10.md`）。
 
 ## Git 提交记录（全部**已本地 commit，未 push**；AGENTS §4 禁 push）
 
@@ -68,3 +68,12 @@
 - ③ `jarvis/tools/router.py` 加 `TOOL_LABELS`（33 项）+ `tool_label()`；`main.py` `_tool_report()` 用中文名，`tool`/`tool_result` 广播 4 处（llamacpp + ollama 分支）新增 `label`；`index.html` 状态条/活动条/工具日志/实时流用 `msg.label || msg.name`。实测文案 `我执行了 输入文本、按下按钮：OK enter`；真人网页触发事件 `["tool","get_time","看时间"]`、`["tool_result","get_time","看时间"]`。英文 `name` 保留（检索/LLM schema 不变）。
 - 验证 4 轮全 PASS（`tests/2026-11-09-21-55-14_cc/`，累积见 `tests/opinion.md`）。全程零截图。第 4 轮为补充回归：新播放路径下 `stop_speaking()` 仍即时（2.26 s 音频在 0.5 s 打断，`stop_call_ms=0.0`，队列清空，`is_speaking()=false`），并测出建流成本随设备状态波动（990/2868/3125 ms）→ 证实建流必须挪到启动阶段。
 - 遗留登记（未改）：真实语音轮 STT 两次 `ConnectError WinError 10054`（`.tmp\jarvis3.log:19-23`）、`asr.warm=false`、VAD 在噪声下录满 30 s 上限；改 `threshold` 后必须重启 Jarvis 才刷新灯上的数值。
+
+## 2026-11-10-17-31 ASR「不能转写」真因（重启丢 HF 环境变量）+ whisper 启动预热
+
+- 追问（「你说的这个问题是 asr 有问题?」）→ `records/2026-11-10-17-31-10.md`。
+- **定性：ASR 代码无缺陷。** 日志与代码对照：`_model_device` 打印为 `None` 说明异常发生在**模型加载**阶段——faster-whisper 去 Hugging Face Hub 找 `small` 快照时被连接重置（`ConnectError WinError 10054`）。模型其实**在磁盘上**：`.hf-cache\hub\models--Systran--faster-whisper-small\snapshots\...`，而默认用户缓存里没有。根因是我 16:46 用 `pwsh` 重启 Jarvis 时**没带 `HF_ENDPOINT/HF_HOME/HF_HUB_DISABLE_XET`**（`start_all.bat` 里本来就有），属操作失误；`asr.warm=false` 与「转写为空」都是它的下游。
+- 改动两处：① 运维约定写入执行通道（重启必带三变量）；② `jarvis/main.py` 新增 `_warm_stt()` 后台预加载 `jarvis.stt._get_model()`，`asr.warm` 启动即 `true`（实测 `whisper warmed in 2866 ms`），加载失败在启动日志立刻暴露，不再等真人说完话才发现。
+- 顺带实测：`config.yaml` `device: cuda` 在本机不可用（`CUDA driver version is insufficient`），`stt.py:32-37` 既有逻辑自动回 CPU（建议把配置改回 `cpu`，省一次无效尝试）。安静环境下 VAD 正常（`rms=0.0222` 触发 → 静音收尾 → 7.5 s 音频成功转写 + `press_key`/`get_time` 执行）。
+- 3 轮全 PASS（`tests/2026-11-10-17-31-10_cc/`，累积见 `tests/opinion.md`）：① health `asr.warm=true` + 加载日志；② 真人语音轮端到端；③ WS 链路与中文 `label` 无回归。全程零截图。
+- 新登记遗留（LLM 侧，未改）：`get_time` 返回 `星期二`，模型回答写「星期五」；转写与回答出现繁体（`我愛你`、`現在是…`）。
