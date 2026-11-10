@@ -46,6 +46,7 @@
 - `5292ccd` `feat(AI): localize tool result strings, dump captured audio for ASR replay, tune whisper with simplified prompt and vad, verified 3 rounds`（21 files / 331+ / 74-；**已本地 commit，未 push**）
 - `4586671` `feat(AI): exit mic capture early when no speech, add real-person wake-word dataset and SNR noise post-training, verified 3 rounds with config unchanged`（14 files / 220+ / 4-：`config.yaml`、`jarvis/stt.py`、`jarvis/main.py`、`records/2026-11-10-21-02-16.md`、`tests/2026-11-10-21-02-16_cc/` 5 件、`tests/opinion.md`、`need_user.md`（Q8）、`progress.md`（已归档 `ai_buckup/progress.md_2026-11-10-21-50-17.md`）、`todo.md`（已归档 `ai_buckup/todo.md_2026-11-10-21-52-25.md`）、`tree.md`；新脚本与 `aili_xiya_v0.4/v0.5` 数据被 `.gitignore` 排除，未 commit；**已本地 commit，未 push**）
 - `d5c2f35` `docs(AI): relabel real recording as 13 wake-word calls, retrain v0.6 with noisy positives, verify 4 models and ask user about switching config`（7 files：`need_user.md`（Q8 done + Q9/Q10）、`records/2026-11-10-22-17-39.md`、`tests/2026-11-10-22-17-39_cc/` 5 件、`tests/opinion.md`、`progress.md`、`todo.md`、`tree.md`；新脚本与 `aili_xiya_v0.6` 数据被 `.gitignore` 排除，未 commit；**已本地 commit，未 push**）
+- `023a987` `docs(AI): 定长期约定「commit 标题用中文」，登记 Q11 请示历史英文标题的改写范围`（5 files：`records/2026-11-10-22-48-24.md`、`todo.md`、`need_user.md`（Q11 status: wait）、`progress.md`（执行通道节改写为「commit 主题一律中文」）、`tree.md`（186 项）；**已本地 commit，未 push**）
 - 最后一条 hash 的「记录该 hash 的 commit」不再追加，避免无限循环。
 
 ## 2026-11-10-17-31 ASR「不能转写」真因（重启丢 HF 环境变量）+ whisper 启动预热
