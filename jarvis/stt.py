@@ -132,9 +132,13 @@ def record_until_silence(
     sample_rate: int = 16000,
     silence_threshold: float = 0.012,
     max_seconds: int = 30,
+    no_speech_seconds: float = 2.0,
 ) -> np.ndarray:
     """Record microphone audio until silence is detected. Returns float32 array.
     Waits for speech to start before counting silence.
+    Exits after `no_speech_seconds` if no speech is ever heard (records/2026-11-10-21-02-16:
+    a wake triggered by noise peaks 0.736/0.799, VAD never saw speech, so the capture
+    ran the full 30 s and transcribed to nothing).
     Can be interrupted via the abort event (Esc key)."""
     import sounddevice as sd
 
@@ -147,6 +151,8 @@ def record_until_silence(
     silent_chunks_needed = 10  # ~2.1s of silence to stop
     heard_speech = False
     speech_threshold = 0.015  # louder than silence — confirms user is talking
+    # 2 s without any chunk over speech_threshold = nobody is speaking; stop early.
+    no_speech_chunks_needed = max(1, int(round(no_speech_seconds / 0.3)))
 
     _start = time.time()
     with sd.InputStream(samplerate=sample_rate, channels=1, dtype="float32") as stream:
@@ -176,6 +182,10 @@ def record_until_silence(
 
             if heard_speech and silent_chunks >= silent_chunks_needed:
                 print("[STT] Silence detected, stopping recording.")
+                break
+            if not heard_speech and len(recording) >= no_speech_chunks_needed:
+                print(f"[STT] No speech in {no_speech_seconds}s, stopping early "
+                      f"(max rms={max(float(np.sqrt(np.mean(c ** 2))) for c in recording):.4f}).")
                 break
             if len(recording) * chunk >= max_seconds * sample_rate:
                 print(f"[STT] Max recording time reached ({max_seconds}s)")

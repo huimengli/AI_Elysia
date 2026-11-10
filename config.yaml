@@ -10,6 +10,7 @@ stt:
   language: zh
   beam_size: 10
   best_of: 5
+  no_speech_seconds: 2.0
   initial_prompt: 以下是简体中文的普通话口语。爱莉希雅、屏幕、看得见、读取屏幕、点击、输入文本、按下按键、滚动、时间、日期、星期、音量、浏览器、天气、搜索、打开、截图、播放。
 llm:
   active_provider: llamacpp

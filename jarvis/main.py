@@ -513,7 +513,10 @@ def _handle_wake_inner() -> None:
     time.sleep(0.15)  # Give pyaudio time to release the mic
     _stt_recording = True
     try:
-        audio = record_until_silence()
+        _stt_cfg = _load_config().get("stt", {})
+        audio = record_until_silence(
+            no_speech_seconds=float(_stt_cfg.get("no_speech_seconds", 2.0)),
+        )
     finally:
         _stt_recording = False
         resume_wake_mic()  # Always resume wake word detection

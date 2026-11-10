@@ -1,102 +1,28 @@
 # Todo
 
-- [x] 2026-10-12-12-28-30 将 Jarvis 项目运行起来（→ records/2026-10-12-12-28-30.md；2026-10-13-10:3x 端到端 CHAT_OK）
-  - [x] 环境检查（Python 3.12 ✓ / Ollama 未装，按用户要求不装）
-  - [x] config.yaml：LLM 指向 llama.cpp @ 127.0.0.1:8080/v1
-  - [x] config.yaml：wake_word.model 定为内置 `hey_jarvis_v0.1`（原 `jarvis` 与 CWD 目录同名冲突，见 hard_bug.md HB-001）
-  - [x] 安装依赖到 .venv（阿里云镜像卡死 torch → 换清华镜像成功；AppData pip 缓存被拒 → PIP_CACHE_DIR 指向工作区 `.pip-cache`）
-  - [x] 下载 openWakeWord 模型（9 个 ONNX，含 hey_jarvis_v0.1 / melspectrogram / embedding；GitHub TLS 失败 → Python urllib + 大小校验，加载验证通过 OWW_OK）
-  - [x] 预下载 TTS/STT 模型到 `.hf-cache`（Kokoro-82M 72 文件含 kokoro-v1_0.pth 312MB + faster-whisper-small model.bin 461MB；HF_ENDPOINT=hf-mirror.com + HF_HUB_DISABLE_XET=1，见 HB-002）
-  - [x] espeak-ng-data 部署到 DLL 硬编码路径 `D:\a\espeakng-loader\...`（364 文件，用户批准越权写入；DLL 忽略参数与 env，根因见会话记录）
-  - [x] spacy `en_core_web_sm` 装入 .venv（GitHub 全阻 → HF-mirror `spacy/en_core_web_sm` wheel 3.7.1 改名 `--no-deps` 安装，加载验证 OK，仅兼容性警告）
-  - [x] `_tts_test.py` 端到端 TTS 合成通过（TTS_TEST_OK chunks=1；当时 free 已低至 ~400MB，HB-003 风险实证）
-  - [x] 启动 `python -m jarvis.main`（后台作业 pwsh-50，HF_HOME 指向工作区 `.hf-cache`），Web UI :7860 HTTP 200 ✓
-  - [x] 2026-10-13 机器重启后后台重启 Jarvis（作业 pwsh-2），Web UI :7860 HTTP 200 ✓
-  - [x] need_user.md Q1 已答复并归档（用户：llama 由其自行启动，需要时 agent 发请求 → `ai_buckup/need_user.md_2026-10-13-09-56-54.md`）
-  - [x] WS 聊天走通 LLM：2026-10-13-10:3x 用户启动 llama.cpp @ :8080（模型与 config 一致，零改动）→ `_ws_chat_test.py` **CHAT_OK** ✓（Qwen 真实回复），HB-004 解除
-  - [x] llama.cpp 启动请求已发出并获用户执行（建议 8090 → 实际用户用回 :8080，Steam 已消失）
-  - [x] 收尾：records/progress/tree/hard_bug 同步、`_ws_chat_test.py` 已删、本地 git commit `7d279a7`（未 push）
-- [ ] 2026-10-13-11-45 用户报告三问题排查与修复（→ records/2026-10-13-11-45.md）
-  - [x] "Stopped." 根因：非流式 + 60s 超时 → 改流式 + 300s（main.py），HB-005 记录
-  - [x] 重启漏 HF env 致进程启动即崩（HB-006）→ pwsh-19 带正确 env 恢复，:7860 ✓
-  - [x] 唤醒词诊断：mic+OWW 峰值 0.985/0.790 ≫ 0.5 → 链路正常；待用户对新进程实测
-  - [x] e2e 流式验证：pwsh-53 **PASS**（case1 71.5s / case2 40.1s，此前挂起 40+min）
-  - [x] （优化项）Qwen3.8 thinking 模式导致 iGPU 生成极长 → config `max_tokens: 2048` + `enable_thinking: false`，main.py `create()` 加 `extra_body.chat_template_kwargs`（HB-008）
-- [x] 2026-10-13-11-55 接入 GPT-SoVITS 2.0 爱莉希雅 TTS（→ records/2026-10-13-11-55.md）
-  - [x] 用户已下载 `[GPT-SoVITS 2.0] 爱莉希雅` 到 `F:\BaiduNetdiskDownload\爱莉希雅\`（GPT e5-e20 ckpt + SoVITS e16/e20/e24 pth + 参考音频）
-  - [x] 仓库 zip 经 ghproxy.net 下载并解包至 `GPT-SoVITS-main/`（344 文件，含 api_v2.py / webui.py / requirements.txt）
-  - [x] 独立 venv `.venv-gsv` + 依赖安装（torch ✓ 2.14.1 CPU；jieba `--no-build-isolation` 本地构建；jieba_fast 零 wheel → 仓库根 shim 包，HB-009；GSV_IMPORTS_OK）
-  - [x] portable ffmpeg 放入 `GPT-SoVITS-main/runtime/`（gyan.dev 死挂 → Python urllib + ghproxy.net 下 ffmpeg-static b6.1.1 win32-x64，`ffmpeg -version` OK）
-  - [x] 预训练基座模型下载（hf-mirror：gsv-v2final GPT/SoVITS + chinese-hubert-base 189MB + chinese-roberta-wwm-ext-large 651MB → `GPT-SoVITS-main/GPT_SoVITS/pretrained_models/`，全部就位）
-  - [x] api_v2.py 加载爱莉希雅权重推理验证（llama 已停；Elysia e20+e24_s13080 确认加载；冒烟 **PASS**：84.1s / 541KB WAV / 32kHz / 8.5s；期间修复 HB-010 torchcodec→soundfile 补丁、HB-011 fast_langdetect lite 补丁）
-  - [x] Jarvis 新增 TTS provider（gptsovits）+ config 切换（`tts.provider: gptsovits` 已生效，Jarvis :7860 重启；`_tts_direct_test.py` **PASS** 76.3s/32kHz/5.2s）
-  - [x] 完整聊天 e2e 复验（`_e2e_stream_test.py`：用户重启 llama :8080 后 **PASS**——case1 70.0s / case2 39.4s；期间修复 HB-012 GBK print 崩溃、HB-013 双 system 500）
-- [x] 2026-10-13-12-20 C 盘写满事故处置（C: 剩 10MB → 清 `.venv-gsv`/zip/`.pip-cache` 后余 5.26GB；GPT-SoVITS 保留工作区内，F: 写入被沙箱拒）
-- [x] 2026-10-13-12-35 HB-007 chroma embedding 下载 PermissionError（→ need_user.md Q2；17:2x 已解决：`.chroma-models/` 预下载 + `jarvis/memory.py` WorkspaceMiniLM 指路，store/search OK）
-- [ ] 2026-10-13-21-38-01 爱莉希雅化改造 + 自训唤醒词（→ records/2026-10-13-21-38-01.md）
-  - [x] T3 先建 records（records/2026-10-13-21-38-01.md）
-  - [x] T1 自称改"爱莉希雅"：系统提示词 / 启动问候 / 停止命令 / Windows 通知（代码完成；HB-014 流式停滞保护 + 启动问候健壮性修复；**2026-10-14-22:0x e2e PASS 34.7s，自称"爱莉希雅"✓**（用户校正：去掉 Elysia 后缀））
-  - [x] T5 强制中文：系统提示词加"始终用简体中文回答"（同 T1 **e2e PASS**：回复全简体中文 ✓；期间发现 HB-015 测试脚本缺陷并已修复）
-  - [x] T2 自训唤醒词"爱莉希雅"（openWakeWord 官方 train 流程；**2026-10-17-15:5x 完成**：v0.3c PASS @ 0.7 recall 0.94 / fp 0.09，已接入 config.yaml 并重启验证）
-    - [x] 训练环境搭建（openwakeword 0.6.0 自带 train.py；torchinfo/torchmetrics/pandas/matplotlib/scipy1.14.1/numpy2.2.6 等全部装齐，导入链 T2_IMPORT_OK）
-    - [x] `generate_samples.py` GSV shim 就位并冒烟 PASS（16kHz mono 1.9s 条；断点续传 + 3 次重试已加）
-    - [x] 中文负样本方案：官方 `generate_adversarial_texts` 仅英文（CMU 词典，CJK 崩溃）→ `_t2_train_cn.py`（train.py 副本）+ `cn_generate_adversarial_texts`（同音字替换/部分短语/重叠音节真词池），30 条样例测试通过
-    - [x] train_config.yaml 校验完整（rir/10 + background/noise 24 + speech 30 就位；UTF-8 读取修复）
-    - [x] v0.1 数据合成完成（2000/400/2000/400 = 4800 条）——三次训练验收全 FAIL（HB-021/022/023：同音色捷径）
-    - [x] **v0.2 数据重建完成**（2026-10-16-19:3x，HB-023/024/025）：neg_src 1700/1700 合成齐 + 强变换消费齐 → **2000/400/2000/400 = 4800 条**（pwsh-63/pwsh-13 均 exit 0）
-    - [x] 负样本准备（24 合成噪声 + 10 RIR + 30 GSV 语音句 + val_fp.npy 已生成）
-    - [x] v0.2 训练链 pwsh-144 完成（2026-10-16 20:0x→21:0x，全链约半小时）：ONNX 已产出但验收 FAIL（80 clip 全 ≈1.000）→ **HB-027**
-    - [x] v0.2b：流式特征重算（pwsh-154，57600 行）+ steps=2500 重训（pwsh-156）完成，但 verify `40` FAIL（negadv_te 干净对抗句 ≈0.94 ≈ pos；诊断证明模型已学会类分离 → **数据侧缺口**，HB-027/HB-028）
-    - [x] v0.3：negative_train +800 条干净对抗句 → 特征 33600 行 → 重训（pwsh-8）→ verify `400` **FAIL**（pos 0.785 / negadv_te 0.504，两侧边距薄；HB-027）
-    - [x] v0.3b：+1050 对抗句 → 特征 46200 → 重训 → verify `400` **FAIL**（pos 0.844/recall@0.7=0.98，但负类均匀上移，fp@0.7=0.16；HB-027）
-    - [x] **v0.3c 数据侧**（2026-10-17-15:5x PASS）：+500 条新 Elysia 句子强变换（negx2_tr）+450 噪声（noise2_tr）→ 特征 **57600** → steps=3000 重训 → verify `400` **PASS @ 阈值 0.7：recall 0.94 / fp 0.09**（pos mean 0.807；neg 三集回落 mean 0.453；HB-027 已解决）
-    - [x] 接入：config.yaml `wake_word.model` → `openWakeWord/output/aili_xiya_v0.3/aili_xiya_v0.3.onnx` + threshold 0.7，Jarvis 重启加载（pwsh-9）
-  - [ ] T4 GitHub 仓库私有化/描述改"自用"——AGENTS 禁止远程写入，需用户手动操作（已提供步骤；need_user.md Q5；**2026-10-17-16:5x 用户确认延后处理**）
-  - [ ] T6 网页 UI 改为爱莉希雅相关内容（**本轮不做**，仅记录；web.py/static/index.html 暂不动）
-- [ ] 2026-10-14-22-23-49 TTS 迁移到 SoulX-Podcast（→ records/2026-10-14-22-23-49.md；**本轮不做**，仅记录；用户不满 GPT-SoVITS 效果）
-- [x] 2026-10-15-21-05-48 新增 DSH Agent 预设 PTC-MY 与 创造模式-MY（→ records/2026-10-15-21-05-48.md；bundle `dsh-my-presets` 安装成功，两预设行 active）
-- [x] 2026-10-17-17-16-41 Web UI 操作记录 + SQLite 持久化 + 固定应答词 wav + start_all.bat（→ records/2026-10-17-17-16-41.md；先记入 design.md v1.0 再开工；**2026-10-17-18:5x WS 冒烟 3/3 PASS**）
-  - [x] T7 唤醒即记录 + 事件落 sqlite（`jarvis/data/events.db`，不依赖网页端）+ 网页端加载历史记录展示
-  - [x] T8 固定应答词：5 句备选 GSV 预合成 wav → `jarvis/data/ack/`，唤醒随机播放本地 wav（目录空则回退实时 TTS）
-  - [x] T9 `start_all.bat`：一键启动 GSV :9880 + Jarvis :7860（含 HF env；llama.cpp 用户自启不纳入）
-- [ ] 2026-10-17-19-11-07 README 中文化（删 Coffe helps）+ fork/权重来源(位置+类型)/自用声明 + 仓库更名 AI_Elysia + LICENSE + push（→ records/2026-10-17-19-11-07.md；用户已允许本次 push）
-- [ ] 2026-10-17-19-52-00 唤醒词模型 onnx v0.3 入库（自训练，用户批准推送）(→ records/2026-10-17-19-52-00.md)
-- [ ] 2026-11-08-12-08-49 LLM 基准测试台账 AI_Benchmark.md（三模型对比落盘，后续继续测更多模型） (→ records/2026-11-08-12-08-49.md)
-- [x] 2026-11-08-12-19-15 0.8B 基准复测补缺口项（T0-T13 + E 全量，台账升 v1.1） (→ records/2026-11-08-12-19-15.md)
-- [x] 2026-11-08-12-29-18 Qwen3.5-4B-UD-IQ3_XXS 基准（台账升 v1.2，四模型对比） (→ records/2026-11-08-12-29-18.md)
-- [x] 2026-11-08-12-40-22 新增 T14 decode 速度测试项（IQ3 实测 8.7 tps；其余模型待重载补测） (→ records/2026-11-08-12-40-22.md)
-- [x] 2026-11-08-12-51-25 2B T14 decode 补测（21.2 tps，TTFT 248 ms） (→ records/2026-11-08-12-51-25.md)
-- [x] 2026-11-08-13-04-48 llm/ 文件夹入 .gitignore（llama.cpp 二进制 + gguf 不入库，.ps1 保留）；选定 2B-Q4_K_M 为主模型，config.yaml 改仓库内模型路径，README/tree 同步 (→ records/2026-11-08-13-04-48.md)
-- [x] 2026-11-08-13-29-56 三个 startLlama*.ps1 的 $BinDir 与默认模型改为仓库内 llm/ 路径（含 VulkanTest 的 Push-Location 与 API-key 分支修复） (→ records/2026-11-08-13-29-56.md)
-- [ ] 2026-11-08-13-04-48 三个 startLlama*.ps1 的 $BinDir/模型路径仍指向外部 testGame；是否改为仓库内 llm/ 路径需用户确认 (→ records/2026-11-08-13-04-48.md)
-- [x] 2026-11-08-18-16-33 切回 main + 重启 Jarvis :7860（job pwsh-21），UI 差异确证（main 52,655 B 旧版 / future/AI_UI 41,769 B Elysia），3 轮验证通过 (→ records/2026-11-08-18-16-33.md)
-- [x] 2026-11-08-18-39-40 合并 future/AI_UI 到 main（merge commit `99aeaf1`，本地未 push），5 处冲突保留两侧内容，3 轮验证通过 (→ records/2026-11-08-18-39-40.md)
+<!-- 已归档于 ai_buckup/todo.md_2026-11-10-21-52-25.md（含 2026-10-12 运行环境搭建全链、2026-10-13 GPT-SoVITS 接入、2026-10-13-21-38 自训唤醒词 v0.1→v0.3c 全链、2026-10-17 Web UI 记录/应答词/start_all、2026-11-08 各修复批次、2026-11-09 状态灯/插件评估/阈值 0.7、2026-11-10-17-31 HF 预热、2026-11-10-17-43 汉化+ASR 参数 等已完成条目）。本文件保留未完成项 + 最近三批。 -->
 
-### 合并保留（future/AI_UI 侧未包含于 HEAD 的行，append-only 不删历史）
-- [x] 2026-11-08-13-04-48 startLlama*.ps1 改仓库内 llm/ 路径（用户答"改一下"确认，实施见 2026-11-08-13-29-56） (→ records/2026-11-08-13-04-48.md)
-- [x] 2026-11-08-14-12-32 T6 网页 UI 爱莉希雅化（在线搜索风格参考 → 主题化 index.html，保持接口不变，3 轮验证）→ commit + push 到 future/AI_UI（用户显式授权，AGENTS §4 冲突已提示） (→ records/2026-11-08-14-12-32.md)
-- [x] 2026-11-08-15-16-18 重装在线搜索 skill：修 launch 的 env/Edge 路径 + 自装 Chromium Headless Shell（curl 断点续传，F: 盘），6 轮验证（msedge/空env/bundled 三层回退均 exit 0） (→ records/2026-11-08-15-16-18.md)
-- [x] 2026-11-08-17-29-39 启动全部服务（llama :8080 已在跑 / GPT-SoVITS :9880 启成 / Jarvis :7860 启成）供真人测试，3 轮验证通过 (→ records/2026-11-08-17-29-39.md)
-- [x] 2026-11-08-17-53-00 修「保存设置后管线报错」：根因=context 摘要产生第二条 system → chat template 500；main.py 并入唯一 system + llm.py 补 enable_thinking/timeout 90，3 轮验证通过 (→ records/2026-11-08-17-53-00.md)
-- [ ] 2026-11-08-18-16-33 切回 main 分支并重启 Jarvis :7860，做 UI 差异对比（main 无 17:53 修复，需提示） (→ records/2026-11-08-18-16-33.md)
-- [x] 2026-11-08-18-54-18 修「语音输入变 You + Done.」：两处根因（stt.py 写死 language=en；main.py 342-343 空 content 兜底字面 Done.）→ stt 语言取 config（zh）+ 转录守卫 + `_tool_report()` 兜底，3 轮验证通过 (→ records/2026-11-08-18-54-18.md)
-- [x] 2026-11-08-19-25-48 重启后台 + 修语音唤醒不触发：阈值 0.75→0.65（真人 peak 最高 0.570，合成音频 PEAK 0.862）、wake.py 加 peak 分数日志、修残留 abort 把录音砍成 0.3 s，3 轮验证通过 (→ records/2026-11-08-19-25-48.md)
-- [x] 2026-11-08-19-52-59 修「真人语音能唤醒却总答『我没听清』」：录音 abort 竞态（1.5s 宽限 + 5s 冷却 + handle_wake 入口置 recording）+ 新增 get_time 工具让『现在几点』答时间，3 轮验证通过 (→ records/2026-11-08-19-52-59.md)
-- [x] 2026-11-08-20-22-00 修网页端不实时更新（状态字符串只匹配英文字面量 + 心跳/重连重拉历史），Playwright 3 轮验证通过 (→ records/2026-11-08-20-22-00.md)
-- [ ] 2026-11-08-20-44-17 修幻觉（参数强制类型+提示禁编造）、网页端实时（WS+2s events 轮询兜底）、说完刷「已停止」（abort 去广播+连续两次高分才中止+3.0s 静音判停）、顶部改状态显示器（下线中/聆听中/说话中/执行中/思考中） (→ records/2026-11-08-20-44-17.md)
-- [x] 2026-11-09-15-37-58 顶部状态显示器定稿 + 重启三服务 + 共用浏览器插件评估（→ records/2026-11-09-15-37-58.md）
-  - [x] 状态显示器定稿：6 芯片 `待命中/已离线/聆听中/说话中/执行中/思考中` + 右侧 `语音识别/LLM/TTS` 三盏灯，新增 `GET /api/health`（3 轮验证全 PASS）
-  - [x] 重启三服务：llama `:8080`(pid 16876) / GPT-SoVITS `:9880`(pid 18284) / Jarvis `:7860`(pid 1924)，实测监听 + TTS 真实合成
-  - [x] 2026-11-09-18-21 二次重启复验（用户「继续(服务你需要重启一下)」）：重启前三端口全无监听、无 `llama-server`/`python.exe`；重启后 llama `:8080`(pid 2072) / GPT-SoVITS `:9880`(pid 19084) / Jarvis `:7860`(pid 2828)，`/api/health` 三灯 online、WS `user→思考中→get_time→tool_result`、事件库 18:39:40→18:39:50 简体中文真实时钟（全程 `.tmp/*.log` 文本通路，零截图）
-  - [x] 需求 1/2/3 复核：历史 `.strip()` 崩溃为 11-08 事件（`_coerce` 已修）；17:17/17:19 实测简体 + 真实时钟；两次 1.2 s `stop` 无重复系统气泡
-  - [x] 插件三问评估落盘（口碑 / 恶意执行 / 数据外发）：Playwright MCP `--cdp-endpoint` **通过（推荐）**、Chrome DevTools MCP **通过**、Browser MCP（云 relay）**拒绝**
-  - [ ] 插件**安装/配置**（`mcp_connector_configure` + Chrome `--remote-debugging-port=9222`）——需用户明确授权后执行
-- [ ] 2026-11-09-19-45-46 修一键启动：`start_all.bat` 设 `MPLCONFIGDIR` 消除 matplotlib `WinError 5` 警告 + 补 llama `:8080` 启动段（双击起齐三服务），实测三端口监听 + `/api/health` 三灯 (→ records/2026-11-09-19-45-46.md)
-- [x] 2026-11-09-20-35-43 状态灯新增「唤醒」，排在语音识别左侧（`wake.state` + `/api/health` 四灯 + `lamp-wake`），重启 Jarvis 后 3 轮验证 (→ records/2026-11-09-20-35-43.md)
-- [x] 2026-11-09-21-19-29 `start_all.bat` 改纯 ASCII + CRLF（实测 `nonASCII=250`），三个 `start ... cmd /k (...)` 括号复合改单行 `start "标题" cmd /k "..."` 开 4 个 cmd 窗口（llama/GSV/Jarvis/Status）+ 端口占用时 `[Skip]`，3 轮验证 (→ records/2026-11-09-21-19-29.md)
-- [x] 2026-11-09-21-55-14 唤醒阈值改 0.7 + 唤醒提示音改播预生成音频（不走 TTS 实时合成）+ 工具执行播报汉化（`type_text→输入文本`、`press_key→按下按钮`），3 轮验证 (→ records/2026-11-09-21-55-14.md)
-- [x] 2026-11-10-17-31-10 查清 ASR「不能转写」真因＝重启时丢 `HF_ENDPOINT/HF_HOME` 导致 whisper 去联网找快照（`ConnectError 10054`）；重启带环境变量 + `main.py` 新增 `_warm_stt()` 启动预热，3 轮验证 (→ records/2026-11-10-17-31-10.md)
-- [ ] 2026-11-10-17-43-08 汉化补全（工具**返回值文案**改中文，如 `Typed:` → `已输入文本：`）+ 录音落盘做 A/B + ASR 参数优化（`initial_prompt`/beam/vad），不够再评估换 sherpa-onnx paraformer-zh，3 轮真人语音验证 (→ records/2026-11-10-17-43-08.md)
-  - 已完成：汉化 44 处 + 乱码修复 + 重试判定修复；录音落盘；参数优化（合成语音 A/B 3/3 全对）；验证 3 轮（`tests/2026-11-10-17-43-08_cc/`）已 commit
-  - 待办：真人 3 句语音验证 + 是否换 sherpa-onnx 引擎 —— 等用户在 `need_user.md` Q7 回复
+## 未完成（等用户 / 需授权 / 延后）
 
+- [ ] 2026-10-13-11-45 三问题排查收尾（→ records/2026-10-13-11-45.md；剩余：用户对新进程实测唤醒）
+- [ ] 2026-10-13-21-38-01 T4 仓库私有化/描述改「自用」（AGENTS 禁远程写入，需用户手动；need_user.md Q5，用户确认延后）
+- [ ] 2026-10-13-21-38-01 T6 网页 UI 爱莉希雅化（当时仅记录，后续已由 2026-11-08-14-12-32 完成）
+- [ ] 2026-10-14-22-23-49 TTS 迁移 SoulX-Podcast（用户当时要求，**本轮不做**，仅记录）
+- [ ] 2026-10-17-19-11-07 README 中文化 + 来源声明 + 仓库更名 AI_Elysia + LICENSE + push（→ records/2026-10-17-19-11-07.md；用户当时允许 push，AGENTS §4 禁 push，需用户明确操作）
+- [ ] 2026-10-17-19-52-00 唤醒词 v0.3 onnx 入库（用户批准推送；AGENTS 禁 push → 需用户执行）
+- [ ] 2026-11-08-12-08-49 LLM 基准台账 `AI_Benchmark.md` 继续补测更多模型（T14 decode 仅 IQ3 2B 已测）
+- [ ] 2026-11-08-20-44-17 剩余：幻觉治理与「说完刷已停止」的 20 轮明确测试未跑完；轮 4 barge-in 结论待追加到累积 `tests/opinion.md`
+- [ ] 2026-11-09-19-45-46 剩余 3 轮验证未跑完（1 轮已做）
+- [ ] 2026-11-09-15-37-58 浏览器共用插件**安装/配置**（Playwright MCP `--cdp-endpoint` 已评估通过；需用户授权 Chrome `--remote-debugging-port=9222` 后执行）
+- [ ] 2026-11-10-17-43-08 真人 3 句语音验证 + 是否换 sherpa-onnx paraformer-zh —— 等 `need_user.md` Q7 回复（汉化 44 处 / 乱码 / 重试判定 / 录音落盘 / 参数优化已 commit，3 轮已验）
+
+## 2026-11-10-21-02-16 真人录音分段重训练 + 抗干扰后训练 + 「录满 30 s」修复 (→ records/2026-11-10-21-02-16.md)
+
+- [x] 解码 36.12 s + ASR 词级时间戳定位呼唤（确认 4 次：1.3–2.5 / 2.8–4.6 / 30.6–31.7 / 33.1–34.3）+ 逐 0.5 s 响度剖面
+- [x] 真人 clip 切分入库（2 训练正 / 2 验收留出 / 真人负 8+3 / 静音负 3+7，编号延续 10xx）→ `aili_xiya_v0.4` 流式特征（24024 正 / 57708 负行）→ 训练 `aili_xiya_v0.4.onnx`
+- [x] **抗干扰后训练**（用户追加）：噪声池按 SNR -5/0/5/10 dB 混合 164 条带噪 clip + 8 条纯噪声负样本，真人行 ×5 / 带噪 ×2 → `aili_xiya_v0.5.onnx`
+- [x] 验收矩阵（合成 + 真人留出 + 带噪留出，阈值 0.4–0.8，`v05verify.log`）：v0.3 真人 rec 1.00/fp 0.70；v0.4 0.50/0.20；v0.5 0.00/0.00（带噪 fp 归零、recall 塌陷）→ **三者在写死判据下全 FAIL，`config.yaml` 未改，Jarvis 仍用 v0.3 + 0.7**
+- [x] 修「无人说话录满 30 s」：`record_until_silence` 新增 `no_speech_seconds`（默认 2.0，`config.yaml` `stt.no_speech_seconds`）；模拟 3 例 2.10/4.20/30.00 s 达标，21:48 线上实测 2.1 s 提前退出
+- [x] 3 轮验证落盘（`tests/2026-11-10-21-02-16_cc/record_1..3.md` + `opinion.md`，累积追加 `tests/opinion.md`）
+- [ ] 等用户在 `need_user.md` Q8 回复：① 录音里喊了几次「爱莉希雅」、分别在几秒；② 高分未标注窗口（27.0–30.2、31.7–32.7）是呼唤还是噪声（未入库）；③ **补录 ≥20 次干净呼唤**（安静 + 带噪各半、离麦近、系统录音音量调高）——真人正样本量是抗干扰链的硬瓶颈，补录后重跑同一套特征+训练+矩阵
+- [ ] 补录后的后续：v0.4/v0.5 数据与 ONNX 留在 `openWakeWord/output/`（未 commit）作基线；新脚本 6 个需进 `tree.md` 重建
