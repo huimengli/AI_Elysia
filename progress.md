@@ -16,7 +16,7 @@
 
 - 早期（ASCII 主题，当时走 `cmd` 会 GBK 写乱，未改写）：`35984ac`（修 barge-in + get_time）、`904dbc8`/`104045f`（网页实时状态）、`a0ecd92`（4 状态灯）、`1e16ca6`/`cc6830a`/`9939d8d`（台账）、`324fe25`/`10d2b55`（MPLCONFIGDIR + llama 启动）、`4840591`/`c1f358e`（唤醒灯）、`387b320`/`4ab19ea`（start_all 纯 ASCII CRLF）。
 - **2026-11-10-22-58 已把最近 12 条英文标题 reword 成中文**（`git rebase -i 8aada16~1` + 脚本改主题；旧历史保留在本地分支 `backup-before-reword`；工作树逐文件一致）。**旧 hash → 新 hash**：`8aada16`→`58c322e`（feat: 唤醒阈值定 0.7、应答音频缓存内存并复用单条输出流、TTS 与 UI 工具标签汉化，3 轮验证）、`510b26b`→`8fad6b7`、`f7abb54`→`f84e5ff`（test: 补第 4 轮 barge-in 回归）、`cbff3bd`→`35fb9f0`、`d7d8132`→`5e5112b`（fix: 重启补齐 HF 环境变量 + whisper 预热）、`54474ba`→`c470e9e`、`5292ccd`→`2c02937`（feat: 工具结果文案汉化、录音落盘、whisper prompt/vad 调参）、`8b78934`→`5e70996`、`4586671`→`91d88f0`（feat: 无人说话提前结束录音，真人数据集与 SNR 抗干扰后训练）、`7f5341b`→`f5984a4`、`d5c2f35`→`2998a5c`（docs: 真人录音重标 13 次，重训 v0.6 带噪正样本，四模型验收）、`c85069d`→`8d2a201`；内容未改仅换 hash：`023a987`→`432f5ab`（定「commit 标题用中文」+ Q11）、`811b576`→`244fd12`。
-- 最新一条：`244fd12` `docs(AI): 把 023a987 的 hash 追加到进度台账`。最后一条 hash 的「记录该 hash 的 commit」不再追加，避免无限循环。
+- 最新一条：`689af87` `docs(AI): 最近 12 条 commit 标题改中文（rebase reword，旧→新 hash 对照入台账），Q11 已答复`（5 files：`records/2026-11-10-22-48-24.md` 结果节、`need_user.md`（Q11 status done）、`todo.md`、`progress.md`（已归档 `ai_buckup/progress.md_2026-11-10-23-00-30.md`，压缩到 46 行）、`tree.md`（187 项）；**已本地 commit，未 push**）。最后一条 hash 的「记录该 hash 的 commit」不再追加，避免无限循环。
 
 ## 最近三批要点
 
