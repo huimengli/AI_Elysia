@@ -65,5 +65,5 @@
 - ② `jarvis/tts.py` 新增 `preload_ack_audio()`（启动时把 5 条 ack wav 解码成内存 float32 PCM）+ `_output_stream()`（**常驻复用同一条** `sd.OutputStream`）；`play_ack_wav()` 只写流，不再 `wave.open`、不再 `sd.play` 建流、不发 TTS 请求；`main()` 启动时预热。建流 3125–3444 ms 移到启动一次性支付，唤醒后 `ack stream ready 0 ms`，出声延迟 ≈20 ms（2.26 s 音频 total 2281 ms；真人唤醒 total 2069 ms）。
 - ② 修的两个真缺陷：`sd.OutputStream(latency="small")` 在这版 sounddevice 抛 `TypeError: must be real number, not str`（要数值 blocksize）→ 去掉；只缓存 PCM 不够（首次唤醒仍付 3.4 s 建流）→ 启动预热建流（`output stream warmed in 2868 ms`）。
 - ③ `jarvis/tools/router.py` 加 `TOOL_LABELS`（33 项）+ `tool_label()`；`main.py` `_tool_report()` 用中文名，`tool`/`tool_result` 广播 4 处（llamacpp + ollama 分支）新增 `label`；`index.html` 状态条/活动条/工具日志/实时流用 `msg.label || msg.name`。实测文案 `我执行了 输入文本、按下按钮：OK enter`；真人网页触发事件 `["tool","get_time","看时间"]`、`["tool_result","get_time","看时间"]`。英文 `name` 保留（检索/LLM schema 不变）。
-- 3 轮全 PASS（`tests/2026-11-09-21-55-14_cc/`，累积见 `tests/opinion.md`）。全程零截图。
+- 验证 4 轮全 PASS（`tests/2026-11-09-21-55-14_cc/`，累积见 `tests/opinion.md`）。全程零截图。第 4 轮为补充回归：新播放路径下 `stop_speaking()` 仍即时（2.26 s 音频在 0.5 s 打断，`stop_call_ms=0.0`，队列清空，`is_speaking()=false`），并测出建流成本随设备状态波动（990/2868/3125 ms）→ 证实建流必须挪到启动阶段。
 - 遗留登记（未改）：真实语音轮 STT 两次 `ConnectError WinError 10054`（`.tmp\jarvis3.log:19-23`）、`asr.warm=false`、VAD 在噪声下录满 30 s 上限；改 `threshold` 后必须重启 Jarvis 才刷新灯上的数值。
