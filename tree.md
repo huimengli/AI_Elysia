@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-10-22-40（新增 `records/2026-11-10-22-17-39.md`、`tests/2026-11-10-22-17-39_cc/`（5 个文件），共 185 项；本批无代码改动（`config.yaml` 未改，Jarvis 仍用 `aili_xiya_v0.3.onnx` + 0.7）。上一批（2026-11-10-21-02-16）改动 `config.yaml`（`stt.no_speech_seconds`）、`jarvis/stt.py`（无人说话 2 s 提前退出）、`jarvis/main.py`（传入该参数）。本文件由 `git ls-files` + 未跟踪的非忽略文件（2 项）+ 本轮新增重建；`.tmp/` 被 `.gitignore` 排除，不列出；`_t2_v04_real_clips.py`、`_t2_v04_features.py`、`_t2_v04_noisy_clips.py`、`_t2_v05_features.py`、`_t2_v06_clips.py`、`_t2_v06_noisy_clips.py`、`_t2_v06_features.py` 与 `openWakeWord/train_config_v04|v05|v06.yaml`、`openWakeWord/output/aili_xiya_v0.4|v0.5|v0.6/` 均被 `.gitignore`（`_*.py`、`openWakeWord/*`、`*.wav`）排除，不列出）
+更新时间: 2026-11-10-22-52（新增 `records/2026-11-10-22-48-24.md`（commit 标题改中文，`need_user.md` Q11 待定范围），共 186 项；本批无代码改动（`config.yaml` 未改，Jarvis 仍用 `aili_xiya_v0.3.onnx` + 0.7）。上一批（2026-11-10-22-17-39）新增 `records/2026-11-10-22-17-39.md` 与 `tests/2026-11-10-22-17-39_cc/`（5 个文件）。本文件由 `git ls-files` + 未跟踪的非忽略文件（2 项）+ 本轮新增重建；`.tmp/` 被 `.gitignore` 排除，不列出；`_t2_v04_real_clips.py`、`_t2_v04_features.py`、`_t2_v04_noisy_clips.py`、`_t2_v05_features.py`、`_t2_v06_clips.py`、`_t2_v06_noisy_clips.py`、`_t2_v06_features.py` 与 `openWakeWord/train_config_v04|v05|v06.yaml`、`openWakeWord/output/aili_xiya_v0.4|v0.5|v0.6/` 均被 `.gitignore`（`_*.py`、`openWakeWord/*`、`*.wav`）排除，不列出）
 
 ```
 JarvisAi/
@@ -107,7 +107,8 @@ JarvisAi/
 │   ├── 2026-11-10-17-31-10.md
 │   ├── 2026-11-10-17-43-08.md
 │   ├── 2026-11-10-21-02-16.md
-│   └── 2026-11-10-22-17-39.md
+│   ├── 2026-11-10-22-17-39.md
+│   └── 2026-11-10-22-48-24.md
 └── tests
     ├── __init__.py
     ├── opinion.md

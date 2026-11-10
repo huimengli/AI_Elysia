@@ -38,3 +38,9 @@
 - [x] 3 轮验证 `tests/2026-11-10-22-17-39_cc/record_1..3.md` + `opinion.md`，累积追加 `tests/opinion.md`
 - [ ] 等 `need_user.md` Q10 用户决定：是否把 `wake_word.model` 切到 `aili_xiya_v0.6.onnx`（阈值必须 0.7）；授权后重启 Jarvis（带 3 个 HF 变量）+ 真人唤醒复验 3 轮
 - [ ] 等 `need_user.md` Q9 明日补录（≥20 次干净呼唤 + ≥10 句无关中文短句作真人负样本 + ≥10 次带噪呼唤）→ 重跑同一套流程，目标带噪 recall ≥0.9 并补齐真人 fp
+
+## 2026-11-10-22-48-24 commit 标题改中文（→ `records/2026-11-10-22-48-24.md`）
+
+- [ ] 长期约定写入 `progress.md`：以后 commit subject 一律中文（`type(AI): 中文标题`；type/scope 保持英文，与 AGENTS §4 的 Conventional Commits 兼容，AGENTS.md 本身只读不改）
+- [ ] 历史英文标题改写范围等 `need_user.md` **Q11** 用户确认（选项 1 推荐：本批 3 条 `4586671` / `d5c2f35` / `c85069d` 逐条 reword；选项 2 全部约 12 条英文标题；选项 3 仅最新 1 条 amend）
+- [ ] 改写后：新 hash 追加 `progress.md` 台账（旧 hash 保留并注明「标题改写」）、`tree.md` 增 `records/2026-11-10-22-48-24.md`（186 项）、commit 本次文档；全程本地、**禁止 push**

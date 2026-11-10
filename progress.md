@@ -23,7 +23,7 @@
 ### 执行通道（本会话沉淀，可复用）
 - **首选 `pwsh` 工具通道**：直接跑 `git` / `netstat` / `Invoke-WebRequest` / `tasklist` / python 探针，无需前台、无需弹窗。`cmd /c start_all.bat` 在 stdout 被重定向时不会退出（子窗口继承管道），脚本类启动仍走双击 / `Win+R` 弹窗。
 - 弹窗通道（次选）：`write` 生成纯 ASCII `.bat` → `Win+R` 填全路径 →「打开文件 - 安全警告」用 **`Alt+R`（运行(R) 助记键）** 放行（UIA `invoke` 与鼠标点击对该弹窗无效）→ 输出重定向 `.tmp\*.log` → `read`。window_id 每次动作前重新 `list`（id 会被成功动作消耗/过期）。
-- 编码坑：中文路径在 `.bat` 里被 cmd 当 GBK → 用 `%USERPROFILE%`/`%~dp0`；PowerShell `>` 产生 UTF-16 不可读，CJK 日志需 `Get-Content | Out-File -Encoding utf8`；python 探针设 `PYTHONIOENCODING=utf-8`、`PYTHONPATH=%CD%`（否则 `No module named 'jarvis'`）；commit 主题用 ASCII。
+- 编码坑：中文路径在 `.bat` 里被 cmd 当 GBK → 用 `%USERPROFILE%`/`%~dp0`；PowerShell `>` 产生 UTF-16 不可读，CJK 日志需 `Get-Content | Out-File -Encoding utf8`；python 探针设 `PYTHONIOENCODING=utf-8`、`PYTHONPATH=%CD%`（否则 `No module named 'jarvis'`）。**commit 主题自 2026-11-10-22-48 起一律用中文**（`type(AI): 中文标题`，type/scope 保持英文）：`pwsh` 通道 UTF-8 正常，历史 ASCII 主题只是因为当时走 `cmd`（GBK 会把中文写乱）；含反引号的长中文文本用 `write` 工具，不要用 pwsh heredoc（会吞反引号）。
 - 运维：重启 `:7860` 用 `Get-NetTCPConnection -LocalPort 7860 -State Listen` 找 pid → `Stop-Process` → `Start-Process -WindowStyle Hidden` 拉起 `.venv\Scripts\python.exe -u -m jarvis.main`（精确，不伤 GPT-SoVITS）。**重启 Jarvis 必须带 `HF_ENDPOINT=https://hf-mirror.com` + `HF_HOME=<repo>\.hf-cache` + `HF_HUB_DISABLE_XET=1`**：whisper-small 的快照只存在于仓库内 `.hf-cache`（默认用户缓存没有），漏了这三个变量 faster-whisper 会去 huggingface.co 找快照并抛 `ConnectError WinError 10054`，转写直接为空（`records/2026-11-10-17-31-10.md`）。
 
 ## Git 提交记录（全部**已本地 commit，未 push**；AGENTS §4 禁 push）
