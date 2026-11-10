@@ -44,6 +44,7 @@
 - `f7abb54` `test(AI): add round 4 barge-in regression for cached ack playback path, update ledgers`（4 files / 26+ / 4-；**已本地 commit，未 push**）
 - `d7d8132` `fix(AI): restore HF cache env vars on jarvis restart and add startup whisper warm-up so asr loads from repo .hf-cache, verified 3 rounds`（10 files / 136+ / 5-；**已本地 commit，未 push**）
 - `5292ccd` `feat(AI): localize tool result strings, dump captured audio for ASR replay, tune whisper with simplified prompt and vad, verified 3 rounds`（21 files / 331+ / 74-；**已本地 commit，未 push**）
+- `4586671` `feat(AI): exit mic capture early when no speech, add real-person wake-word dataset and SNR noise post-training, verified 3 rounds with config unchanged`（14 files / 220+ / 4-：`config.yaml`、`jarvis/stt.py`、`jarvis/main.py`、`records/2026-11-10-21-02-16.md`、`tests/2026-11-10-21-02-16_cc/` 5 件、`tests/opinion.md`、`need_user.md`（Q8）、`progress.md`（已归档 `ai_buckup/progress.md_2026-11-10-21-50-17.md`）、`todo.md`（已归档 `ai_buckup/todo.md_2026-11-10-21-52-25.md`）、`tree.md`；新脚本与 `aili_xiya_v0.4/v0.5` 数据被 `.gitignore` 排除，未 commit；**已本地 commit，未 push**）
 - 最后一条 hash 的「记录该 hash 的 commit」不再追加，避免无限循环。
 
 ## 2026-11-10-17-31 ASR「不能转写」真因（重启丢 HF 环境变量）+ whisper 启动预热
