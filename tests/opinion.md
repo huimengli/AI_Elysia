@@ -105,3 +105,10 @@
 - 方法学定稿：`start "标题" cmd /k "cd /d %~dp0... & set ... & 程序"` 单行形式（旧的 `cmd /k ( 多行 )` 括号复合废弃）；路径全用 `%~dp0`（无空格无中文）故 `cmd /k` 内不需嵌套引号；ASCII 化用 `Set-Content -Encoding Ascii` + 显式 `\r\n`，注释与提示一律英文。全程零截图（`netstat`/`tasklist`/`curl` + 窗口标题文本）。
 - 结论：编码与窗口两条要求闭合，四窗口 = llama :8080 / GPT-SoVITS :9880 / Jarvis :7860 / Status 面板；关窗即停对应服务。遗留：`call start_all.bat` 后父脚本尾部输出未落盘（`exit /b 0` 交互，不影响双击），第 4 个状态窗口不需要时可自行关闭。
 
+# 批次结论（tests/2026-11-09-21-55-14_cc，验证 3 轮）
+
+- 需求：① 唤醒触发阈值改 0.7；② 唤醒后固定应答音「直接播放已有音频」不再进 TTS；③ 工具执行播报汉化（`type_text → 输入文本`、`press_key → 按下按钮`）（`records/2026-11-09-21-55-14.md`）。
+- 3 轮全 PASS：① 重启后 `/api/health` 的 `wake.threshold=0.7`（`h6.log`/`h7.log`），真人实测 `peak 0.773 ≥ 0.7` 成功触发、环境峰值 0.25–0.62 均不触发（`.tmp\jarvis3.log` 的 `[Wake] peak` 行）；② 热路径改为「内存 PCM + 常驻输出流」，`ack stream ready 0 ms`、2.26 s 音频总 2281 ms（`ack3.log`），真人唤醒实测 `stream ready 0 ms / total 2069 ms`（`.tmp\jarvis3.log:7-10`），首字出声延迟由 ~3.4 s 级降到 ~20 ms 级，全程无 HTTP 合成请求；③ `TOOL_LABELS` 33/33 无遗漏，`_tool_report` 文案为 `我执行了 输入文本、按下按钮：…`（`tool1.log`），真人经网页端触发后 WS 事件带中文 `label`：`["tool","get_time","看时间"]`、`["tool_result","get_time","看时间"]`（`ws1.log`）。
+- 方法学新增：`pwsh` 通道可直接跑 `git`/`netstat`/`Invoke-WebRequest`/python 探针（比「运行(R)+安全警告 Alt+R」弹窗便宜得多）；`cmd /c start_all.bat` 在 stdout 被重定向的管道里不会退出（子窗口继承管道），故脚本执行仍走双击/Run 弹窗语义；探针输出需 `PYTHONIOENCODING=utf-8` + `Out-File -Encoding utf8` 才能被 `read` 读。全程零截图。
+- 结论：三项要求都是「零新增网络调用、零新增推理」的实现路径；英文工具名保留在协议与事件里（检索/LLM schema 不变），中文只用于播报与 UI。本轮修掉两个真缺陷（`latency="small"` 抛 `TypeError`；首次唤醒仍付 3.4 s 建流成本 → 启动预热建流）。遗留登记：真实语音轮 STT 两次 `ConnectError WinError 10054`、`asr.warm=false`、VAD 录满 30 s 上限，属 STT/VAD 老问题，需另开需求。
+

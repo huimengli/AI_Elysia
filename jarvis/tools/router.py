@@ -61,6 +61,49 @@ TOOL_MAP = {
     "delegate_task":    lambda a: delegate_task(a["task"], a.get("context", "")),
 }
 
+# Chinese display names for spoken / on-screen reports (records/2026-11-09-21-55-14.md).
+# The English name stays the schema/protocol identity; this map is only for 播报与 UI.
+TOOL_LABELS = {
+    "web_search": "联网搜索",
+    "fetch_page": "读取网页",
+    "open_url": "打开网址",
+    "get_weather": "查天气",
+    "get_time": "看时间",
+    "open_app": "打开应用",
+    "kill_process": "结束进程",
+    "read_screen": "读取屏幕",
+    "find_on_screen": "屏幕查找",
+    "click_at": "点击坐标",
+    "scroll_screen": "滚动屏幕",
+    "move_mouse": "移动鼠标",
+    "focus_window": "聚焦窗口",
+    "get_open_windows": "列出窗口",
+    "type_text": "输入文本",
+    "press_key": "按下按钮",
+    "media_control": "媒体控制",
+    "screenshot": "截图",
+    "read_file": "读取文件",
+    "write_file": "写入文件",
+    "list_files": "列出文件",
+    "run_python": "运行代码",
+    "get_clipboard": "读取剪贴板",
+    "set_clipboard": "写入剪贴板",
+    "set_volume": "设置音量",
+    "get_volume": "查看音量",
+    "get_system_info": "系统信息",
+    "set_brightness": "设置亮度",
+    "lock_screen": "锁定屏幕",
+    "power_command": "电源操作",
+    "show_notification": "发送通知",
+    "set_timer": "设置计时器",
+    "delegate_task": "委派任务",
+}
+
+
+def tool_label(name: str) -> str:
+    """Chinese display name for a tool; falls back to the English name."""
+    return TOOL_LABELS.get(name, name)
+
 TOOL_SCHEMAS = [
     # --- Web ---
     {"type": "function", "function": {

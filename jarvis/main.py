@@ -24,11 +24,11 @@ for _stream in (sys.stdout, sys.stderr):
 
 from jarvis.wake import listen_for_wake_word
 from jarvis.stt import record_until_silence, transcribe_audio, set_abort_event
-from jarvis.tts import speak, speak_streamed, is_speaking, stop_speaking, play_ack_wav
+from jarvis.tts import speak, speak_streamed, is_speaking, stop_speaking, play_ack_wav, preload_ack_audio
 from jarvis.context import ContextManager
 from jarvis.memory import Memory
 from jarvis.events import EventLog
-from jarvis.tools.router import TOOL_SCHEMAS, dispatch
+from jarvis.tools.router import TOOL_SCHEMAS, dispatch, tool_label
 
 _MAX_TOOL_LOOPS = 3
 _CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
@@ -347,13 +347,13 @@ def _call_openai_provider(provider_cfg: dict, temperature: float, full_messages:
                 _check_abort()
                 args = _parse_tool_args(call["function"]["arguments"])
                 tool_count += 1
-                _broadcast({"type": "tool", "name": call["function"]["name"], "args": args})
+                _broadcast({"type": "tool", "name": call["function"]["name"], "label": tool_label(call["function"]["name"]), "args": args})
                 if tool_count == 4:
                     _speak_if_unmuted("好的，我处理一下。")
                 result = _exec_tool_with_retry(call["function"]["name"], args)
                 executed.append((call["function"]["name"], result))
                 print(f"[Tool: {call['function']['name']}] {result[:120]}")
-                _broadcast({"type": "tool_result", "name": call["function"]["name"], "result": result[:200]})
+                _broadcast({"type": "tool_result", "name": call["function"]["name"], "label": tool_label(call["function"]["name"]), "result": result[:200]})
                 full_messages.append({
                     "role": "tool",
                     "content": result,
@@ -371,10 +371,14 @@ def _call_openai_provider(provider_cfg: dict, temperature: float, full_messages:
 
 
 def _tool_report(executed: list[tuple[str, str]]) -> str:
-    """Spoken report when the model returns empty content after tool rounds."""
+    """Spoken report when the model returns empty content after tool rounds.
+
+    Tool names are reported in Chinese (records/2026-11-09-21-55-14.md): the user
+    heard "我执行了 type_text、press_key" before, which is unreadable when spoken.
+    """
     if not executed:
         return "我处理好了。"
-    names = "、".join(n for n, _ in executed)
+    names = "、".join(tool_label(n) for n, _ in executed)
     last = executed[-1][1].strip().split("\n")[0][:80]
     return f"我执行了 {names}：{last}"
 
@@ -392,12 +396,12 @@ def _call_ollama_provider(provider_cfg: dict, temperature: float, full_messages:
                 _check_abort()
                 args = _parse_tool_args(tc.function.arguments)
                 tool_count += 1
-                _broadcast({"type": "tool", "name": tc.function.name, "args": args})
+                _broadcast({"type": "tool", "name": tc.function.name, "label": tool_label(tc.function.name), "args": args})
                 if tool_count == 4:
                     _speak_if_unmuted("好的，我处理一下。")
                 result = _exec_tool_with_retry(tc.function.name, args)
                 print(f"[Tool: {tc.function.name}] {result[:120]}")
-                _broadcast({"type": "tool_result", "name": tc.function.name, "result": result[:200]})
+                _broadcast({"type": "tool_result", "name": tc.function.name, "label": tool_label(tc.function.name), "result": result[:200]})
                 full_messages.append({
                     "role": "tool",
                     "content": result,
@@ -658,6 +662,12 @@ def main() -> None:
     webbrowser.open("http://localhost:7860")
 
     event_log.log("system", "爱莉希雅 online", "startup")
+    # Warm the wake-ack path before the first turn: cached PCM + one open output
+    # stream, so the first wake answer costs no file decode and no stream startup.
+    try:
+        preload_ack_audio()
+    except Exception as e:
+        print(f"[WARN] ack preload failed (will fall back to live TTS): {e}")
     try:
         _speak_if_unmuted("早安，爱莉希雅已上线。")
     except Exception as e:

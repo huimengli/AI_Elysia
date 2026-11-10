@@ -5,6 +5,7 @@ import re
 import urllib.parse
 import urllib.request
 import wave
+import time
 import yaml
 import numpy as np
 import sounddevice as sd
@@ -150,34 +151,102 @@ def _resolve_ack_dir() -> Path:
     return p if p.is_absolute() else (_CONFIG_PATH.parent / p)
 
 
+# Pre-loaded wake-ack audio, kept in memory as float32 PCM. Decoding a wav on the
+# fly (wave.open + readframes + numpy cast) is a few ms, but the real cost is
+# sounddevice opening a fresh output stream on every sd.play() call — that is what
+# made the wake answer feel slow. The stream is opened once and reused, and the
+# clips are cached at startup, so the ack starts as soon as the bytes are written.
+_ack_cache: list[tuple[np.ndarray, int]] = []
+_ack_pos = 0
+_out_stream = None
+
+
+def preload_ack_audio() -> int:
+    """Load every tts.ack_dir wav into RAM once (called at startup)."""
+    global _ack_cache
+    ack_dir = _resolve_ack_dir()
+    wavs = sorted(ack_dir.glob("*.wav")) if ack_dir.is_dir() else []
+    cache = []
+    for p in wavs:
+        try:
+            with wave.open(str(p), "rb") as w:
+                rate = w.getframerate()
+                pcm = w.readframes(w.getnframes())
+            if pcm:
+                cache.append((np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32767, rate))
+        except Exception as e:
+            print(f"[TTS] ack preload skipped {p.name}: {e}")
+    _ack_cache = cache
+    print(f"[TTS] ack audio preloaded: {len(cache)} clips in memory")
+    # Warm the output stream at startup too: opening it costs ~3.4 s (measured),
+    # so paying that here keeps the *first* wake answer as fast as the rest.
+    if cache:
+        try:
+            t_open = time.perf_counter()
+            _output_stream(cache[0][1])
+            print(f"[TTS] output stream warmed in {1000 * (time.perf_counter() - t_open):.0f} ms")
+        except Exception as e:
+            print(f"[TTS] output stream warm-up failed (first ack will be slow): {e}")
+    return len(cache)
+
+
+def _output_stream(rate: int):
+    """One long-lived output stream, reopened only when the sample rate changes."""
+    global _out_stream
+    if _out_stream is not None:
+        if int(_out_stream.samplerate) == rate:
+            if not _out_stream.active:
+                _out_stream.start()
+            return _out_stream
+        try:
+            _out_stream.stop()
+            _out_stream.close()
+        except Exception:
+            pass
+        _out_stream = None
+    # No `latency="small"`: this sounddevice build wants a numeric blocksize
+    # (frames), so a string raises TypeError: must be real number, not str.
+    # The speedup comes from cached PCM + one reused stream, not a tiny buffer.
+    _out_stream = sd.OutputStream(samplerate=rate, channels=1, dtype="float32")
+    _out_stream.start()
+    return _out_stream
+
+
 def play_ack_wav() -> None:
     """T8: play a pre-synthesized wake-ack wav picked at random from tts.ack_dir.
 
-    Local file playback — no live TTS round-trip, so the "I'm listening" ack is
-    instant. Falls back to live synthesis when the directory is missing/empty.
-    Interruptible via stop_speaking().
+    Cached PCM + reused output stream — no live TTS round-trip and no stream
+    startup, so the "I'm listening" answer is near-instant. Falls back to live
+    synthesis only when the cache/directory is empty. Interruptible via stop_speaking().
     """
-    ack_dir = _resolve_ack_dir()
-    wavs = sorted(ack_dir.glob("*.wav")) if ack_dir.is_dir() else []
-    if not wavs:
+    global _ack_pos
+    if not _ack_cache:
+        preload_ack_audio()
+    if not _ack_cache:
         print("[TTS] No pre-generated ack wavs — falling back to live TTS")
         speak("嗯？我在听。")
         return
-    pick = random.choice(wavs)
-    with wave.open(str(pick), "rb") as w:
-        rate = w.getframerate()
-        pcm = w.readframes(w.getnframes())
-    if not pcm:
-        speak("嗯？我在听。")
-        return
+    t0 = time.perf_counter()
+    audio, rate = _ack_cache[_ack_pos % len(_ack_cache)]
+    _ack_pos += 1
     _interrupt.clear()
-    audio = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32767
     _speaking.set()
+    stream = None
     try:
-        sd.play(audio, samplerate=rate)
-        _wait_or_interrupt()
+        stream = _output_stream(rate)
+        print(f"[TTS] ack stream ready in {1000 * (time.perf_counter() - t0):.0f} ms")
+        chunk = max(1, int(rate * 0.1))
+        for i in range(0, len(audio), chunk):
+            if _interrupt.is_set():
+                break
+            stream.write(audio[i : i + chunk])
+        print(f"[TTS] ack played ({len(audio) / rate:.2f} s), total {1000 * (time.perf_counter() - t0):.0f} ms")
     finally:
-        sd.stop()
+        if stream is not None and _interrupt.is_set():
+            try:
+                stream.stop()  # flush the queue so stop_speaking is instant
+            except Exception:
+                pass
         _speaking.clear()
         _interrupt.clear()
 

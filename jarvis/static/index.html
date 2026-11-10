@@ -632,8 +632,8 @@ function connect() {
         break;
       }
       case 'wake': addLiveFeed('system', '[WAKE] ' + (msg.text || '')); seenEvents.add('wake|' + (msg.text || '')); break;
-      case 'tool': setAppState('acting'); setStatusText('工具: ' + msg.name.toUpperCase()); showActivity('执行: ' + msg.name); addActivityStep(); addToolCall(msg.name, msg.args); addLiveFeed('tool', '[Tool: ' + msg.name + ']'); break;
-      case 'tool_result': updateToolResult(msg.name, msg.result); break;
+      case 'tool': { const lab = msg.label || msg.name; setAppState('acting'); setStatusText('工具: ' + lab); showActivity('执行: ' + lab); addActivityStep(); addToolCall(lab, msg.args); addLiveFeed('tool', '[Tool: ' + lab + ']'); break; }
+      case 'tool_result': updateToolResult(msg.label || msg.name, msg.result); break;
       case 'response': setThinking(false); hideActivity(); setReactorState('speaking'); setAppState('speaking'); setStatusText('说话中'); addMsg('assistant', msg.text); addLiveFeed('assistant', msg.text); seenEvents.add('assistant|' + msg.text); break;
       case 'mute': isMuted = msg.muted; updateMuteUI(); addMsg('system', msg.muted ? '🔇 已静音' : '🔊 已解除静音'); break;
       case 'provider_changed': loadProviders(); break;

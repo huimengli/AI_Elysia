@@ -94,4 +94,5 @@
 - [ ] 2026-11-09-19-45-46 修一键启动：`start_all.bat` 设 `MPLCONFIGDIR` 消除 matplotlib `WinError 5` 警告 + 补 llama `:8080` 启动段（双击起齐三服务），实测三端口监听 + `/api/health` 三灯 (→ records/2026-11-09-19-45-46.md)
 - [x] 2026-11-09-20-35-43 状态灯新增「唤醒」，排在语音识别左侧（`wake.state` + `/api/health` 四灯 + `lamp-wake`），重启 Jarvis 后 3 轮验证 (→ records/2026-11-09-20-35-43.md)
 - [x] 2026-11-09-21-19-29 `start_all.bat` 改纯 ASCII + CRLF（实测 `nonASCII=250`），三个 `start ... cmd /k (...)` 括号复合改单行 `start "标题" cmd /k "..."` 开 4 个 cmd 窗口（llama/GSV/Jarvis/Status）+ 端口占用时 `[Skip]`，3 轮验证 (→ records/2026-11-09-21-19-29.md)
+- [x] 2026-11-09-21-55-14 唤醒阈值改 0.7 + 唤醒提示音改播预生成音频（不走 TTS 实时合成）+ 工具执行播报汉化（`type_text→输入文本`、`press_key→按下按钮`），3 轮验证 (→ records/2026-11-09-21-55-14.md)
 
