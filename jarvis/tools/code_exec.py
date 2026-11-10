@@ -25,11 +25,11 @@ def run_python(code: str) -> str:
             timeout=timeout,
         )
         output = result.stdout + result.stderr
-        return output.strip() or "(no output)"
+        return output.strip() or "(无输出)"
     except subprocess.TimeoutExpired:
-        return f"Code execution timed out after {timeout}s."
+        return f"代码执行超时（{timeout} 秒）。"
     except Exception as e:
-        return f"Execution error: {e}"
+        return f"执行出错：{e}"
     finally:
         try:
             os.unlink(fname)

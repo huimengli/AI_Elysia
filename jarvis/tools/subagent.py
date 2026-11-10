@@ -29,6 +29,6 @@ def delegate_task(task: str, context: str = "") -> str:
         text = response.message.content or ""
         # Strip thinking tags from local model too
         text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
-        return text if text else "Subtask completed (no output)."
+        return text if text else "子任务完成（无输出）。"
     except Exception as e:
-        return f"Subagent failed: {e}"
+        return f"子智能体调用失败：{e}"

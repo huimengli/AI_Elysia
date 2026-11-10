@@ -39,16 +39,64 @@ def _get_model(force_cpu=False):
             raise
     return _model
 
+def _dump_audio(audio: np.ndarray, sample_rate: int = 16000) -> Path:
+    """Write the captured audio to `.tmp/capture_<ts>.wav` (gitignored) so an ASR
+    miss can be replayed offline against any engine — the only way to A/B
+    whisper parameters vs. a candidate engine (records/2026-11-10-17-43-08.md)."""
+    import wave
+    import time as _time
+
+    out_dir = Path(__file__).parent.parent / ".tmp"
+    out_dir.mkdir(exist_ok=True)
+    path = out_dir / f"capture_{int(_time.time())}.wav"
+    pcm = (np.clip(audio, -1.0, 1.0) * 32767).astype(np.int16).tobytes()
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(sample_rate)
+        w.writeframes(pcm)
+    print(f"[STT] capture saved: {path.name} ({len(pcm) // 2 // sample_rate} s)")
+    return path
+
+
+def _trim_leading_silence(audio: np.ndarray, sample_rate: int = 16000) -> np.ndarray:
+    """Drop the leading quiet block (the mic opens right after the wake ack, so the
+    clip starts with ~1 s of silence). Whisper small hallucinates on silent input,
+    so the clip is cut to the first window above the speech threshold."""
+    window = int(sample_rate * 0.1)
+    for i in range(0, len(audio) - window, window):
+        rms = float(np.sqrt(np.mean(audio[i : i + window] ** 2)))
+        if rms > 0.015:
+            keep = max(0, i - int(sample_rate * 0.1))
+            return audio[keep:]
+    return audio
+
+
 def transcribe_audio(audio: np.ndarray) -> str:
     """Transcribe a float32 numpy audio array (16kHz mono) to text."""
     # language="en" was hardcoded here, so Chinese speech was decoded as English
     # fragments — a user utterance came back as literal "You" and the LLM answered
     # "Done." (see records/2026-11-08-18-54-18.md). Language now comes from
     # config.yaml stt.language (default zh; set null for auto-detect).
-    lang = _load_config()["stt"].get("language", "zh")
+    stt = _load_config()["stt"]
+    lang = stt.get("language", "zh")
+    # initial_prompt biases the decoder: an explicit Simplified-Chinese prompt with
+    # this project's vocabulary keeps whisper small from answering in Traditional
+    # (observed: `[You] 我愛你`, `你能看得见屏幕吗？` → `你能看的就`) and stabilises
+    # short utterances. Tunable via config.yaml stt.initial_prompt.
+    prompt = stt.get("initial_prompt") or None
+    audio = _trim_leading_silence(audio)
     try:
         model = _get_model()
-        segments, _ = model.transcribe(audio, beam_size=5, language=lang)
+        segments, _ = model.transcribe(
+            audio,
+            beam_size=int(stt.get("beam_size", 10)),
+            best_of=int(stt.get("best_of", 5)),
+            vad_filter=True,
+            condition_on_previous_text=False,
+            initial_prompt=prompt,
+            language=lang,
+        )
         return " ".join(seg.text.strip() for seg in segments).strip()
     except Exception as e:
         # If CUDA worked for loading but fails during inference, retry on CPU
@@ -56,7 +104,15 @@ def transcribe_audio(audio: np.ndarray) -> str:
             print(f"[STT] {_model_device} transcription failed ({e}), reloading on CPU")
             try:
                 model = _get_model(force_cpu=True)
-                segments, _ = model.transcribe(audio, beam_size=5, language=lang)
+                segments, _ = model.transcribe(
+                    audio,
+                    beam_size=int(stt.get("beam_size", 10)),
+                    best_of=int(stt.get("best_of", 5)),
+                    vad_filter=True,
+                    condition_on_previous_text=False,
+                    initial_prompt=prompt,
+                    language=lang,
+                )
                 return " ".join(seg.text.strip() for seg in segments).strip()
             except Exception as e2:
                 print(f"[STT] CPU transcription also failed: {e2}")
@@ -127,4 +183,9 @@ def record_until_silence(
 
     if not recording:
         return np.zeros(chunk, dtype=np.float32)
-    return np.concatenate(recording)
+    audio = np.concatenate(recording)
+    try:
+        _dump_audio(audio, sample_rate)
+    except Exception as e:
+        print(f"[STT] capture dump failed: {e}")
+    return audio

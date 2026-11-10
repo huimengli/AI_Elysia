@@ -119,3 +119,10 @@
 - **定性结论：ASR 代码无缺陷。** 根因是重启通道丢了 HF 环境变量：whisper-small 快照在仓库内 `.hf-cache`（实测存在），默认用户缓存里没有，缺 `HF_HOME` 时 faster-whisper 去 huggingface.co 找快照被连接重置（`ConnectError 10054`）→ 加载失败 → 转写为空；`start_all.bat` 本就设了这三个变量，属我的操作失误。改动仅两处：运维约定（重启必带三变量，写入 progress 执行通道）+ `main.py` 新增 `_warm_stt()` 后台预加载，使 `warm` 启动即 true、加载失败在启动日志立刻暴露。
 - 顺带发现并登记：`config.yaml` 的 `device: cuda` 在本机不可用（`CUDA driver version is insufficient`，既有逻辑自动回 CPU，建议改配置为 `cpu`）；2B 模型把 11-10 答成「星期五」（`tool_result` 是 `星期二`）、转写/回答出现繁体 —— LLM 侧遗留，需另开需求。
 
+# 批次结论（tests/2026-11-10-17-43-08_cc，验证 3 轮）
+
+- 需求：① 汉化「还是不够全」（工具**返回值文案**）；② 真人语音「你能看得见屏幕吗？」被识别成「你能看的就」，要求优化或更换 ASR 方案（`records/2026-11-10-17-43-08.md`）。
+- 3 轮全 PASS（②为部分 PASS）：① `lab2.log` 12 条工具结果逐条中文（`已输入文本：`、`已按下：`、`已用左键点击 (x, y)`、`已滚动：向下 3 格`、`未知媒体操作：…`、`工具「读取文件」执行失败：路径不在允许清单内：…`），并当场修掉 `get_system_info` 乱码（`text=True` 用系统代码页解码 PowerShell 输出，新增 `_ps_utf8()` 强制 UTF-8，`lab3.log` 复测正常）；② 录音落盘 `.tmp\capture_<ts>.wav` 成功，可离线复现，合成语音 A/B **3/3 全对**（旧参数繁体 `你能看得見屏幕嗎`/`調到20` → 新参数逐字正确带标点），真人 1 句在 6 种参数组合下均为 `你看得见吗?`（丢「能」「屏幕」），2x 增益无效；③ `ws3.log` 中文 label 与中文结果、`name` 仍英文、四灯在线（`asr warm=true, device cpu`）。
+- 结论：汉化覆盖「用户听到的文案」（`tools/*.py` 返回值共 44 处 + `router.py` 2 处），协议层（`TOOL_SCHEMAS` 名称/参数、WS `name`、事件 `tool` 行、`TOOL_LABELS` key）刻意保持英文；顺带修掉 `main.py` 重试判定失效（原判定 `Tool '…'`，改为 `执行失败：`）。ASR 参数级优化（beam 10 + 简体中文 `initial_prompt` + `vad_filter` + 去头部静音）能消除繁体与标点缺失，但真人短句的丢字无法用参数/增益解决，瓶颈是 whisper small 对中文短句的鲁棒性；换引擎（sherpa-onnx paraformer-zh）需用户授权，已写入 `need_user.md` Q7，未擅自安装。
+- 新登记遗留：18:03 的 `peak 0.736/0.799` 在 0.7 阈值下误触发后录满 30 s、转写为空（`record_until_silence` 缺「无人说话快速退出」）；真人录音 rms 仅 0.010（建议调高麦克风增益）；`stt.device` 已按实测改为 `cpu`。
+

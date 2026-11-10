@@ -43,7 +43,7 @@ def set_volume(level: int) -> str:
         f"$v.SetMasterVolumeLevelScalar({scalar},[System.Guid]::Empty)"
     )
     _run_vol_ps(ps)
-    return f"Volume set to {level}%."
+    return f"音量已设为 {level}%。"
 
 
 def get_volume() -> str:
@@ -58,16 +58,23 @@ def get_volume() -> str:
     )
     result = _run_vol_ps(ps)
     vol = result.stdout.strip()
-    return f"Volume is at {vol}%." if vol.isdigit() else "Could not read volume."
+    return f"当前音量 {vol}%。" if vol.isdigit() else "读不到音量。"
+
+
+def _ps_utf8(args: list[str]) -> str:
+    """Run PowerShell and decode its stdout as UTF-8.
+
+    With `text=True` the bytes were decoded with the local code page, so the
+    Chinese labels in get_system_info came back as mojibake (round 1 of
+    records/2026-11-10-17-43-08.md: `CPU 21% | 鍐呭瓨 宸茬敤 …`).
+    """
+    result = subprocess.run(args, capture_output=True, text=False)
+    return result.stdout.decode("utf-8", errors="ignore").strip()
 
 
 def get_clipboard() -> str:
     """Return current clipboard text."""
-    result = subprocess.run(
-        ["powershell", "-command", "Get-Clipboard"],
-        capture_output=True, text=True,
-    )
-    return result.stdout.strip()
+    return _ps_utf8(["powershell", "-command", "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; Get-Clipboard"])
 
 
 def set_clipboard(text: str) -> str:
@@ -77,12 +84,13 @@ def set_clipboard(text: str) -> str:
         ["powershell", "-command", f"Set-Clipboard -Value '{safe}'"],
         capture_output=True,
     )
-    return "Clipboard updated."
+    return "剪贴板已更新。"
 
 
 def get_system_info() -> str:
     """Get CPU, RAM, and disk usage."""
     ps = (
+        "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
         "$cpu = (Get-CimInstance Win32_Processor).LoadPercentage;"
         "$os = Get-CimInstance Win32_OperatingSystem;"
         "$ram_total = [math]::Round($os.TotalVisibleMemorySize/1MB,1);"
@@ -91,11 +99,10 @@ def get_system_info() -> str:
         "$disk = Get-CimInstance Win32_LogicalDisk -Filter 'DeviceID=\"C:\"';"
         "$disk_total = [math]::Round($disk.Size/1GB,1);"
         "$disk_free = [math]::Round($disk.FreeSpace/1GB,1);"
-        "Write-Output \"CPU: ${cpu}% | RAM: ${ram_used}/${ram_total} GB | "
-        "Disk C: ${disk_free}/${disk_total} GB free\""
+        "Write-Output \"CPU ${cpu}% | 内存 已用 ${ram_used}/${ram_total} GB | "
+        "磁盘C 剩余 ${disk_free}/${disk_total} GB\""
     )
-    result = subprocess.run(["powershell", "-command", ps], capture_output=True, text=True)
-    return result.stdout.strip() or "Could not read system info."
+    return _ps_utf8(["powershell", "-command", ps]) or "读不到系统信息。"
 
 
 def set_brightness(level: int) -> str:
@@ -104,14 +111,14 @@ def set_brightness(level: int) -> str:
     ps = f"(Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness(1,{level})"
     result = subprocess.run(["powershell", "-command", ps], capture_output=True, text=True)
     if result.returncode == 0:
-        return f"Brightness set to {level}%."
-    return "Brightness control not available (desktop monitors don't support WMI brightness)."
+        return f"亮度已设为 {level}%。"
+    return "这台台式机不支持通过 WMI 调节亮度。"
 
 
 def lock_screen() -> str:
     """Lock the workstation."""
     subprocess.run(["rundll32.exe", "user32.dll,LockWorkStation"])
-    return "Screen locked."
+    return "已锁定屏幕。"
 
 
 def power_command(action: str) -> str:
@@ -119,14 +126,14 @@ def power_command(action: str) -> str:
     action = action.lower().strip()
     if action == "shutdown":
         subprocess.Popen(["shutdown", "/s", "/t", "5"])
-        return "Shutting down in 5 seconds."
+        return "5 秒后关机。"
     elif action == "restart":
         subprocess.Popen(["shutdown", "/r", "/t", "5"])
-        return "Restarting in 5 seconds."
+        return "5 秒后重启。"
     elif action == "sleep":
         subprocess.run(["rundll32.exe", "powrprof.dll,SetSuspendState", "0", "1", "0"])
-        return "Going to sleep."
-    return f"Unknown power action: {action}. Use shutdown/restart/sleep."
+        return "已进入睡眠。"
+    return f"未知电源操作：{action}，请用 shutdown/restart/sleep。"
 
 
 def show_notification(title: str, message: str) -> str:
@@ -144,8 +151,8 @@ def show_notification(title: str, message: str) -> str:
     )
     result = subprocess.run(["powershell", "-command", ps], capture_output=True, text=True)
     if result.returncode == 0:
-        return f"Notification shown: {title}"
-    return f"Notification failed: {result.stderr.strip()}"
+        return f"已弹出通知：{title}"
+    return f"通知失败：{result.stderr.strip()}"
 
 
 # --- Timer / Reminder ---
@@ -163,12 +170,12 @@ def set_timer(seconds: int, message: str = "定时到了！") -> str:
     _timers.append(t)
 
     if seconds >= 3600:
-        time_str = f"{seconds // 3600}h {(seconds % 3600) // 60}m"
+        time_str = f"{seconds // 3600}小时 {(seconds % 3600) // 60}分"
     elif seconds >= 60:
-        time_str = f"{seconds // 60}m {seconds % 60}s"
+        time_str = f"{seconds // 60}分 {seconds % 60}秒"
     else:
-        time_str = f"{seconds}s"
-    return f"Timer set for {time_str}: {message}"
+        time_str = f"{seconds}秒"
+    return f"已设置 {time_str} 后的提醒：{message}"
 
 
 def get_time() -> str:

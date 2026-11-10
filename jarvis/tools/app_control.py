@@ -68,16 +68,16 @@ def open_app(name: str) -> str:
     args = [exe] + _ARGS.get(key, [])
     try:
         subprocess.Popen(args)
-        return f"Opening {name}."
+        return f"正在打开：{name}。"
     except Exception as e:
         fallback = _FALLBACKS.get(key)
         if fallback:
             try:
                 subprocess.Popen([fallback] + _ARGS.get(key, []))
-                return f"Opening {name}."
+                return f"正在打开：{name}。"
             except Exception:
                 pass
-        return f"Could not open {name}: {e}"
+        return f"打不开「{name}」：{e}"
 
 
 def open_url(url: str) -> str:
@@ -85,7 +85,7 @@ def open_url(url: str) -> str:
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
     webbrowser.open(url)
-    return f"Opened {url}."
+    return f"已在浏览器打开：{url}"
 
 
 def kill_process(name: str) -> str:
@@ -98,5 +98,5 @@ def kill_process(name: str) -> str:
     )
     output = (result.stdout + result.stderr).strip()
     if result.returncode == 0:
-        return f"Killed {name}."
-    return f"Could not kill {name}: {output}"
+        return f"已结束进程：{name}"
+    return f"结束进程「{name}」失败：{output}"

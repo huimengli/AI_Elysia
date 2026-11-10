@@ -1,6 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-10-17-40（新增 `records/2026-11-10-17-31-10.md` 与 `tests/2026-11-10-17-31-10_cc/`（5 个文件），共 165 项；本轮改动 `jarvis/main.py`（whisper 启动预热）。本文件由 `git ls-files` + 未跟踪的非忽略文件（2 项）+ 本轮新增重建；`.tmp/` 被 `.gitignore` 排除，不列出）
+更新时间: 2026-11-10-18-25（新增 `records/2026-11-10-17-43-08.md` 与 `tests/2026-11-10-17-43-08_cc/`（5 个文件），共 171 项；本轮改动 `config.yaml`、`jarvis/stt.py`、`jarvis/main.py`、`jarvis/tools/`（8 个文件的结果文案汉化）。本文件由 `git ls-files` + 未跟踪的非忽略文件（2 项）+ 本轮新增重建；`.tmp/` 被 `.gitignore` 排除，不列出）
 
 ```
 JarvisAi/
@@ -102,7 +102,8 @@ JarvisAi/
 │   ├── 2026-11-09-20-35-43.md
 │   ├── 2026-11-09-21-19-29.md
 │   ├── 2026-11-09-21-55-14.md
-│   └── 2026-11-10-17-31-10.md
+│   ├── 2026-11-10-17-31-10.md
+│   └── 2026-11-10-17-43-08.md
 └── tests
     ├── __init__.py
     ├── opinion.md
@@ -126,7 +127,8 @@ JarvisAi/
     ├── 2026-11-09-20-35-43_cc (opinion.md + record_1..3)
     ├── 2026-11-09-21-19-29_cc (opinion.md + record_1..3)
     ├── 2026-11-09-21-55-14_cc (opinion.md + record_1..4)
-    └── 2026-11-10-17-31-10_cc (opinion.md + record_1..3)
+    ├── 2026-11-10-17-31-10_cc (opinion.md + record_1..3)
+    └── 2026-11-10-17-43-08_cc (opinion.md + record_1..3)
 ```
 
-注：`jarvis/main.py` 为本轮改动（2026-11-10-17-31-10，whisper 启动预热）；`config.yaml`、`jarvis/tts.py`、`jarvis/tools/router.py`、`jarvis/static/index.html` 为上一轮改动（2026-11-09-21-55-14，阈值 0.7 / 唤醒音直放 / 工具名汉化）；`start_all.bat` 为编码/窗口改动（2026-11-09-21-19-29）。
+注：`config.yaml`、`jarvis/stt.py`、`jarvis/main.py`、`jarvis/tools/{desktop,system,app_control,web_search,file_ops,code_exec,subagent,router}.py` 为本轮改动（2026-11-10-17-43-08，工具结果文案汉化 + 录音落盘 + ASR 参数）；`jarvis/main.py` 的 whisper 预热属上一轮（2026-11-10-17-31-10）；`jarvis/tts.py`、`jarvis/tools/router.py`、`jarvis/static/index.html` 为 2026-11-09-21-55-14 改动。

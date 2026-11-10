@@ -433,7 +433,7 @@ def _call_llm(full_messages: list[dict]) -> str:
 def _exec_tool_with_retry(name: str, args: dict) -> str:
     """Execute a tool, retry once on failure."""
     result = dispatch(name, args)
-    if result.startswith("Tool '") and "failed:" in result:
+    if "执行失败：" in result and result.startswith("工具「"):
         time.sleep(0.5)
         result = dispatch(name, args)
     return result

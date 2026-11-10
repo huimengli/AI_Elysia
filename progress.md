@@ -78,3 +78,12 @@
 - 顺带实测：`config.yaml` `device: cuda` 在本机不可用（`CUDA driver version is insufficient`），`stt.py:32-37` 既有逻辑自动回 CPU（建议把配置改回 `cpu`，省一次无效尝试）。安静环境下 VAD 正常（`rms=0.0222` 触发 → 静音收尾 → 7.5 s 音频成功转写 + `press_key`/`get_time` 执行）。
 - 3 轮全 PASS（`tests/2026-11-10-17-31-10_cc/`，累积见 `tests/opinion.md`）：① health `asr.warm=true` + 加载日志；② 真人语音轮端到端；③ WS 链路与中文 `label` 无回归。全程零截图。
 - 新登记遗留（LLM 侧，未改）：`get_time` 返回 `星期二`，模型回答写「星期五」；转写与回答出现繁体（`我愛你`、`現在是…`）。
+
+## 2026-11-10-17-43 工具结果文案汉化补全 + 录音落盘 + ASR 参数优化
+
+- 需求（`records/2026-11-10-17-43-08.md`）：① 汉化「还是不够全」（用户看到 `我执行了 读取屏幕、点击坐标、输入文本：Typed: 证断`——冒号后是工具**返回值**）；② 真人说「你能看得见屏幕吗？」被识别成「你能看的就」，要求优化或换 ASR 方案。
+- ① 汉化边界：本轮覆盖**用户听到的文案**——`tools/desktop.py` 14 处、`system.py` 13 处、`app_control.py` 6 处、`web_search.py` 4 处、`file_ops.py` 2 处、`code_exec.py` 3 处、`subagent.py` 2 处、`router.py` 2 处（`已输入文本：`、`已按下：`、`已用左键点击 (x, y)`、`已滚动：向下 3 格`、`当前音量 N%`、`工具「读取文件」执行失败：路径不在允许清单内：…`）。协议层保持英文：`TOOL_SCHEMAS` 名称/参数、WS 事件 `name`、`events.db` 的 `tool` 行、`TOOL_LABELS` 的 key。顺带修 2 个真缺陷：`get_system_info` 中文乱码（`text=True` 用系统代码页解码 PS 输出 → 新增 `_ps_utf8()` 强制 UTF-8，`get_clipboard` 同步改）；`main.py` 重试判定原依赖 `result.startswith("Tool '")`，文案中文化后会静默失效，改为判定 `执行失败：`。
+- ② ASR 参数级优化（`stt.py` + `config.yaml` 新键 `beam_size 10 / best_of 5 / initial_prompt=<简体中文+项目词表>`，`transcribe` 加 `vad_filter=True`、`condition_on_previous_text=False`，新增 `_trim_leading_silence()`）+ **录音落盘** `_dump_audio()`（每次写 `.tmp\capture_<ts>.wav`，gitignore 不 commit）——这是首次让 ASR 误识别可离线复现。
+- A/B 结果：合成语音（GPT-SoVITS 做已知文本对照）**3/3 全对**，旧参数输出繁体/丢标点（`你能看得見屏幕嗎`、`把音量調到20`）→ 新参数逐字正确；真人 1 句（`peak 0.1178 / rms 0.0104`）在 6 种参数组合（含 2x 增益）下均为 `你看得见吗?`（丢「能」「屏幕」）→ **瓶颈是 whisper small 对中文短句的鲁棒性，不是电平也不是参数**。换引擎（sherpa-onnx paraformer-zh，约 30 MB 依赖 + 200–400 MB 模型，C 盘剩 17.7 GB，需从 hf-mirror 下载）已写入 `need_user.md` Q7 等用户授权，未擅自安装。
+- 3 轮验证（`tests/2026-11-10-17-43-08_cc/`，累积见 `tests/opinion.md`）：① 12 条工具结果逐条中文 + 乱码修复复测；② 落盘成功 + 合成 3/3 + 真人 6 组合同结果（部分 PASS）；③ WS 端到端中文 label/结果、`name` 仍英文、四灯在线。全程零截图。真人 3 句轮延后（`need_user.md` Q7）。
+- 新登记（未改）：18:03 `peak 0.736/0.799` 在 0.7 阈值下**误触发**后录满 30 s、转写为空（`record_until_silence` 缺「无人说话快速退出」）；真人录音 rms 仅 0.010，建议调高麦克风增益。`config.yaml` `stt.device` 已按 17-31 实测改为 `cpu`。

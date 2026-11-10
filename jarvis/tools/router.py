@@ -361,8 +361,8 @@ def dispatch(tool_name: str, tool_args: dict) -> str:
     """Execute a named tool and return string result."""
     fn = TOOL_MAP.get(tool_name)
     if fn is None:
-        return f"Unknown tool: {tool_name}"
+        return f"未知工具：{tool_label(tool_name)}"
     try:
         return str(fn(_coerce(tool_name, tool_args)))
     except Exception as e:
-        return f"Tool '{tool_name}' failed: {e}"
+        return f"工具「{tool_label(tool_name)}」执行失败：{e}"

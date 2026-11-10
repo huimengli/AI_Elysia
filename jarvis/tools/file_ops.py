@@ -18,7 +18,7 @@ def _check_allowed(path: str) -> None:
         # Use parents check — immune to startswith prefix attacks
         if target == allowed_dir or allowed_dir in target.parents:
             return
-    raise PermissionError(f"Path not in allowed list: {path}")
+    raise PermissionError(f"路径不在允许清单内：{path}")
 
 
 def read_file(path: str) -> str:
@@ -31,7 +31,7 @@ def write_file(path: str, content: str) -> str:
     _check_allowed(path)
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
-    return f"Written to {path}."
+    return f"已写入：{path}"
 
 
 def list_files(path: str) -> str:

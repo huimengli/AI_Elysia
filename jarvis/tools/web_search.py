@@ -10,22 +10,22 @@ def search(query: str, max_results: int = 5) -> str:
     try:
         results = DDGS().text(query, max_results=max_results)
         if not results:
-            return "No results found."
+            return "没有找到结果。"
         return "\n".join(f"- {r['title']}: {r['body']}" for r in results)
     except Exception as e:
-        return f"Search failed: {e}"
+        return f"搜索失败：{e}"
 
 
 def get_weather(location: str = "") -> str:
     """Get current weather using wttr.in (no API key needed)."""
     try:
         loc = location.replace(" ", "+") if location else ""
-        url = f"https://wttr.in/{loc}?format=%l:+%C+%t+%h+%w"
+        url = f"https://wttr.in/{loc}?format=%l：天气%C，气温%t，湿度%h，风%w"
         req = urllib.request.Request(url, headers={"User-Agent": "curl/7.0"})
         with urllib.request.urlopen(req, timeout=5) as resp:
             return resp.read().decode("utf-8").strip()
     except Exception as e:
-        return f"Weather unavailable: {e}"
+        return f"天气查询失败：{e}"
 
 
 def fetch_page(url: str, max_chars: int = 3000) -> str:
@@ -41,4 +41,4 @@ def fetch_page(url: str, max_chars: int = 3000) -> str:
         raw = re.sub(r"\s+", " ", raw).strip()
         return raw[:max_chars]
     except Exception as e:
-        return f"Failed to fetch {url}: {e}"
+        return f"读取网页失败 {url}：{e}"

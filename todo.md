@@ -96,4 +96,7 @@
 - [x] 2026-11-09-21-19-29 `start_all.bat` 改纯 ASCII + CRLF（实测 `nonASCII=250`），三个 `start ... cmd /k (...)` 括号复合改单行 `start "标题" cmd /k "..."` 开 4 个 cmd 窗口（llama/GSV/Jarvis/Status）+ 端口占用时 `[Skip]`，3 轮验证 (→ records/2026-11-09-21-19-29.md)
 - [x] 2026-11-09-21-55-14 唤醒阈值改 0.7 + 唤醒提示音改播预生成音频（不走 TTS 实时合成）+ 工具执行播报汉化（`type_text→输入文本`、`press_key→按下按钮`），3 轮验证 (→ records/2026-11-09-21-55-14.md)
 - [x] 2026-11-10-17-31-10 查清 ASR「不能转写」真因＝重启时丢 `HF_ENDPOINT/HF_HOME` 导致 whisper 去联网找快照（`ConnectError 10054`）；重启带环境变量 + `main.py` 新增 `_warm_stt()` 启动预热，3 轮验证 (→ records/2026-11-10-17-31-10.md)
+- [ ] 2026-11-10-17-43-08 汉化补全（工具**返回值文案**改中文，如 `Typed:` → `已输入文本：`）+ 录音落盘做 A/B + ASR 参数优化（`initial_prompt`/beam/vad），不够再评估换 sherpa-onnx paraformer-zh，3 轮真人语音验证 (→ records/2026-11-10-17-43-08.md)
+  - 已完成：汉化 44 处 + 乱码修复 + 重试判定修复；录音落盘；参数优化（合成语音 A/B 3/3 全对）；验证 3 轮（`tests/2026-11-10-17-43-08_cc/`）已 commit
+  - 待办：真人 3 句语音验证 + 是否换 sherpa-onnx 引擎 —— 等用户在 `need_user.md` Q7 回复
 

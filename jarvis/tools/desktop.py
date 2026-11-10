@@ -7,6 +7,11 @@ import pyautogui
 
 pyautogui.FAILSAFE = False
 
+# Single source for the "empty screen" message: read_screen() returns it and
+# find_on_screen() compares against it (records/2026-11-10-17-43-08.md — all
+# user-facing tool results are Chinese now, protocol names/args stay English).
+NO_TEXT = "屏幕上没有可读文字。"
+
 
 # ──────────────── Typing & Keys ────────────────
 
@@ -14,14 +19,14 @@ def type_text(text: str) -> str:
     """Type text at the current cursor position."""
     time.sleep(0.15)
     pyautogui.write(text, interval=0.02)
-    return f"Typed: {text[:80]}"
+    return f"已输入文本：{text[:80]}"
 
 
 def press_key(keys: str) -> str:
     """Press a key or hotkey combo. Example: 'ctrl+shift+esc', 'alt+tab', 'enter'."""
     parts = [k.strip() for k in keys.split("+")]
     pyautogui.hotkey(*parts)
-    return f"Pressed: {keys}"
+    return f"已按下：{keys}"
 
 
 # ──────────────── Mouse Control ────────────────
@@ -30,28 +35,33 @@ def click_at(x: int, y: int, button: str = "left") -> str:
     """Click at screen coordinates (x, y). Button: left, right, double."""
     if button == "double":
         pyautogui.doubleClick(x, y)
+        label = "双击"
     elif button == "right":
         pyautogui.rightClick(x, y)
+        label = "右键"
     else:
         pyautogui.click(x, y)
-    return f"Clicked ({button}) at ({x}, {y})."
+        label = "左键"
+    return f"已用{label}点击 ({x}, {y})。"
 
 
 def scroll_screen(direction: str, amount: int = 3) -> str:
     """Scroll up or down. Amount = number of scroll steps."""
     if direction.lower() == "up":
         pyautogui.scroll(amount)
+        way = "向上"
     elif direction.lower() == "down":
         pyautogui.scroll(-amount)
+        way = "向下"
     else:
-        return f"Unknown direction: {direction}. Use up/down."
-    return f"Scrolled {direction} by {amount}."
+        return f"未知滚动方向：{direction}，请用 up/down。"
+    return f"已滚动：{way} {amount} 格。"
 
 
 def move_mouse(x: int, y: int) -> str:
     """Move mouse cursor to (x, y) without clicking."""
     pyautogui.moveTo(x, y)
-    return f"Moved mouse to ({x}, {y})."
+    return f"已把鼠标移到 ({x}, {y})。"
 
 
 # ──────────────── Screen Reading (OCR) ────────────────
@@ -110,7 +120,7 @@ $output -join "`n"
     )
     text = result.stdout.strip()
     if not text:
-        return "No text found on screen."
+        return NO_TEXT
     return text
 
 
@@ -118,8 +128,8 @@ def find_on_screen(text: str) -> str:
     """Find text on screen using OCR. Returns coordinates of the match, or 'not found'.
     Use click_at() with the returned coordinates to click on it."""
     screen_text = read_screen()
-    if screen_text == "No text found on screen.":
-        return "No text found on screen."
+    if screen_text == NO_TEXT:
+        return NO_TEXT
 
     target = text.lower()
     best_match = None
@@ -134,7 +144,7 @@ def find_on_screen(text: str) -> str:
         # Exact substring match
         if target in content_lower:
             x, y = coords.split(",")
-            return f"Found '{text}' at ({x.strip()}, {y.strip()}). Use click_at to click it."
+            return f"已找到「{text}」位于 ({x.strip()}, {y.strip()})，用 click_at 可点击。"
 
         # Partial word match — score by overlap
         words_target = set(target.split())
@@ -147,7 +157,7 @@ def find_on_screen(text: str) -> str:
     if best_match and best_score > 0:
         content, coords = best_match
         x, y = coords.split(",")
-        return f"Closest match: '{content}' at ({x.strip()}, {y.strip()}). Use click_at to click it."
+        return f"最接近的匹配：「{content}」位于 ({x.strip()}, {y.strip()})，用 click_at 可点击。"
 
     # Not found — try scrolling down and searching again
     pyautogui.scroll(-3)  # scroll down
@@ -159,9 +169,9 @@ def find_on_screen(text: str) -> str:
         content, coords = line.rsplit(" | ", 1)
         if target in content.lower():
             x, y = coords.split(",")
-            return f"Found '{text}' at ({x.strip()}, {y.strip()}) after scrolling. Use click_at to click it."
+            return f"滚动后找到「{text}」位于 ({x.strip()}, {y.strip()})，用 click_at 可点击。"
 
-    return f"'{text}' not found on screen (tried scrolling)."
+    return f"屏幕上找不到「{text}」（已尝试向下滚动）。"
 
 
 # ──────────────── Window Management ────────────────
@@ -174,7 +184,7 @@ def get_open_windows() -> str:
          "Select-Object -ExpandProperty MainWindowTitle"],
         capture_output=True, text=True,
     )
-    return result.stdout.strip() or "No open windows found."
+    return result.stdout.strip() or "没有可识别的窗口。"
 
 
 def focus_window(title: str) -> str:
@@ -196,8 +206,8 @@ def focus_window(title: str) -> str:
     )
     result = subprocess.run(["powershell", "-command", ps], capture_output=True, text=True)
     if "not found" in result.stdout:
-        return f"No window matching '{title}' found."
-    return f"Focused: {title}"
+        return f"找不到标题包含「{title}」的窗口。"
+    return f"已聚焦窗口：{title}"
 
 
 # ──────────────── Media Control ────────────────
@@ -216,9 +226,9 @@ def media_control(action: str) -> str:
     }
     key = key_map.get(action.lower().strip())
     if not key:
-        return f"Unknown media action: {action}. Use play/pause/next/previous/mute."
+        return f"未知媒体操作：{action}，请用 play/pause/next/previous/mute。"
     pyautogui.press(key)
-    return f"Media: {action}"
+    return f"媒体操作已执行：{action}"
 
 
 def screenshot(filename: str = "") -> str:
@@ -231,4 +241,4 @@ def screenshot(filename: str = "") -> str:
     path = os.path.join(desktop, filename)
     img = pyautogui.screenshot()
     img.save(path)
-    return f"Screenshot saved: {path}"
+    return f"截图已保存：{path}"
