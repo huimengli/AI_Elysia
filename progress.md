@@ -62,3 +62,4 @@ p.random 噪声初始化特征缓冲，**同一音频同一模型 3 次独立实
 - **ASR 引擎开关（第 4 项，进行中）**：jarvis/stt.py 新增 stt.engine（whisper/sherpa）+ _get_sherpa()（OfflineRecognizer.from_paraformer）+ _sherpa_transcribe()，网页设置复用现有 pi_get_settings/pi_update_settings 的 stt 字典（用户可在网页选引擎）。sherpa-onnx 依赖：pypi 官方源 14 分钟无进度（已停），改清华镜像重试；模型（paraformer-zh int8）下载与 3 轮 A/B 待完成（Q13 磁盘授权）。
 - **第 3 项 Q12 已答复并执行**（保持 v0.6+0.7）；**第 5 项 Q5/Q6 标 done**；**第 6 项根目录清理阻塞于 Q13，未移动任何文件**。
 - 服务侧：本批开始时 :9880/:8080/:7860 全 DOWN（机器重启），cmd /c start_all.bat 后台任务 10 s 拉起；两次训练失败（positive_test 缺 wav = HB-028 已知；补齐后一次 DefaultCPUAllocator: not enough memory 内存峰值），第三次成功。全程零截图、无子智能体。
+- 最新一条：4f3e964 	est(AI): 新录音训练 v0.7/v0.8 三轮验收未达标（保持 v0.6+0.7），记录打分非确定性 HB-032 并加 ASR 引擎开关（11 files / 232+ / 11-；**已本地 commit，未 push**）。上一条 44f0be 的 hash 记录在同批 TTS 提交里，见本批要点节。
