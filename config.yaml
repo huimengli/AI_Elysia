@@ -1,6 +1,6 @@
 wake_word:
   model: "C:\\Users\\\u697C\u542C\\Desktop\\git\\JarvisAi\\openWakeWord\\output\\\
-    aili_xiya_v0.3\\aili_xiya_v0.3.onnx"
+    aili_xiya_v0.6\\aili_xiya_v0.6.onnx"
   threshold: 0.7
   chunk_size: 1280
 stt:

@@ -45,3 +45,12 @@
 - [x] 用户选定范围（`need_user.md` Q11，status done）：**最近 12 条**（含 HF 预热、barge-in、阈值 0.7 等）
 - [x] reword 执行：`git branch -f backup-before-reword HEAD` → `git rebase -i 8aada16~1` + `.tmp\reword\se.ps1` / `ed.ps1` / `msgmap.json`；12 条英文主题全改中文，14 commit 重放，`git diff backup-before-reword HEAD --stat` 为空（工作树逐文件一致）；旧→新 hash 对照写入 `progress.md`；`progress.md` 101 行 → 归档 `ai_buckup/progress.md_2026-11-10-23-00-30.md` 并压缩到 46 行；全程本地、**未 push**
 - [x] 补 commit 本次文档（`records/2026-11-10-22-48-24.md` 结果节 + `todo.md` + `need_user.md` Q11 done + `progress.md` + `tree.md` 187 项），中文主题
+
+## 2026-11-11-19-45-46 唤醒模型切换到 `aili_xiya_v0.6.onnx`（→ `records/2026-11-11-19-45-46.md`）
+
+- 用户答复 `need_user.md` Q10 = 选项 1：「先将模型切换到0.6,我看看效果」→ Q10 追加 A + `status: done`
+- [x] `config.yaml` `wake_word.model` → `openWakeWord/output/aili_xiya_v0.6/aili_xiya_v0.6.onnx`，`threshold` 保持 **0.7**，`chunk_size` 1280
+- [x] 重启 Jarvis（带 3 个 HF 变量）→ `api/health` 的 `wake.model` = `aili_xiya_v0.6.onnx`、4 灯 online、`asr.warm=true`（实测 `listening=true`，`whisper warmed in 3384 ms`）
+- [x] 3 轮验证 `tests/2026-11-11-19-45-46_cc/record_1..3.md` + `opinion.md`（累积追加 `tests/opinion.md`）：轮 1 PASS；轮 2 部署管线复放 36.12 s 录音 → **v0.6 检出 10 次 vs v0.3 5 次**（期望 ≥12 未达）；轮 3 定标纯噪声 0（达标）、合成对抗 4 次、**现场环境音 10 s 实录触发 1 次（0.703）→ 0.7 阈值 FAIL**，阈值 0.75 时环境音归零（检出降为 5）
+- [ ] 等 `need_user.md` **Q12** 用户回复：真人实测 3 次唤醒结果 + 阈值选择（保持 0.7 / 改 0.75 / 回退 v0.3）；我按答复改 `config.yaml` 并重启（带 3 个 HF 变量）
+- [x] commit（中文主题）+ hash 追加台账 + `tree.md` 重建（193 项），**禁止 push**
