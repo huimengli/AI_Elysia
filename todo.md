@@ -65,3 +65,11 @@
 - [ ] 根目录清理：约 100 个 _* 脚本/日志 + jarvis_screen.png / love_silvia.txt / AI_Benchmark.md / JARVIS_STATE.md / PROJECT_SUMMARY.txt 移入对应文件夹（**移动不删除**），目标目录等 Q13 确认（推荐 .tmp/），tree.md 重建
 - [x] 需要更多音频的规格写入 need_user.md Q13（缺「≥10 句无关中文短句」+ 更多真人近音/干净呼唤）；Q13 同时请示根目录清理目标目录与 ASR 磁盘授权，**status: wait**
 - [ ] commit（中文主题）+ hash 追加台账，**禁止 push**
+
+## 2026-11-11-21-36-30 「我没听清，请再说一遍」入 ack 池 + sqlite 热词(热句)小表（→ records/2026-11-11-21-36-30.md）**本批只落盘，明天开工**
+
+- [ ] 「我没听清，请再说一遍」预合成 wav 入内存 ack 池（config.yaml 	ts.ack_phrases + jarvis/tts.py），**只在识别失败/空转录时播放**，不改 barge-in 语义
+- [ ] memory.db 新增小表 hot_phrases(text, kind, count, first_seen, last_seen)，kind = user / hot / near_miss；写入点为 	ranscribe_audio 成功与近音误识，上限 200 行、按 count 淘汰
+- [ ] 热词表接 ASR 偏置：whisper 用 stt.initial_prompt 拼 top-N，sherpa-onnx 用原生 hotwords；与 ASR A/B（2026-11-11-20-34 第 4 项）一起 3 轮验收
+- [ ] 续传 paraformer-zh model.int8.onnx（81.8 MB，hf-mirror 多次停滞于 9.6 MB，需换源）→ 跑 .tmp/probe_asr_ab.py 3 轮 A/B（已知文本 6 件 + 12 条真实 capture wav）
+- [ ] commit（中文主题）+ hash 追加台账，**禁止 push**
