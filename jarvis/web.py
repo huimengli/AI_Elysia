@@ -274,14 +274,17 @@ def _health_snapshot() -> dict:
     stt_cfg = cfg.get("stt", {})
     loaded = getattr(stt_mod, "_model", None) is not None
     device = getattr(stt_mod, "_model_device", None)
+    engine = stt_cfg.get("engine", "whisper")
     asr = {
         "online": True,
         "warm": loaded,
+        "engine": engine,
         "model": stt_cfg.get("model", "small"),
         "language": stt_cfg.get("language", "zh"),
         "device": device or stt_cfg.get("device", "cpu"),
         "detail": (
-            f"faster-whisper {stt_cfg.get('model', 'small')} / "
+            ("faster-whisper " if engine == "whisper" else "sherpa-onnx Paraformer ")
+            + f"{stt_cfg.get('model', 'small')} / "
             f"{device or stt_cfg.get('device', 'cpu')} / "
             f"{stt_cfg.get('language', 'zh')}（模型已加载={loaded}）"
         ),

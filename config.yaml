@@ -4,6 +4,7 @@ wake_word:
   threshold: 0.7
   chunk_size: 1280
 stt:
+  engine: whisper
   model: small
   device: cpu
   compute_type: int8
@@ -11,7 +12,19 @@ stt:
   beam_size: 10
   best_of: 5
   no_speech_seconds: 2.0
-  initial_prompt: 以下是简体中文的普通话口语。爱莉希雅、屏幕、看得见、读取屏幕、点击、输入文本、按下按键、滚动、时间、日期、星期、音量、浏览器、天气、搜索、打开、截图、播放。
+  initial_prompt: "\u4EE5\u4E0B\u662F\u7B80\u4F53\u4E2D\u6587\u7684\u666E\u901A\u8BDD\
+    \u53E3\u8BED\u3002\u7231\u8389\u5E0C\u96C5\u3001\u5C4F\u5E55\u3001\u770B\u5F97\
+    \u89C1\u3001\u8BFB\u53D6\u5C4F\u5E55\u3001\u70B9\u51FB\u3001\u8F93\u5165\u6587\
+    \u672C\u3001\u6309\u4E0B\u6309\u952E\u3001\u6EDA\u52A8\u3001\u65F6\u95F4\u3001\
+    \u65E5\u671F\u3001\u661F\u671F\u3001\u97F3\u91CF\u3001\u6D4F\u89C8\u5668\u3001\
+    \u5929\u6C14\u3001\u641C\u7D22\u3001\u6253\u5F00\u3001\u622A\u56FE\u3001\u64AD\
+    \u653E\u3002"
+  sherpa:
+    model_dir: "C:\\Users\\\u697C\u542C\\Desktop\\git\\JarvisAi\\.hf-cache\\sherpa-paraformer-zh"
+    model_file: model.int8.onnx
+    tokens_file: tokens.txt
+    num_threads: 2
+    language_hints: zh
 llm:
   active_provider: llamacpp
   temperature: 0.7
