@@ -41,8 +41,8 @@
 
 ## 阻塞与等用户
 
-- `need_user.md` **Q10**（是否切 `aili_xiya_v0.6.onnx`，阈值 0.7）与 **Q9**（明日补录：≥20 次干净呼唤 + ≥10 句无关中文短句作真人负样本 + ≥10 次带噪呼唤，三段分文件）均 `status: wait`；Q11（改写范围）已答复 → `status: done`（本批）。
-- **Q7** 真人 3 句语音验证 + 是否换 sherpa-onnx paraformer-zh（约 30 MB 依赖 + 200–400 MB 模型，C 盘剩 17.7 GB）`status: wait`。
+- `need_user.md`：**Q9**（真人负样本）部分满足——2026-11-11 20:19 新录音给出 3 件真人近音负样本 + 2 件带噪呼唤，仍缺「≥10 句无关中文短句」与更多干净呼唤；**Q10 / Q11 / Q12** 已答复（`status: done`）。新增 **Q13**（`status: wait`）：① 缺的音频规格（≥10 句无关中文短句、≥10 件真人近音词、更多带噪呼唤）；② 根目录清理的目标目录（`_*` 脚本/日志、`jarvis_screen.png`、`love_silvia.txt`、`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 归入何处，推荐 `.tmp/`）；③ ASR 第二引擎的磁盘授权（C 盘现剩 14.48 GB）。第 6 项清理与 ASR 模型下载在 Q13 答复前不推进（AGENTS §2）。
+- **Q7** 真人 3 句语音验证 + 是否换 sherpa-onnx paraformer-zh `status: wait`（本批已开工引擎开关，模型下载待授权）。
 - 未跑完的验证：`2026-11-09-19-45-46` 剩 2 轮；`2026-11-08-20-44-17` 的 20 轮明确测试未跑完、轮 4 barge-in 结论待追加累积 `tests/opinion.md`。
 - 浏览器共用插件安装/配置等用户授权 Chrome `--remote-debugging-port=9222`。
 
@@ -52,3 +52,13 @@
 - **部署管线复放（关键新数据）**：用与线上一致的判定方式（1280 chunk 逐块、检出后 reset、2 s 冷却）复放 36.12 s 真人录音 —— **v0.6 检出 10 次（0.48/5.12/9.04/11.92/14.72/18.16/26.24/28.56/31.60/34.16 s），v0.3 检出 5 次**；阈值 0.75 时 v0.6 降到 5 次、0.8 降到 1 次。clip 级 recall 1.00 与部署级 10/13 的差来自逐 chunk 分数在 0.7 附近波动 + 冷却合并（约 20.7 s、23.3 s 峰值压线 0.70–0.73 未触发）。
 - **代价实证（新登记）**：现场环境音 10 s 实录（rms 1484，笔记本风扇 + 键盘）v0.6 触发 1 次 0.703、v0.3 0 次；线上日志实证启动阶段连触发两次（peak 0.737、0.716）后 [STT] No speech in 2.0s, stopping early (max rms=0.0024) → Transcription empty，即无人说话时它会自己应答。定标纯噪声 16 s 检出 0；合成对抗 20 条 v0.6 触发 4 次（v0.3 2 次，句子本身含唤醒词）。阈值 0.75 时环境音触发归零。
 - 3 轮（tests/2026-11-11-19-45-46_cc/，累积 tests/opinion.md）：轮 1 PASS、轮 2 部分 PASS（期望 ≥12 未达）、轮 3 FAIL（0.7 下环境音会触发）。全程零截图、无子智能体。commit 9d724cd（10 files / 123+ / 6-；**已本地 commit，未 push**）。阈值选择与真人实测结果登记 need_user.md **Q12**（status: wait）：保持 0.7（现行，检出 10）/ 改 0.75（环境音归零、检出 5）/ 回退 v0.3。
+
+## 2026-11-11-20-34-04 TTS 分段队列 + 新录音训练 v0.7/v0.8 + ASR 引擎开关（第 6 项清理待 Q13）
+
+- **TTS 分段队列（第 1 项，完成）**：jarvis/tts.py 的 _split_sentences 按中文+拉丁标点切句（旧正则只按拉丁 .!?+空白，中文整句切不出段）；_produce_segments（queue.Queue(maxsize=4)，生产者线程在播放段 k 时合成段 k+1）+ speak_queued（按序播放、记录首声、打断即 flush 输出流）；speak_streamed 的 gptsovits 分支走队列，main.py 调用点不变。A/B 实测（6 段应答，逐段合成 2453/2570/2556/3747/2815/2908 ms，串行合计 17049 ms，音频 11.48 s）：**首声 14.08 s → 2.44 s（≈5.8 倍）、总时长 27.04 s → 19.56 s（−27%）**；打断 1.2 s 后 played 0.00 s、is_speaking=False。commit 44f0be（perf(AI)，10 files；**已本地 commit，未 push**）。3 轮见 	ests/2026-11-11-20-34-04_cc/record_1..3.md。
+- **新录音训练（第 2 项，两代均未达标）**：7 件新 m4a → 5 件含唤醒词（编号 13xx）+ **首批真人近音负样本 3 件**（'爱丽安娜' 0.735 / '爱丽丝' 0.708 / '米希雅' 0.683，v0.6 峰值）。部署管线矩阵（阈值 0.7，检出后 reset + 2 s 冷却）：**v0.6 = 13 次呼唤 10、真人近音 fp 1–2、合成对抗 4、定标纯噪声 0、环境音 0**；**v0.7（近音负 x5，2500 步）= 10→5、fp 2 → FAIL**（负样本行重复压过正样本，模型学会「语音密集=拒绝」）；**v0.8（正 x5 / 近音负 x3，3000 步）= 12 检出、真人近音 fp 3/3、合成对抗 6>4 → FAIL**；0.75 阈值 v0.8 = 8 + fp 0 + 对抗 6（对抗判据仍破）。按 Q12 规则**保持 v0.6 + 0.7 不改**，config.yaml 未动。3 轮见 ecord_4..6.md；训练配置 openWakeWord/train_config_v07.yaml、	rain_config_v08.yaml（新增，已 commit）。
+- **新发现（记 hard_bug.md HB-032，未解决）**：AudioFeatures 用 
+p.random 噪声初始化特征缓冲，**同一音频同一模型 3 次独立实例分数漂移 ±0.02–0.07**（ailianna max 0.753/0.730/0.732，aisli 0.681/0.713/0.671）。边界样本必须 ≥3 次独立复测；训练自带 Final Model False Positives per Hour: 0.0（三次都是 0.0）只统计 400 条合成 val_fp，**反映不出真人近音**，验收一律以部署管线矩阵为准。
+- **ASR 引擎开关（第 4 项，进行中）**：jarvis/stt.py 新增 stt.engine（whisper/sherpa）+ _get_sherpa()（OfflineRecognizer.from_paraformer）+ _sherpa_transcribe()，网页设置复用现有 pi_get_settings/pi_update_settings 的 stt 字典（用户可在网页选引擎）。sherpa-onnx 依赖：pypi 官方源 14 分钟无进度（已停），改清华镜像重试；模型（paraformer-zh int8）下载与 3 轮 A/B 待完成（Q13 磁盘授权）。
+- **第 3 项 Q12 已答复并执行**（保持 v0.6+0.7）；**第 5 项 Q5/Q6 标 done**；**第 6 项根目录清理阻塞于 Q13，未移动任何文件**。
+- 服务侧：本批开始时 :9880/:8080/:7860 全 DOWN（机器重启），cmd /c start_all.bat 后台任务 10 s 拉起；两次训练失败（positive_test 缺 wav = HB-028 已知；补齐后一次 DefaultCPUAllocator: not enough memory 内存峰值），第三次成功。全程零截图、无子智能体。

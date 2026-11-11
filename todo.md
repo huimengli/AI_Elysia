@@ -59,9 +59,9 @@
 
 - [x] Q12 已答复：**保持 aili_xiya_v0.6 + threshold 0.7**（现行不改），「之后训练测试如果更好就换」
 - [x] Q5 / Q6 关闭（用户自己推进）→ need_user.md 标 status: done 并归档已解决项
-- [ ] 新录音 7 件（3 条真人近音负样本 + 2 条带噪呼唤 + 3 条含唤醒词整句）切样本 → 与 v0.6 数据合并训练 aili_xiya_v0.7 → 部署管线矩阵对比 v0.6/v0.7（真人检出、带噪、近音负样本、环境音），更好才换 config
-- [ ] TTS 分段队列：应答文本按标点切句，逐句 POST GPT-SoVITS :9880/tts，队列按序播放 + LLM 生成期间并行预取，降低首声延迟；barge-in 时清空队列。改 jarvis/tts.py + jarvis/main.py，3 轮验证
+- [x] 新录音 7 件（3 条真人近音负样本 + 2 条带噪呼唤 + 3 条含唤醒词整句）切样本 → 与 v0.6 数据合并训练 aili_xiya_v0.7 / v0.8 → 部署管线矩阵对比（真人检出、带噪、近音负样本、环境音）：**两代均未达标，按 Q12 保持 v0.6 + 0.7**（v0.7 13 次呼唤 10→5；v0.8 12 检出但真人近音 fp 3/3、合成对抗 6>4）。3 轮见 tests/2026-11-11-20-34-04_cc/record_4..6.md；打分非确定性记 hard_bug.md HB-032
+- [x] TTS 分段队列：应答文本按标点切句，逐句 POST GPT-SoVITS :9880/tts，队列按序播放 + 合成与播放重叠，降低首声延迟；barge-in 时 flush 输出流。改 jarvis/tts.py，3 轮验证 PASS：**首声 14.08 s → 2.44 s（≈5.8×）、总时长 27.04 s → 19.56 s（−27%）、打断后 played 0.00 s**
 - [ ] ASR 引擎可选：下载第二引擎（候选 sherpa-onnx + paraformer-zh，需 Q13 授权磁盘 200-400 MB）→ config.yaml stt.engine + 网页设置项允许选择，3 轮 A/B 对比转写质量
 - [ ] 根目录清理：约 100 个 _* 脚本/日志 + jarvis_screen.png / love_silvia.txt / AI_Benchmark.md / JARVIS_STATE.md / PROJECT_SUMMARY.txt 移入对应文件夹（**移动不删除**），目标目录等 Q13 确认（推荐 .tmp/），tree.md 重建
-- [ ] 需要更多音频的规格写入 need_user.md Q13（缺「无关中文短句」与干净呼唤补充）
+- [x] 需要更多音频的规格写入 need_user.md Q13（缺「≥10 句无关中文短句」+ 更多真人近音/干净呼唤）；Q13 同时请示根目录清理目标目录与 ASR 磁盘授权，**status: wait**
 - [ ] commit（中文主题）+ hash 追加台账，**禁止 push**

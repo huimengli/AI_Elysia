@@ -307,3 +307,15 @@
 - 方案：a) wake.py BUSY 分支先查 `is_recording()`——录音期不打断（触发来自同一麦克风），仅设 2 s 冷却；b) main.py 新增 `_stt_recording` 标志，`_handle_wake_inner` 在 `record_until_silence()` 前后置位/清除并暴露 `is_recording()`；c) wake.py IDLE 分支若 `is_speaking()`（TTS 正在播放）视为自身回声：`stop_speaking()` + 3 s 冷却，不启动管线；d) wake loop `oww.predict` 加 try/except 保护。
 - 验证：修复后 `_smoke_ws.py` 3/3 PASS（2026-10-17-18:55–18:56，GSV :9880 在线），无"已停止。"误杀；HB-030 的入口 clear 与本条的录音期保护互补（前者管跨轮污染，后者管并发误打断）。
 - 关联需求：records/2026-10-17-17-16-41.md
+
+## HB-032 openWakeWord 打分非确定性：贴近阈值的单次测量不可信（未解决，需复测规范）
+
+- 时间：2026-11-11-21:12 发现
+- 状态：未解决（测量规范已定，数据缺口需用户补录音，见 need_user.md Q13）
+- 影响：唤醒验收与模型换代判据的边界样本结论会随运行翻转。真人近音负样本 '爱丽安娜'/'爱丽丝' 在 v0.6 上 0.7 阈值下的检出 1/1 → 1/0 两次运行不一致，直接决定「是否换模型」的判定。
+- 现象：同一音频、同一 ili_xiya_v0.6.onnx、同一部署管线，3 次独立 Model 实例（.tmp\bats\v06determinism.log）：ailianna max 0.753 / 0.730 / 0.732（≥0.7 的 chunk 数 7/4/4），aisli max 0.681 / 0.713 / 0.671（0/1/0）。漂移 ±0.02–0.07。
+- 尝试：把打分改成与线上完全一致（1280 chunk 逐块、检出后 reset、2 s 冷却）仍不复现同值；训练日志 Final Model False Positives per Hour: 0.0（三次训练都是 0.0）也压不住边界翻转。
+- 根因：openwakeword.utils.AudioFeatures.__init__ 用 
+p.random.randint(-1000, 1000, 16000*4) 的随机噪声初始化特征缓冲（utils.py L169），1 s warmup 前缀进入 embedding 流状态，逐 chunk 分数随之每次漂移；贴近 0.7 的近音样本因此落在阈值两侧。
+- 方案：① 验收规范：**边界样本必须 ≥3 次独立实例复测**，以「检出次数中位数 + 峰值区间」判定，禁止单次结论；② 判据以部署管线矩阵为准，不采信 Final Model False Positives per Hour（它只统计 400 条合成 val_fp，反映不出真人近音）；③ 阈值 0.7 对真人近音本质是掷硬币（v0.6 给出 0.735/0.708，v0.8 给出 0.703/0.789/0.723），要真正消除必须补真人近音 + ≥10 句无关中文句子作负样本（Q13）。
+- 关联需求：records/2026-11-11-20-34-04.md；测试 tests/2026-11-11-20-34-04_cc/record_4..6.md

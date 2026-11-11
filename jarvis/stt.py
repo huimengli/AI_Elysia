@@ -17,6 +17,45 @@ try:
 except ImportError:
     WhisperModel = None  # type: ignore
 
+# Engine switch (2026-11-11, records/2026-11-11-20-34-04.md item 4): `stt.engine`
+# picks the ASR backend — "whisper" (faster-whisper, default) or "sherpa"
+# (sherpa-onnx Paraformer-zh, better on short Chinese utterances). Selectable from
+# config.yaml **and from the web settings page** (`api_get_settings` returns the
+# whole `stt` dict, `api_update_settings` merges it), so the user can flip engines
+# without editing files. `stt.sherpa.model_dir` points at the downloaded model.
+_sherpa_rec = None
+
+
+def _engine() -> str:
+    return _load_config()["stt"].get("engine", "whisper")
+
+
+def _get_sherpa():
+    global _sherpa_rec
+    if _sherpa_rec is None:
+        import os
+        import sherpa_onnx
+
+        sh = _load_config()["stt"].get("sherpa", {})
+        md = sh["model_dir"]
+        _sherpa_rec = sherpa_onnx.OfflineRecognizer.from_paraformer(
+            paraformer_model=os.path.join(md, sh.get("model_file", "model.int8.onnx")),
+            tokens=os.path.join(md, sh.get("tokens_file", "tokens.txt")),
+            num_threads=int(sh.get("num_threads", 2)),
+            language_hints=sh.get("language_hints", "zh"),
+            debug=False,
+        )
+        print(f"[STT] sherpa-onnx Paraformer loaded from {md}")
+    return _sherpa_rec
+
+
+def _sherpa_transcribe(audio: np.ndarray) -> str:
+    rec = _get_sherpa()
+    stream = rec.create_stream()
+    stream.accept_audio(audio)
+    rec.decode_stream(stream)
+    return stream.result.text
+
 def _get_model(force_cpu=False):
     global _model, _model_device
     if _model is not None and not force_cpu:
