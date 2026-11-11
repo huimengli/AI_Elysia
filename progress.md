@@ -44,3 +44,10 @@
 - **Q7** 真人 3 句语音验证 + 是否换 sherpa-onnx paraformer-zh（约 30 MB 依赖 + 200–400 MB 模型，C 盘剩 17.7 GB）`status: wait`。
 - 未跑完的验证：`2026-11-09-19-45-46` 剩 2 轮；`2026-11-08-20-44-17` 的 20 轮明确测试未跑完、轮 4 barge-in 结论待追加累积 `tests/opinion.md`。
 - 浏览器共用插件安装/配置等用户授权 Chrome `--remote-debugging-port=9222`。
+
+## 2026-11-11-19-45 唤醒模型切到 aili_xiya_v0.6（用户「先将模型切换到0.6,我看看效果」）
+
+- config.yaml wake_word.model → openWakeWord/output/aili_xiya_v0.6/aili_xiya_v0.6.onnx，threshold 保持 0.7、chunk_size 1280；带 3 个 HF 变量重启 Jarvis（旧 pid 7580），api/health 实测 wake.model=aili_xiya_v0.6.onnx / threshold 0.7 / listening=true、4 灯全 online、asr.warm=true。
+- **部署管线复放（关键新数据）**：用与线上一致的判定方式（1280 chunk 逐块、检出后 reset、2 s 冷却）复放 36.12 s 真人录音 —— **v0.6 检出 10 次（0.48/5.12/9.04/11.92/14.72/18.16/26.24/28.56/31.60/34.16 s），v0.3 检出 5 次**；阈值 0.75 时 v0.6 降到 5 次、0.8 降到 1 次。clip 级 recall 1.00 与部署级 10/13 的差来自逐 chunk 分数在 0.7 附近波动 + 冷却合并（约 20.7 s、23.3 s 峰值压线 0.70–0.73 未触发）。
+- **代价实证（新登记）**：现场环境音 10 s 实录（rms 1484，笔记本风扇 + 键盘）v0.6 触发 1 次 0.703、v0.3 0 次；线上日志实证启动阶段连触发两次（peak 0.737、0.716）后 [STT] No speech in 2.0s, stopping early (max rms=0.0024) → Transcription empty，即无人说话时它会自己应答。定标纯噪声 16 s 检出 0；合成对抗 20 条 v0.6 触发 4 次（v0.3 2 次，句子本身含唤醒词）。阈值 0.75 时环境音触发归零。
+- 3 轮（tests/2026-11-11-19-45-46_cc/，累积 tests/opinion.md）：轮 1 PASS、轮 2 部分 PASS（期望 ≥12 未达）、轮 3 FAIL（0.7 下环境音会触发）。全程零截图、无子智能体。commit 9d724cd（10 files / 123+ / 6-；**已本地 commit，未 push**）。阈值选择与真人实测结果登记 need_user.md **Q12**（status: wait）：保持 0.7（现行，检出 10）/ 改 0.75（环境音归零、检出 5）/ 回退 v0.3。
