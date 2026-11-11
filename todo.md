@@ -73,3 +73,4 @@
 - [ ] 热词表接 ASR 偏置：whisper 用 stt.initial_prompt 拼 top-N，sherpa-onnx 用原生 hotwords；与 ASR A/B（2026-11-11-20-34 第 4 项）一起 3 轮验收
 - [ ] 续传 paraformer-zh model.int8.onnx（81.8 MB，hf-mirror 多次停滞于 9.6 MB，需换源）→ 跑 .tmp/probe_asr_ab.py 3 轮 A/B（已知文本 6 件 + 12 条真实 capture wav）
 - [ ] commit（中文主题）+ hash 追加台账，**禁止 push**
+- [ ] 明天用 GPT-SoVITS 爱莉希雅音色合成负样本：近音词（爱丽安娜/爱丽丝/米希雅/米雅希/爱丽雅/希雅/爱丽西亚/艾丽西亚）+ 10 句无关中文短句，编号延续 `negx_tr_1302…`/`negx_te_1301…`，逐件 v0.6 打分后与 v0.6/v0.7 特征合并训练（行重复先 ×2，依 HB-032 边界复测），3 轮判据：真人 13 次 ≥10、真人近音 fp ≤1、合成对抗 ≤4、纯噪声 0、环境音 ≤1（→ records/2026-11-11-20-34-04.md 第 7 项）
