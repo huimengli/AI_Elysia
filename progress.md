@@ -64,3 +64,4 @@ p.random 噪声初始化特征缓冲，**同一音频同一模型 3 次独立实
 - 服务侧：本批开始时 :9880/:8080/:7860 全 DOWN（机器重启），cmd /c start_all.bat 后台任务 10 s 拉起；两次训练失败（positive_test 缺 wav = HB-028 已知；补齐后一次 DefaultCPUAllocator: not enough memory 内存峰值），第三次成功。全程零截图、无子智能体。
 - 最新一条：4f3e964 	est(AI): 新录音训练 v0.7/v0.8 三轮验收未达标（保持 v0.6+0.7），记录打分非确定性 HB-032 并加 ASR 引擎开关（11 files / 232+ / 11-；**已本地 commit，未 push**）。上一条 44f0be 的 hash 记录在同批 TTS 提交里，见本批要点节。
 - 最新一条：71a6a27 eat(AI): ASR 引擎可切换（whisper/sherpa-onnx Paraformer），网页设置新增引擎选择，3 轮验收（3 files / 27+ / 2-；jarvis/stt.py 的引擎开关在 4f3e964 已提交；**已本地 commit，未 push**）。上一条 hash 的记录 commit 不再追加。
+- 最新一条：621308a docs(AI): 落盘新需求（我没听清入 ack 池 + sqlite 热词热句表），明天开工，本批停工（2 files / 31+；ecords/2026-11-11-21-36-30.md + 	odo.md 5 条待办；**已本地 commit，未 push**）。上一条 hash 的记录 commit 不再追加。
