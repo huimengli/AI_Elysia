@@ -2,7 +2,7 @@
 
 <!-- 已归档于 ai_buckup/need_user.md_2026-10-13-21-12-19.md（Q2/Q3 历史条目 + Q4 llama 重启请求，全部 status: done） -->
 
-## Q5 2026-10-13-22-30 GitHub 仓库私有化 / 描述改"自用"（status: wait）
+## Q5 2026-10-13-22-30 GitHub 仓库私有化 / 描述改"自用"（status: done）
 
 **问题**: 用户要求把 `github.com/huimengli/JarvisAi` 改为私有仓库，若不可行则把仓库描述改为"自用"。AGENTS.md 禁止 Agent 执行 `git push` 或任何远程写入（含 GitHub API/网页操作），此操作只能由用户在 GitHub 端手动完成。
 
@@ -14,9 +14,10 @@
 3. 保存（Save）。
 4. 注意：本 Agent 从未执行过 push，本地提交不会自动同步到 GitHub；若仓库此前是公开空仓库/已有公开内容，改私有后历史内容仍保留在仓库中。
 
-**A**: （待用户回复）
+**A**: （2026-11-11 20:34 用户答复）「Q5、Q6 关闭掉，我自己推」→ 仓库可见性/描述与 push 均由用户在 GitHub 端自行推进，Agent 不再跟进。全程未执行任何远程写入（AGENTS §4）。
+**status: done**
 
-## Q6 2026-10-17-19-5x push 到 AI_Elysia：本机 git 无 GitHub 凭据（status: wait）
+## Q6 2026-10-17-19-5x push 到 AI_Elysia：本机 git 无 GitHub 凭据（status: done）
 
 **问题**: 用户已批准本次 `git push`，本地两个提交（`999cc32`、`251f7b0`）就绪、remote origin 已指向 `https://github.com/huimengli/AI_Elysia`，但执行 `git push -u origin main` 失败：`schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS (0x8009030E)` —— 本机 git 没有任何 GitHub 凭据（无 credential manager 条目、无 PAT），Agent 无法代为推送。
 
@@ -25,7 +26,8 @@
 2. **提供 PAT**: 给我一个有 `repo` 权限的 GitHub Personal Access Token，爱莉希雅写入本机 credential store 后自行完成 push。
 3. **继续延后**：本地提交已保留，remote 已指向正确仓库，之后随时可推。
 
-**A**: （待用户回复）
+**A**: （2026-11-11 20:34 用户答复）「Q5、Q6 关闭掉，我自己推」→ 采用方案 1（用户自己在终端 push），Agent 不再跟进，不索取 PAT。本地提交持续保留、**未 push**。
+**status: done**
 
 ## Q8 2026-11-10-21-1x 真人录音 4 处确认：你喊了几次「爱莉希雅」、其余有声段是什么（status: wait）
 
@@ -42,7 +44,7 @@
 处理：`aili_xiya_v0.6` 重标（13 次呼唤全部作正样本，本录音不再提供真人负样本；负样本只用既有 v0.3 合成对抗样本 + 纯噪声窗口），重算特征、重训练、重验收。真人负样本的缺口留给明日补录（安静 + 带噪各半、≥20 次）。
 **status: done**
 
-## Q9 2026-11-10-22-17 明日补录规格（status: wait）
+## Q9 2026-11-10-22-17 明日补录规格（status: done，部分满足）
 
 **问题**：真人正样本量与真人**负样本**同时缺口——本录音 13 次全为正样本，没有任何「不是爱莉希雅」的真人语音；验收里「真人负样本 fp」这一项只能靠合成对抗样本。
 
@@ -52,7 +54,12 @@
 3. 一段**带噪声**呼唤（背景放音乐/电视，SNR 体感「吵」），≥10 次，用于带噪留出集。
 4. 三段分文件提供（命名随意，我按内容判定归属），全部转 16 kHz 单声道后入库。
 
-**A**: （待用户回复）
+**A**: （2026-11-11 20:34 用户提供了 7 件新录音，见 `records/2026-11-11-20-34-04.md` 清单）
+- **真人负样本（规格 2，首次到位 3 条）**：`'爱丽安娜'.m4a`、`'爱丽丝'.m4a`、`'米希雅'.m4a`（近音词，不含唤醒词）
+- **带噪呼唤（规格 3，2 条）**：`带有音乐噪音的一次呼唤.m4a`、`带微弱噪音的呼唤1次.m4a`
+- **含唤醒词的整句（对抗正样本，3 条）**：`'爱莉希雅, 帮我打开电视机'.m4a`、`'爱莉希雅, 帮我打开浏览器'.m4a`、`'你好啊爱莉希雅, 你在干什么呢'.m4a`
+- **仍缺**：干净呼唤补充（现共 13 次，规格要求 ≥20）与「与唤醒词完全无关的中文短句」≥10 句（现有 3 条是**近音词**，只覆盖「相似音」这一类负样本）。具体请求写入下方 **Q13**。
+**status: done**
 
 ## Q10 2026-11-10-22-4x 是否把唤醒模型切到 `aili_xiya_v0.6.onnx`（status: done）
 
@@ -87,6 +94,8 @@
 **执行结果（agent 记录）**：`git branch -f backup-before-reword HEAD`（保留改写前历史）→ `git rebase -i 8aada16~1`，配 `.tmp\reword\se.ps1`（todo 全 pick→reword）与 `.tmp\reword\ed.ps1`（按 `.tmp\reword\msgmap.json` 换中文主题）。12 条英文标题全部改成中文，14 个 commit 重放，`git diff backup-before-reword HEAD --stat` 为空（工作树逐文件一致）；旧→新 hash 对照写入 `progress.md` 台账。更早 25 条英文标题（`387b320`、`4ab19ea` 等）按用户范围保持原样。**全程本地，未 push**。
 **status: done**
 
+## Q7 2026-11-10-17-4x 真人 3 句语音验证 + 是否换 ASR 引擎（status: done）
+
 **问题**: 新 ASR 参数（`beam_size 10` + 简体中文 `initial_prompt` + `vad_filter` + 去头部静音）在合成语音 A/B 中 3/3 全对（旧参数输出繁体/丢字：`你能看得見屏幕嗎` → 新参数 `你能看得见屏幕吗?`）。真人第一轮只得到 `你看得见吗?`（你说的是「你能看得见屏幕吗？」，丢了「能」「屏幕」），该次录音 rms 仅 0.015，说明离麦克风远/音量大小说明采集电平偏低。要定论需你配合说 3 句，并由你决定是否换引擎。
 
 **选项 1（推荐）**:
@@ -101,7 +110,8 @@
 
 **选项 3**: 先提交已验证部分（工具结果文案汉化 + 录音落盘 + 参数优化），真人轮延后。
 
-**A**: （待用户回复）
+**A**: （2026-11-11 20:34 用户答复）「**asr 的引擎下载下来，也到设置中，允许用户选择**」→ 采纳选项 2 的授权：安装 sherpa-onnx + paraformer-zh，并把 ASR 引擎做成可选项（`config.yaml` `stt.engine` + 网页设置项），whisper 与 sherpa 并存、用户可选。实施见 `records/2026-11-11-20-34-04.md`；磁盘占用（约 200–400 MB 模型 + 30 MB 依赖，C 盘剩约 17.7 GB）与 A/B 对比表会在实施后给出。真人 3 句验证延后到引擎装好一起做。
+**status: done**
 
 ## Q12 2026-11-11-19-5x 切换 v0.6 后的阈值选择与真人实测结果（status: wait）
 
@@ -121,5 +131,26 @@
    - **选项 1（现行，推荐先试）**：保持 threshold: 0.7 —— 真人检出 10/13，环境音偶发误触发。
    - **选项 2**：改 threshold: 0.75 —— 环境音误触发归零，真人检出降到 5（约等于旧模型在 0.7 的水平）。
    - **选项 3**：回退 aili_xiya_v0.3.onnx + 0.7（旧行为完全不变）。
+
+**A**: （2026-11-11 20:34 用户答复）「Q12：**先用 v0.6 + 0.7，之后训练测试如果更好就换**」→ 选项 1，现行配置（`aili_xiya_v0.6.onnx` + `threshold 0.7`）不改。真人 3 次唤醒的具体结果未回报；「更好就换」的判据交给后续训练测试（v0.7 用新录音的真人近音负样本 + 带噪呼唤，跑同一套部署管线矩阵对比）。
+**status: done**
+
+## Q13 2026-11-11-20-34 根目录清理目标目录 + 仍缺的音频（status: wait）
+
+**背景（根目录现状）**：根目录有约 **100 个 _ 开头的一次性脚本与日志**（_t2_*.py/.log、_chk_*.py/.log、_diag_*.py、_dl_*.py、_probe_*.py、_setup_gsv*.py、_gsv_main.tar.gz 等，全部被 .gitignore 的 _*.py 等规则排除，不进 Git、不在 tree.md），另有 5 个非代码文件：jarvis_screen.png、love_silvia.txt、AI_Benchmark.md、JARVIS_STATE.md、PROJECT_SUMMARY.txt（后三个是未跟踪/已跟踪的项目文档，AGENTS 要求的清单里没有它们）。要求「只保留文件夹 + AGENTS 要求的文件 + 默认放根目录的文件」，清理文件**移动不删除**。
+
+**我的建议（选项 1，推荐）**：
+1. 全部 _ 开头 的脚本与日志移入已存在的 .tmp/（该目录已被 .gitignore 排除，且现有探针/日志都在这里，不新造目录名）。代价：训练链 5 个可复用脚本（_t2_stream_features_v02.py、_t2_train_cn.py、_t2_transform_v02.py、_t2_make_val_fp_v02.py、_t2_verify_onnx.py）的调用路径要改成 .tmp/，我会同步改脚本内的相对路径与文档记录。
+2. AI_Benchmark.md、JARVIS_STATE.md、PROJECT_SUMMARY.txt → 移入 ecords/（都是阶段性总结，属记录类）；jarvis_screen.png、love_silvia.txt 是你给的非代码文件，建议移入 ecords/（love_silvia.txt 是文本素材）——**这两项我不确定你希望放哪，请指定**。
+3. start.bat、start_all.bat、install.bat、equirements.txt、config.yaml、LICENSE、README.md、AGENTS.md、design.md、progress.md、	ree.md、	odo.md、hard_bug.md、
+eed_user.md、.gitignore **留在根目录**。
+
+**需要你回答**：
+1. 上面的清理方案是否照办（_ 文件 → .tmp/；3 个 md/txt → ecords/）？jarvis_screen.png、love_silvia.txt 放哪里？
+2. **仍缺的音频**（v0.7 训练需要，按优先级）：
+   - 与唤醒词**完全无关**的中文短句 **≥10 句**（例：「今天天气不错」「帮我倒杯水」「最近工作怎么样」），1 个文件里连着说即可，间隔 1–2 s；
+   - 干净「爱莉希雅」呼唤补 **≥10 次**（现共 13 次，规格 ≥20），离麦近、音量尽量大（上次录音 rms 仅 0.010–0.02）；
+   - 若方便：带噪呼唤再多几条（现 2 条，规格 ≥10），背景放音乐/电视。
+3. ASR 引擎磁盘授权确认：sherpa-onnx + paraformer-zh 约 **30 MB 依赖 + 200–400 MB 模型**（从 hf-mirror 下载），C 盘剩约 17.7 GB。你说「下载下来」我就按此执行，装完给出 whisper/sherpa 真人 A/B 对比表。
 
 **A**: （待用户回复）

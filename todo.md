@@ -54,3 +54,14 @@
 - [x] 3 轮验证 `tests/2026-11-11-19-45-46_cc/record_1..3.md` + `opinion.md`（累积追加 `tests/opinion.md`）：轮 1 PASS；轮 2 部署管线复放 36.12 s 录音 → **v0.6 检出 10 次 vs v0.3 5 次**（期望 ≥12 未达）；轮 3 定标纯噪声 0（达标）、合成对抗 4 次、**现场环境音 10 s 实录触发 1 次（0.703）→ 0.7 阈值 FAIL**，阈值 0.75 时环境音归零（检出降为 5）
 - [ ] 等 `need_user.md` **Q12** 用户回复：真人实测 3 次唤醒结果 + 阈值选择（保持 0.7 / 改 0.75 / 回退 v0.3）；我按答复改 `config.yaml` 并重启（带 3 个 HF 变量）
 - [x] commit（中文主题）+ hash 追加台账 + `tree.md` 重建（193 项），**禁止 push**
+
+## 2026-11-11-20-34-04 TTS 分段队列 / 新录音继续训练 / ASR 引擎可选 / 关闭 Q5-Q6 / 根目录清理（→ records/2026-11-11-20-34-04.md）
+
+- [x] Q12 已答复：**保持 aili_xiya_v0.6 + threshold 0.7**（现行不改），「之后训练测试如果更好就换」
+- [x] Q5 / Q6 关闭（用户自己推进）→ need_user.md 标 status: done 并归档已解决项
+- [ ] 新录音 7 件（3 条真人近音负样本 + 2 条带噪呼唤 + 3 条含唤醒词整句）切样本 → 与 v0.6 数据合并训练 aili_xiya_v0.7 → 部署管线矩阵对比 v0.6/v0.7（真人检出、带噪、近音负样本、环境音），更好才换 config
+- [ ] TTS 分段队列：应答文本按标点切句，逐句 POST GPT-SoVITS :9880/tts，队列按序播放 + LLM 生成期间并行预取，降低首声延迟；barge-in 时清空队列。改 jarvis/tts.py + jarvis/main.py，3 轮验证
+- [ ] ASR 引擎可选：下载第二引擎（候选 sherpa-onnx + paraformer-zh，需 Q13 授权磁盘 200-400 MB）→ config.yaml stt.engine + 网页设置项允许选择，3 轮 A/B 对比转写质量
+- [ ] 根目录清理：约 100 个 _* 脚本/日志 + jarvis_screen.png / love_silvia.txt / AI_Benchmark.md / JARVIS_STATE.md / PROJECT_SUMMARY.txt 移入对应文件夹（**移动不删除**），目标目录等 Q13 确认（推荐 .tmp/），tree.md 重建
+- [ ] 需要更多音频的规格写入 need_user.md Q13（缺「无关中文短句」与干净呼唤补充）
+- [ ] commit（中文主题）+ hash 追加台账，**禁止 push**

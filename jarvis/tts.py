@@ -1,5 +1,6 @@
 from pathlib import Path
 import io
+import queue
 import random
 import re
 import urllib.parse
@@ -109,9 +110,23 @@ def _synth(text: str) -> tuple[bytes, int]:
 
 
 def _split_sentences(text: str) -> list[str]:
-    """Split text into sentences for streaming TTS."""
-    parts = re.split(r'(?<=[.!?])\s+', text)
-    return [p.strip() for p in parts if p.strip()]
+    """Split text into speakable segments on **Chinese and Latin punctuation**.
+
+    The old regex `(?<=[.!?])\\s+` only split on Latin `.!?` followed by whitespace,
+    so Chinese replies (「你好呀，我在听。今天…」) came out as **one** segment: SoVITS
+    had to synthesize the whole answer before the first sound, which is what made
+    TTS feel slow. Splitting on 「，。！？；、」 (and Latin equivalents) lets the first
+    short clause go to SoVITS immediately while the rest is synthesized in parallel.
+    Fragments shorter than 2 characters are merged into the previous segment.
+    """
+    parts = [p.strip() for p in re.split(r"(?<=[。！？，；、!?;,\n])", text) if p.strip()]
+    merged: list[str] = []
+    for p in parts:
+        if merged and len(p) < 2:
+            merged[-1] += p
+        else:
+            merged.append(p)
+    return merged
 
 
 def speak_to_bytes(text: str) -> bytes:
@@ -130,6 +145,13 @@ def is_speaking() -> bool:
 def stop_speaking() -> None:
     """Interrupt current speech playback — instant."""
     _interrupt.set()
+    # The queue player writes into the reused output stream; flushing it is what
+    # makes the stop instant (sd.stop() alone leaves the queued buffer playing out).
+    if _out_stream is not None:
+        try:
+            _out_stream.stop()
+        except Exception:
+            pass
     sd.stop()
     _speaking.clear()
 
@@ -251,6 +273,85 @@ def play_ack_wav() -> None:
         _interrupt.clear()
 
 
+def _produce_segments(sentences: list[str], q: "queue.Queue") -> None:
+    """Producer side of the TTS queue: synthesize segments in order and push PCM.
+
+    The queue is bounded, so the producer runs **at most a few segments ahead** of
+    playback — segment k+1 is being synthesized by SoVITS while segment k is already
+    playing on the output stream. Bounded size keeps memory small (each 24 kHz int16
+    segment is ~100 KB per second of speech) and keeps ordering strict: the consumer
+    pops in the same order the producer pushed.
+    """
+    for s in sentences:
+        if _interrupt.is_set():
+            break
+        try:
+            pcm, rate = _synth(s)
+        except Exception as e:
+            print(f"[TTS] segment synth failed ({s[:12]!r}): {e}")
+            break
+        if pcm:
+            q.put((pcm, rate))
+    q.put(None)  # sentinel: producer finished
+
+
+def speak_queued(text: str) -> None:
+    """Speak text through the synthesis queue — the first clause sounds as soon as
+    SoVITS returns it, the rest is synthesized ahead of playback. Interruptible via
+    stop_speaking() (which flushes the reused output stream).
+    """
+    sentences = _split_sentences(text)
+    if not sentences:
+        return
+    _interrupt.clear()
+    _speaking.set()
+    t0 = time.perf_counter()
+    q = queue.Queue(maxsize=4)
+    prod = threading.Thread(target=_produce_segments, args=(sentences, q), daemon=True)
+    prod.start()
+    first_ms = None
+    played = 0.0
+    interrupted = False
+    last_rate = None
+    try:
+        while True:
+            item = q.get()
+            if item is None:
+                break
+            pcm, rate = item
+            last_rate = rate
+            if _interrupt.is_set():
+                interrupted = True
+                break
+            audio = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32767
+            if first_ms is None:
+                first_ms = 1000 * (time.perf_counter() - t0)
+            stream = _output_stream(rate)
+            chunk = max(1, int(rate * 0.1))
+            for i in range(0, len(audio), chunk):
+                if _interrupt.is_set():
+                    interrupted = True
+                    break
+                stream.write(audio[i : i + chunk])
+            played += len(audio) / rate
+            if interrupted:
+                break
+    finally:
+        if _interrupt.is_set() and last_rate is not None:
+            try:
+                _output_stream(last_rate).stop()
+            except Exception:
+                pass
+        _speaking.clear()
+        _interrupt.clear()
+        first = f"{first_ms:.0f} ms" if first_ms is not None else "n/a"
+        print(
+            f"[TTS] queued: {len(sentences)} segments, first sound {first}, "
+            f"played {played:.2f} s, total {1000 * (time.perf_counter() - t0):.0f} ms"
+            + (" (interrupted)" if interrupted else "")
+        )
+
+
 def speak(text: str) -> None:
     """Speak text aloud. Can be interrupted via stop_speaking()."""
     _interrupt.clear()
@@ -273,23 +374,9 @@ def speak_streamed(text: str) -> None:
         return
 
     if _active_provider() == "gptsovits":
-        # Per-sentence HTTP synthesis; each sentence plays as soon as it is ready.
-        _speaking.set()
-        try:
-            for sentence in sentences:
-                if _interrupt.is_set():
-                    break
-                pcm, rate = _gptsovits_synth(sentence)
-                if not pcm or _interrupt.is_set():
-                    break
-                audio = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32767
-                sd.play(audio, samplerate=rate)
-                if _wait_or_interrupt():
-                    break
-        finally:
-            sd.stop()  # ensure audio stops even if we break mid-play
-            _speaking.clear()
-            _interrupt.clear()
+        # Queue path (2026-11-11): segments go to SoVITS in order, segment k plays
+        # as soon as it is ready while segment k+1 is being synthesized.
+        speak_queued(text)
         return
 
     # Short text — just speak normally
