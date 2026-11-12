@@ -66,3 +66,13 @@ p.random 噪声初始化特征缓冲，**同一音频同一模型 3 次独立实
 - 最新一条：71a6a27 eat(AI): ASR 引擎可切换（whisper/sherpa-onnx Paraformer），网页设置新增引擎选择，3 轮验收（3 files / 27+ / 2-；jarvis/stt.py 的引擎开关在 4f3e964 已提交；**已本地 commit，未 push**）。上一条 hash 的记录 commit 不再追加。
 - 最新一条：621308a docs(AI): 落盘新需求（我没听清入 ack 池 + sqlite 热词热句表），明天开工，本批停工（2 files / 31+；ecords/2026-11-11-21-36-30.md + 	odo.md 5 条待办；**已本地 commit，未 push**）。上一条 hash 的记录 commit 不再追加。
 - 最新一条：4369989 docs(AI): 追加第 7 项——明天用 GPT-SoVITS 爱莉希雅音色合成近音词与无关短句作负样本训练（2 files / 21+；核查结论：piper 合成负样本步骤**已有**，缺的是**同音色近音词 + 无关短句**，故追加；**已本地 commit，未 push**）。上一条 hash 的记录 commit 不再追加。
+
+## 2026-11-12-10-35 批次（第 8 项：真人补录负样本 + TTS 合成负样本）
+
+- 真人补录清点：C:\Users\楼听\Documents\录音 21 件（8 件为 11-12 10:11-10:20 新录）。入库负样本 **15 件**：11 件 speech（近音 4：爱莉雅/米雅希/希雅/希雅老师；无关短句 7：那部戏爱丽/小爱同学x2/你问我是否爱你/如果说梦想/贾维斯AI/我爱你）+ 4 段长噪音低分窗（rms 18-47，v0.6 峰值 0.700-0.758）。编号延续 13xx（negx_tr_1302-1309、negx_te_1301-1303、noise_tr_1300-1302、noise_te_1300），正样本沿用 13xx（×5），新负样本 ×2。
+- **TTS 合成负样本实测排除**：GPT-SoVITS 逐条合成 16 件，7 件峰值 >=0.7（爱丽安娜 0.839 / 爱丽丝 0.832 / 米雅希 0.814 / 爱丽雅 0.832 / 米希雅 0.796 / 把音量调大一点 0.837 / 帮我打开浏览器 0.727）剔除，剩 9 件低分件（0.575-0.694）按第 8 项修订排除不入库。根因：参考音频就是爱莉希雅本人音色，同音色合成近音词比真唤醒词更像唤醒词，入库=教模型拒绝唤醒词（与用户要求剔除 爱丽西亚/艾丽西亚 一致）。
+- **3 轮部署矩阵（阈值 0.7，逐块 1280 + reset + 2 s 冷却）**：v0.9 = 13 次呼唤 **14/14/14**、真人近音 fp 9/11/10、无关短句 5/3/4、合成对抗 6、定标纯噪声 0、长噪音 1、环境音 1；v0.6（现役）= 10/10/10、fp 6/6/7、对抗 4；v0.8 = 12/12/12、fp 7/8/7。**行重复比只移动灵敏度曲线，不产生近音判别力**（v0.7 负 x5 → 检出 10→5；v0.9 负 x2 → 检出 14 但 fp 9-11）。
+- **阈值扫描后采用 0.9 + 0.75**：检出 12 / 近音 fp 6 / 无关短句 2 / 合成对抗 4 / 长噪音 1 / 环境音 0 —— 两个轴同时优于现役 0.6 + 0.7（10 / 6-7 / 4-5 / 4 / 1 / 0）。严格判据（近音 fp<=1 且 13 次>=10）在 0.70/0.75/0.80 均无法同时满足，**此条记为未达标**，缺口 = 真人近音负样本仅 7 件（需 >=10，Q13 仍 wait）。
+- config.yaml 已切 ili_xiya_v0.9.onnx + 	hreshold: 0.75，Jarvis 重启后 health 显示 ili_xiya_v0.9.onnx / threshold 0.75（零截图，走 HTTP 文本）。
+- ASR 引擎可用性修正（sherpa-onnx 2.0.1 实测签名）：rom_paraformer(paraformer=..., tokens=..., num_threads=...)（无 paraformer_model/language_hints）；OfflineStream 只有 ccept_waveform(sample_rate, samples)（无 ccept_audio）；	ranscribe_audio 已接引擎分发 + sherpa 空结果/异常回退 whisper；paraformer-zh small model.int8.onnx 81.8 MB 下载完成（curl --ssl-no-revoke 续传）。
+- 并发 4 个探针会触发 MemoryError（_streaming_melspectrogram，与 v0.8 训练 DefaultCPUAllocator 同源）；验收必须单探针串行。

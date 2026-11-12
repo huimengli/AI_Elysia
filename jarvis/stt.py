@@ -38,11 +38,12 @@ def _get_sherpa():
 
         sh = _load_config()["stt"].get("sherpa", {})
         md = sh["model_dir"]
+        # sherpa-onnx 2.0.1 的签名是 from_paraformer(paraformer, tokens, num_threads, ...)
+        # —— 没有 paraformer_model / language_hints 参数（实测 TypeError，见 2026-11-12 记录）
         _sherpa_rec = sherpa_onnx.OfflineRecognizer.from_paraformer(
-            paraformer_model=os.path.join(md, sh.get("model_file", "model.int8.onnx")),
+            paraformer=os.path.join(md, sh.get("model_file", "model.int8.onnx")),
             tokens=os.path.join(md, sh.get("tokens_file", "tokens.txt")),
             num_threads=int(sh.get("num_threads", 2)),
-            language_hints=sh.get("language_hints", "zh"),
             debug=False,
         )
         print(f"[STT] sherpa-onnx Paraformer loaded from {md}")
@@ -50,9 +51,11 @@ def _get_sherpa():
 
 
 def _sherpa_transcribe(audio: np.ndarray) -> str:
+    """sherpa-onnx 2.0.1: OfflineStream 只有 `accept_waveform(sample_rate, samples)`，
+    没有 `accept_audio`（实测 AttributeError）。`audio` 是 [-1,1] 的 float 数组，16 kHz。"""
     rec = _get_sherpa()
     stream = rec.create_stream()
-    stream.accept_audio(audio)
+    stream.accept_waveform(16000, np.asarray(audio, dtype=np.float32))
     rec.decode_stream(stream)
     return stream.result.text
 
@@ -125,6 +128,17 @@ def transcribe_audio(audio: np.ndarray) -> str:
     # short utterances. Tunable via config.yaml stt.initial_prompt.
     prompt = stt.get("initial_prompt") or None
     audio = _trim_leading_silence(audio)
+    if stt.get("engine", "whisper") == "sherpa":
+        # Engine switch (records/2026-11-11-20-34-04.md 第 4 项): sherpa-onnx Paraformer
+        # is a CPU-only path with no beam search; fall back to whisper if it fails so
+        # a model-file problem never turns into an empty transcription.
+        try:
+            text = _sherpa_transcribe(audio)
+            if text.strip():
+                return text
+            print("[STT] sherpa 空结果，回退 whisper")
+        except Exception as e:
+            print(f"[STT] sherpa 失败（{e}），回退 whisper")
     try:
         model = _get_model()
         segments, _ = model.transcribe(
