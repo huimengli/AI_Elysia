@@ -15,7 +15,7 @@ openWakeWord/output/*
 !openWakeWord/output/aili_xiya_v0.3/
 openWakeWord/output/aili_xiya_v0.3/*
 !openWakeWord/output/aili_xiya_v0.3/aili_xiya_v0.3.onnx
-_*.py
+# 2026-11-12 第 6 项清理（Q13）：可复用脚本移入 training/ 并**入 Git**，故移除 `_*.py` 忽略规则
 _wheels/
 _*.txt
 _*.tar.gz

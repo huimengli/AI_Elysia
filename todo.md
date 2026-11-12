@@ -85,3 +85,15 @@
 - [ ] ASR 引擎 A/B 3 轮（whisper vs sherpa，已知文本 6 件 + 12 条真实 capture wav，.tmp/probe_asr_ab.py，rounds 记录进 	ests/2026-11-12-10-35-29_cc/）→ 达标才把 stt.engine 设为默认
 - [ ] commit（中文主题）+ hash 追加台账，**禁止 push**
 - [ ] ASR：给 sherpa 路径加能量门（VAD/静音跳过，避免 嗯/北京/小一瓶 类幻觉），门生效后重跑 A/B 3 轮再决定 stt.engine 默认（当前保持 whisper；3 轮实测 sim whisper 3/6 vs sherpa 2/6，sherpa 快 10-20 倍）
+
+## 新需求 2026-11-12-12-12-28（Q13 答复 + 根目录清理）(→ records/2026-11-12-12-12-28.md)
+
+- [ ] Q13 标 status: done 并归档 need_user.md 到 ai_buckup/（AGENTS §3）
+- [ ] 新建 need_audio.md：逐条 ""音频内容"", ""文件路径""（无音频则路径留空，需用户录）
+- [ ] 根目录全部 _*.py 移入 training/，并从 .gitignore 移除该规则（进 Git、进 tree.md）
+- [ ] 根目录其余 _* 文件（.log/.txt/.yaml/.gz/.jinja/.wav）移入 .tmp/（仍被忽略）
+- [ ] jarvis_screen.png、love_silvia.txt **留在根目录**（用户明确不动）
+- [ ] AI_Benchmark.md、JARVIS_STATE.md、PROJECT_SUMMARY.txt 移入 records/（git mv，保留历史）
+- [ ] 修 sys.path 与训练/验证调用路径（脚本从 training/ 导入），复跑一次训练链冒烟
+- [ ] 重建 tree.md（training/*.py 入树），commit（中文主题）+ hash 追加台账，**禁止 push**
+- [ ] 下载类任务一律后台任务，不阻塞（Q13 第 3 问）
