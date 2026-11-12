@@ -78,3 +78,4 @@ p.random 噪声初始化特征缓冲，**同一音频同一模型 3 次独立实
 - 并发 4 个探针会触发 MemoryError（_streaming_melspectrogram，与 v0.8 训练 DefaultCPUAllocator 同源）；验收必须单探针串行。
 - 最新一条：`733bf52` `docs(AI): 重建 tree.md（201 项，新增 tests/2026-11-12-10-35-29_cc，config 切 v0.9+0.75）`（1 file；**已本地 commit，未 push**）。
 - 前两条：`10398c8` `test(AI): 真人补录 15 件负样本训练 v0.9，3 轮矩阵后采用 v0.9+阈值0.75，实测排除 TTS 合成负样本并修正 sherpa API`（8 files / 131+ / 5-）；`096f5b9` `docs(AI): ASR 引擎 A/B 三轮结论（whisper 保持默认，sherpa 快 10-20 倍但无 VAD 会幻觉）`（3 files / 65+）。均**已本地 commit，未 push**。
+- 最新一条：`2846dcc` `docs(AI): Q13 追加进度——真人补录 15 件负样本已入库、ASR 依赖与模型已就位并给出 A/B 对比表，清理目标目录仍等答复`（1 file / 6+；**已本地 commit，未 push**）。上一条 hash 的记录 commit 不再追加。
