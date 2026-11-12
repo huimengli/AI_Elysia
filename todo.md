@@ -1,78 +1,44 @@
 # Todo
 
-<!-- 已归档于 ai_buckup/todo.md_2026-11-12-16-58-46.md（103 行全量逐条历史，含 2026-10-12 运行环境搭建、2026-10-13 GPT-SoVITS 接入与自训唤醒词 v0.1→v0.3c、2026-10-17 Web UI 记录/应答词/start_all、2026-11-08 各修复批次、2026-11-09 状态灯/插件评估/阈值 0.7、2026-11-10 HF 预热与汉化、2026-11-10-21-02 真人分段重训练、2026-11-10-22-17 重标 v0.6、2026-11-10-22-48 commit 标题改中文、2026-11-11-19-45 切换 v0.6、2026-11-11-20-34 六项批量、2026-11-11-21-36 落盘未开工、2026-11-12-10-35 第 8 项、2026-11-12-12-12-28 Q13 清理）。本文件为压缩版：保留全部未完成项 + 最近批次要点。 -->
+<!-- 已归档于 ai_buckup/todo.md_2026-11-12-19-23-02.md（99 行全量，含 2026-11-10 真人重训练链、2026-11-11 三批、2026-11-12 Q13 清理与 16:58 对比台账的逐条明细）。上一版归档 ai_buckup/todo.md_2026-11-12-16-58-46.md。本文件为压缩版：保留全部未完成项 + 最近批次要点。 -->
 
 ## 未完成（等用户 / 需授权 / 延后）
 
-- [ ] 2026-10-13-11-45 三问题排查收尾（→ records/2026-10-13-11-45.md；剩余：用户对新进程实测唤醒）
-- [ ] 2026-10-13-21-38-01 T4 仓库私有化/描述改「自用」（AGENTS 禁远程写入，需用户手动，用户确认延后）
-- [ ] 2026-10-14-22-23-49 TTS 迁移 SoulX-Podcast（用户当时要求，**本轮不做**，仅记录）
-- [ ] 2026-10-17-19-11-07 README 中文化 + 来源声明 + 仓库更名 AI_Elysia + LICENSE + push（AGENTS §4 禁 push，需用户明确操作）
-- [ ] 2026-10-17-19-52-00 唤醒词 v0.3 onnx 入库（用户批准推送；AGENTS 禁 push → 需用户执行）
-- [ ] 2026-11-08-12-08-49 LLM 基准台账 `AI_Benchmark.md` 继续补测更多模型（T14 decode 仅 2B/IQ3 已测）
-- [ ] 2026-11-08-20-44-17 剩余：幻觉治理与「说完刷已停止」的 **20 轮明确测试**未跑完（1 轮已做）；轮 4 barge-in 结论待追加到累积 `tests/opinion.md`
+- [ ] 2026-10-13-11-45 三问题排查收尾（剩余：用户对新进程实测唤醒）
+- [ ] 2026-10-13-21-38-01 T4 仓库私有化/描述改「自用」（AGENTS §4 禁远程写入，需用户手动，用户确认延后）
+- [ ] 2026-10-14-22-23-49 TTS 迁移 SoulX-Podcast（当时要求，**本轮不做**，仅记录）
+- [ ] 2026-10-17-19-11-07 README 中文化 + 来源声明 + 仓库更名 AI_Elysia + LICENSE + push（禁 push，需用户操作）
+- [ ] 2026-10-17-19-52-00 唤醒词 v0.3 onnx 入库（需用户执行 push）
+- [ ] 2026-11-08-12-08-49 `AI_Benchmark.md` 继续补测更多模型（T14 decode 仅 2B/IQ3 已测）
+- [ ] 2026-11-08-20-44-17 **20 轮明确测试**未跑完（1 轮已做）；轮 4 barge-in 结论待追加累积 `tests/opinion.md`
 - [ ] 2026-11-09-19-45-46 剩余 3 轮验证未跑完（1 轮已做）
 - [ ] 2026-11-09-15-37-58 浏览器共用插件**安装/配置**（需用户授权 Chrome `--remote-debugging-port=9222` + Playwright MCP）
+- [ ] 2026-11-11-21-36-30（已落盘，**未开工**）：① 「我没听清，请再说一遍」预合成 wav 入内存 ack 池（`tts.ack_phrases`，只在识别失败/空转录时播放，不改 barge-in 语义）② `memory.db` 小表 `hot_phrases(text, kind, count, first_seen, last_seen)`（kind = user/hot/near_miss，≤200 行）③ 热词接 ASR 偏置（whisper `initial_prompt` / sherpa hotwords），与 A/B 一起 3 轮验收。**新参考音频已到位**：`C:\Users\楼听\Documents\录音\'我没听清,请再说一遍'.m4a`
+- [ ] **need_user.md Q14（status: wait）**：真人近音件入库规则冲突裁决（推荐「峰值 ≥0.80 的真人近音件移出训练集、只作验收集」）；裁决后重训 v1.0b + 3 轮，达标才换 `config.yaml`
+- [ ] 给 sherpa 路径加能量门（VAD/静音跳过），门生效后重跑 A/B 3 轮再定 `stt.engine` 默认
+- [ ] 真人补录缺口（`need_audio.md` §5）：**竞品唤醒词真人句补 ≥4 条**（现仅 天猫精灵 1 条）、**无关中文短句补 ≥3 句**（现 7 句，规格 ≥10）
 
-## 2026-11-10 真人录音重训练链（→ records/2026-11-10-21-02-16.md、2026-11-10-22-17-39.md）
+## 已结案批次（压缩，明细见归档与 `tests/`、`records/`）
 
-- [x] 解码 36.12 s + 逐 0.5 s 响度剖面；真人 clip 切分入库（10xx 编号）→ `aili_xiya_v0.4` 特征（24024 正 / 57708 负行）→ 训练
-- [x] **抗干扰后训练**（用户追加）：噪声池 SNR -5/0/5/10 dB 混合带噪 clip → `aili_xiya_v0.5.onnx`
-- [x] 验收矩阵（`v05verify.log`）：v0.3 真人 rec 1.00/fp 0.70；v0.4 0.50/0.20；v0.5 **0.00/0.00（recall 塌陷）** → 写死判据下三者全 FAIL，`config.yaml` 未改
-- [x] 修「无人说话录满 30 s」：`record_until_silence` 新增 `no_speech_seconds`（默认 2.0，`config.yaml` `stt.no_speech_seconds`），线上实测 2.1 s 提前退出
-- [x] **重标（Q8 答复：13 次呼唤、无噪音、平均 2–3 s 一次）**：上一批 8 段「真人负样本」实为呼唤 = 教模型拒绝唤醒词；13 次全作正样本（`posx_tr_1200-1209` / `pos_te_1200-1202`，真人特征 24 → 1195 行）→ `aili_xiya_v0.6`（25195 正 / 57696 负行，steps 2500）
-- [x] v0.6 矩阵（`v06verify.log`）：真人留出 rec 1.00 / 带噪 0.83 / 纯噪声 fp 0.00 / 合成 rec 0.92–0.97 / 对抗 fp 0.17，全部真人维度严格优于 v0.3（0.67/0.50/0.25/0.97/0.30）；写死判据仍 FAIL
-- [x] 3 轮验证各落 `tests/2026-11-10-21-02-16_cc/`、`tests/2026-11-10-22-17-39_cc/` + 累积 `tests/opinion.md`
-- [ ] **真人补录缺口**（`need_audio.md` §5 路径留空项，是「近音 fp ≤1」无法达标的直接原因）：干净呼唤补 ≥10 次、带噪呼唤补 ≥8 条、真人近音补 ≥3 件（目标 ≥10 件）、无关短句补 ≥3 句（目标 ≥10 句）、竞品唤醒词真人句 ≥5 条、安静房间 10 s 干净环境音；补录后重跑同一套特征+训练+矩阵
+- **2026-11-10 真人重训练链**（`records/2026-11-10-21-02-16.md`、`22-17-39.md`）：`v0.4` rec 0.50 / `v0.5` **rec 0.00 塌陷** → Q8 重标（13 次全正样本，10xx/12xx 编号）→ `v0.6`（25195 正 / 57696 负行）真人 rec 1.00 / 带噪 0.83 / 纯噪声 0；写死判据仍 FAIL。3 轮 + 阈值扫描已落盘。线上修复：`no_speech_seconds`（默认 2.0）实测 2.1 s 提前退出。
+- **2026-11-11-19-45-46 切 v0.6（Q10）**：health 实测生效；轮 2 部署管线 **v0.6 检出 10 vs v0.3 5**；轮 3 现场环境音 0.703 触发 → 0.7 FAIL，0.75 时环境音归零（检出 5）。
+- **2026-11-11-20-34-04 六项批量**：TTS 按标点切句队列（首声 14.08→2.44 s、总时长 −27%、打断后 played 0）；新录 7 件 → `v0.7`（近音 ×5，检出 10→5）/ `v0.8`（×5/×3，检出 12、近音 fp 3/3、对抗 6>4）均未采用；ASR `stt.engine` 可切换（sherpa Paraformer-zh small 81.8 MB）+ A/B 3 轮（sim ≥0.8 **whisper 3/6 vs sherpa 2/6**，sherpa 快 10-20× 但无 VAD 幻觉、写不出正字）→ 默认 whisper；Q5/Q6 关闭归档。打分非确定性记 **HB-032**（边界须 ≥3 独立实例）。
+- **2026-11-12-10-35-29 第 8 项**：15 件真人负样本入库（13xx）；**TTS 合成负样本判定为无效**（同音色近音词峰值 0.796-0.839 > 真人唤醒整件 0.73-0.75，禁 爱丽西亚/艾丽西亚 类）；`v0.9`（正 ×5 / 新负 ×2）→ **采用 v0.9 + 阈值 0.75**（12 / 近音 fp 6 / 无关 2 / 对抗 4 / 长噪音 1 / 环境 0）；「真人近音 fp ≤1」**未达标**，阻塞于补录。
+- **2026-11-12-12-12-28 Q13 清理**：Q13 done + `need_user.md` 归档；新建 `need_audio.md`；71 个 `_*.py` → `training/`（进 Git），49 个 `_*` → `.tmp/`，3 份总结 → `records/`；28 脚本补 `sys.path`；修 pwsh 反引号转义损伤（规矩：含反引号与 CJK 用 write 工具，追加用 `@' ... '@`）。
+- **2026-11-12-16-58-46 唤醒 ONNX 全版本对比**：9 个 ONNX（v0.1-v0.9，均 13,735 B）写入 **`ai_buckup/onnx_opinion.md`**（版本谱系 / 3 轮矩阵 / 阈值取舍 / HB-032 / 结论与缺口），未重跑探针。
+- **2026-11-12-17-22-40 新补录 14 件验收**：**数据可用**（无过静音；14 次件 v0.9 检出 **14/14** max 0.819、键盘 4 次件 4/4、6 件带噪全命中；真呼唤 13→25 次、带噪 2→12 条）；入库 36 clip（14xx）→ `v1.0`（正 ×5 / 负 ×1，26515 / 58128 行）**Recall 0.3009**（@0.70 真呼唤 10、@0.75 合计 3）→ **未采用**，`config.yaml` 保持 `v0.9 + 0.75`。根因 = 与真唤醒同强度（`米雅` 0.827、键盘噪音 0.816-0.844）的件被标负。脚本入 Git：`training/_t2_newaudio_probe.py`、`_t2_v10_clips.py`（窗口校验条件已修）、`_t2_v10_features.py`。3 轮 + 累积 opinion 已落盘。
+- **2026-11-12-18-49-50 多音色 TTS 训练集（→ records/…）**：[x] 音色清点：爱莉希雅参考音频池 50+ 件**全部同音色**；真人录音（文件名即真值 = `prompt_text`）作参考 = 用户本人音色；Kokoro-82M 支持 `lang_code="z"`，本地 `.hf-cache` 已缓存 7 个中文音色（`zf_xiaoxiao/xiaoni/xiaoyi`、`zm_yunyang/yunxi/yunxia/yunjian`）；[x] 修 Kokoro 依赖：`soundfile` 包目录被 sherpa wheel 解包覆盖丢失（`ModuleNotFoundError: _soundfile_data`）→ tuna wheel 直装 0.14.0（含 `libsndfile_x64.dll`）import 正常；`av` 在 Free 7.9 GB 时对 aac `avcodec_open2` 报 `MemoryError`（停 TTS 后 Free 16 GB）。[x] 生成脚本 `training/_t2_v11_tts.py`（6 音色 × 20 文本，16k mono）。
+  - [x] 生成 + 逐件打分（v0.9 部署管线 + 3 实例峰值）：正样本 21/21 入库（>=0.70）、负样本仅 13/119 合格（3 实例全 <0.70）；真人音色克隆定案不可用（60 s 失控）
+  - [x] 新集编号 **15xx**（34 clip）→ 特征（正 ×5 / 合格负 ×1，并入 **v0.9 基线**）→ `train_config_v11.yaml`（steps 3000）→ **v1.1** Recall 0.6179 + 3 轮矩阵 → **不采用，保持 v0.9 + 0.75**
+  - [x] 3 轮落在 `tests/2026-11-12-20-03-41_cc/record_1..3.md` + `opinion.md`（与流萤/白厄合并成一批），累积 `tests/opinion.md` 已追加
 
-## 2026-11-10-22-48-24 commit 标题改中文
+## 2026-11-12-19-23-02 流萤音色权重接入（→ records/2026-11-12-19-23-02.md）
 
-- [x] 长期约定写入 `progress.md`：commit subject 一律中文（`type(AI): 中文标题`，type/scope 英文，与 AGENTS §4 兼容）
-- [x] 用户选定范围「最近 12 条」→ `git branch -f backup-before-reword HEAD` + `git rebase -i`；12 条英文主题全改中文、14 commit 重放、`git diff` 为空；旧→新 hash 对照入 `progress.md`；全程本地、**未 push**
-
-## 2026-11-11-19-45-46 切换 `aili_xiya_v0.6`（Q10 = 选项 1）
-
-- [x] `config.yaml` `wake_word.model` → v0.6，`threshold` 保持 0.7，`chunk_size` 1280；带 3 个 HF 变量重启，health 实测生效
-- [x] 3 轮（`tests/2026-11-11-19-45-46_cc/`）：轮 1 PASS；轮 2 部署管线复放 36.12 s → **v0.6 检出 10 vs v0.3 5**（期望 ≥12 未达）；轮 3 纯噪声 0、合成对抗 4、**现场环境音触发 1 次（0.703）→ 0.7 FAIL**，阈值 0.75 时环境音归零（检出降为 5）
-
-## 2026-11-11-20-34-04 六项批量（TTS 队列 / 新录音训练 / ASR 引擎 / 关 Q5-Q6 / 清理）
-
-- [x] Q12 答复：**保持 v0.6 + 0.7**，「之后训练测试如果更好就换」；Q5/Q6 关闭并归档
-- [x] TTS 按标点切句 + 合成队列（`speak_queued`/`_produce_segments`/`stop_speaking` flush）：3 轮 PASS，**首声 14.08 s → 2.44 s（≈5.8×）、总时长 −27%、打断后 played 0.00 s**
-- [x] 新录音 7 件 → 3 真人近音负样本 → `aili_xiya_v0.7`（近音负 ×5，检出 10→5）/ `aili_xiya_v0.8`（正 ×5 / 负 ×3，检出 12 但近音 fp 3/3、对抗 6>4）→ **均未达标，按 Q12 保持 v0.6 + 0.7**；打分非确定性记 hard_bug.md **HB-032**（边界判定须 ≥3 独立实例）
-- [x] ASR 引擎可切换（sherpa-onnx Paraformer-zh small，`model.int8.onnx` 81.8 MB 已就位）：`stt.engine` + 网页设置项 + 分发/回退 3 轮实测通过；A/B 3 轮 **sim ≥0.8 whisper 3/6 vs sherpa 2/6**（sherpa 快 10–20× 但无 VAD、静默处幻觉、写不出「爱莉希雅」正字）→ **默认保持 whisper**
-- [ ] **给 sherpa 路径加能量门（VAD/静音跳过）**，门生效后重跑 A/B 3 轮再决定 `stt.engine` 默认
-- [x] 根目录清理（Q13 答复后执行，见 2026-11-12-12-12-28 节）
-- [x] 需要更多音频的规格写入 `need_audio.md`
-
-## 2026-11-11-21-36-30 「我没听清，请再说一遍」+ sqlite 热词表（已落盘，**未开工**）
-
-- [ ] 「我没听清，请再说一遍」预合成 wav 入内存 ack 池（`tts.ack_phrases` + `jarvis/tts.py`），**只在识别失败/空转录时播放**，不改 barge-in 语义
-- [ ] `memory.db` 新增小表 `hot_phrases(text, kind, count, first_seen, last_seen)`，kind = user / hot / near_miss，上限 200 行、按 count 淘汰
-- [ ] 热词表接 ASR 偏置：whisper 用 `stt.initial_prompt` 拼 top-N，sherpa-onnx 用原生 hotwords；与 ASR A/B 一起 3 轮验收
-
-## 2026-11-12-10-35-29 第 8 项（真人补录负样本 + TTS 合成负样本判定）
-
-- [x] 清点真人补录（`C:\Users\楼听\Documents\录音` 21 件，8 件新录）→ 15 件负样本入库（11 speech + 4 噪音窗，13xx 编号）
-- [x] TTS 合成 16 件近音词/无关短句 → 7 件峰值 ≥0.7 剔除、9 件低分件排除，**结论：TTS 合成负样本对本项目无效**（GSV 参考音频就是唤醒词音色，同音色近音词在 v0.6 峰值 0.796–0.839 > 真人唤醒整件 0.73–0.75）；**禁 爱丽西亚/艾丽西亚 类**（与唤醒词几乎无区别）
-- [x] `aili_xiya_v0.9` 训练（正 ×5 / 新负 ×2，steps 3000）+ 3 轮部署矩阵 + 0.75/0.80 扫描 → **采用 v0.9 + 阈值 0.75**（12 检出 / 近音 fp 6 / 无关 2 / 对抗 4 / 长噪音 1 / 环境 0，两轴同时优于 v0.6 + 0.7）
-- [ ] 严格判据「真人近音 fp ≤1」**未达标**（v0.9 fp 6–11；0.70/0.75/0.80 三阈值均无法与「13 次 ≥10」同时满足）→ 阻塞于补录（上节缺口）
-- [x] 长噪音发现：62.83 s 长噪音中 rms 18–47 的低响度段在 v0.6 峰值 0.700–0.758（真实低能量噪声可触发）；定标纯噪声（rms<15）三轮全 0
-- [x] 3 轮 + 阈值扫描落 `tests/2026-11-12-10-35-29_cc/record_1..3.md` + `opinion.md`，累积 `tests/opinion.md`
-
-## 2026-11-12-12-12-28 Q13 答复 + 根目录清理
-
-- [x] Q13 标 status: done 并归档 `need_user.md`（AGENTS §3）
-- [x] 新建 `need_audio.md`（格式 `"音频内容", "文件路径"`，路径空 = 需录）
-- [x] 71 个根目录 `_*.py` → `training/`（从 `.gitignore` 移除该规则，进 Git/tree.md）；49 个 `_*` 非脚本 → `.tmp/`；`AI_Benchmark.md`/`JARVIS_STATE.md`/`PROJECT_SUMMARY.txt` → `records/`；`jarvis_screen.png`、`love_silvia.txt` 留根目录（未跟踪）
-- [x] 28 个脚本 `sys.path` 补 `training` 目录，冒烟 `training/_t2_smoke_stream.py` exit 0（prefix 53）
-- [x] 修文档转义损伤：pwsh 双引号串/heredoc 吃反引号转义（`t`=tab、`n`=换行、`a`=BEL、`f`=FF、`v`=VT），曾把 `training/`、`api_`、`asr_ab`、`vad_filter`、`from_paraformer`、`threshold`、`tests/`、`negx_tr_13xx`、`n_samples` 写坏，已逐处修回（控制字符清零）。**规矩：含反引号与 CJK 的文本一律用 write 工具，追加只用 `@' ... '@` 单引号 heredoc**
-
-## 2026-11-12-16-58-46 唤醒 ONNX 全版本对比落盘（→ records/2026-11-12-16-58-46.md）
-
-- [x] 9 个 ONNX（v0.1–v0.9，体积均 13,735 B）对比写入 **`ai_buckup/onnx_opinion.md`**：表 1 版本谱系、表 2 部署管线 3 轮实测矩阵（阈值 0.70/0.75/0.80）、表 3 阈值取舍、结论与缺口、数据源清单；全部数据取自已落盘日志与结论，**未重跑探针**
-- [x] `todo.md` 103 行 > 100 → 归档 `ai_buckup/todo.md_2026-11-12-16-58-46.md` 并压缩（AGENTS §3）
-- [x] `tree.md` 重建、`progress.md` 更新，commit（中文主题）+ hash 追加台账，**禁止 push**
+- [x] 清点：`F:\BaiduNetdiskDownload\流萤` 是**完整 GPT-SoVITS 包** = `GPT_weights\Firefly-e15.ckpt`（155.1 MB）+ `SoVITS_weights\Firefly_e12_s1404.pth` / `Firefly_e16_s1872.pth`（84.9 MB）+ 9 件参考音频（**文件名即台词 = `prompt_text`**）
+- [x] 通路确认：`GPT-SoVITS-main/api_v2.py:555 /set_gpt_weights?weights_path=`、`:567 /set_sovits_weights?weights_path=`（运行时换权重，服务 `:9880` + `.venv-gsv`）
+- [x] 生成脚本接入 `firefly` 音色（换权重 → 20 件 → **换回 Elysia 权重**）；参考音频文件名尾部带空格，需 `os.listdir` 前缀匹配（直接拼路径 `not exists`）。真人音色 `user` 定案**不可用**，矩阵为 7 音色（含白厄）
+- [x] 打分判定：`firefly` 正 3/3 入库、负 2/17 入库（近音/竞品峰值 0.71-0.84 与真唤醒同量级 → 不入库）；合格件入 15xx，并入 v0.9 基线，v1.1 **不采用**
+- [x] 3 轮落 `tests/2026-11-12-20-03-41_cc/record_1..3.md` + `opinion.md`（与 18:49/20:03 合并成一批），累积 `tests/opinion.md` 已追加；commit + hash，禁止 push；`tree.md` 重建
 
 ## 通用规矩（长期，勿违反）
 
@@ -80,12 +46,16 @@
 - [ ] 零截图；不用子智能体（未询问）；commit 中文主题 + hash 追加台账 + **禁止 push**
 - [ ] `progress.md` / `todo.md` > 100 行先归档再压缩；`tree.md` 文件增删后重建（仅非 `.gitignore`）
 
-## 2026-11-12-17-22-40 新补录 14 件音频的可用性验收（→ records/2026-11-12-17-22-40.md）
+## 2026-11-12-20-03-41 白厄（自称 v2ProPlus）权重接入（→ records/2026-11-12-20-03-41.md）
 
-- [x] 逐件解码（时长 / rms，**无过静音**）+ 部署管线打分（v0.9 与 v0.6 @0.7，单探针串行，边界件 3 实例）：**14 次件检出 14/14（max 0.819）、键盘 4 次件 4/4、6 件带噪全命中**；新负样本 fp 7（`米雅` 0.827、`机械键盘噪音` 0.816-0.844 与真呼唤同量级）
-- [x] 3 轮落 `tests/2026-11-12-17-22-40_cc/record_1..3.md` + `opinion.md`，累积 `tests/opinion.md`（轮 2/3 含 @0.75 复扫）
-- [x] 新件入库（36 clip，14xx）→ 重训 **v1.0**（正 ×5 / 负 ×1，26515 / 58128 行，steps 3000）→ **Recall 0.3009：真呼唤 @0.70 合计 10 / @0.75 合计 3 → 未采用**，`config.yaml` 保持 `v0.9 + 0.75`
-- [x] 可复用脚本入 Git：`training/_t2_newaudio_probe.py`、`training/_t2_v10_clips.py`（窗口非重叠校验条件写反已修）、`training/_t2_v10_features.py`、`openWakeWord/train_config_v10.yaml`
-- [x] `need_audio.md` 新增 §7（14 件填路径）+ §5 缺口现状更新
-- [ ] **need_user.md Q14（status: wait）**：真人近音件入库规则冲突裁决（推荐「峰值 ≥0.80 的真人近音件移出训练集、只作验收集」）；裁决后重训 v1.0b + 3 轮矩阵，达标才换 `config.yaml`
-- [ ] 剩余缺口：**竞品唤醒词真人句补 ≥4 条**（现仅 天猫精灵 1 条，规格 ≥5）、**无关中文短句补 ≥3 句**（现 7 句，规格 ≥10）
+- [x] 清点：`白厄_e10_s680.pth` 172.77 MB（>v2 的 106 MB，与 v2ProPlus 参数量一致）+ `白厄-e10.ckpt` 155.31 MB + 5 件参考音频（文件名即台词）；本机 `TTS.py` 支持 v2ProPlus（`default_configs` 行 353-358、assert 行 429），版本由 `get_sovits_version_from_path_fast` 从权重内容自动判定
+- [x] 冒烟通过：首 2 字节 `b"06"` 证实 v2ProPlus；首次失败根因是缺 `GPT_SoVITS/pretrained_models/sv/pretrained_eres2netv2w24s4ep4.ckpt`（v2ProPlus 需 ERes2NetV2，`sv.py:6` 硬编码），从 hf-mirror 补 107,528,697 B 后切换 + 生成 1.06 s 正常，已切回 Elysia 权重
+- [x] 20 文本 × 5 参考音频轮换（音色 `bai_e`，第 7 音色）生成完毕，生成后已切回 Elysia 权重
+- [x] 打分判据不变：`bai_e` 正 3/3 入库、负 6/17 入库；15xx clip 与其余音色合并（34 件），并入 v0.9 基线特征 → `train_config_v11.yaml` → **v1.1 Recall 0.6179** → 3 轮矩阵 **不采用**（0.75 下 14 次件 12 < 14）
+- [x] 3 轮落 `tests/2026-11-12-20-03-41_cc/` + 累积 `tests/opinion.md`；commit 中文主题 + hash，禁止 push
+
+## 2026-11-12-20-47-51 环境音期望值更正（→ records/2026-11-12-20-47-51.md）
+
+- [x] `training/_t2_newaudio_probe.py` 的 `环境音（安静房间）` 期望 1 → **0**（该件无呼唤）
+- [x] `tests/2026-11-12-20-03-41_cc/record_2.md`、`record_3.md` 追加更正节（0.70 下 v1.1 环境音 1 次 = BAD，v0.9 = OK）
+- [x] 累积 `tests/opinion.md` 追加本批结论（含期望口径更正）
