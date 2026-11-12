@@ -154,3 +154,9 @@ eed_user.md、.gitignore **留在根目录**。
 3. ASR 引擎磁盘授权确认：sherpa-onnx + paraformer-zh 约 **30 MB 依赖 + 200–400 MB 模型**（从 hf-mirror 下载），C 盘剩约 17.7 GB。你说「下载下来」我就按此执行，装完给出 whisper/sherpa 真人 A/B 对比表。
 
 **A**: （待用户回复）
+
+### Q13 进度追加（2026-11-12 11:47，status 仍为 wait）
+
+- **音频缺口由你补录部分关闭**：C:\Users\楼听\Documents\录音 现 21 件，11-12 10:11-10:20 新增 8 件。已入库真人负样本 15 件（近音 4：爱莉雅/米雅希/希雅/希雅老师；无关短句 7：那部戏…爱丽…、小爱同学x2、你问我是否爱你、如果说梦想是什么、贾维斯AI项目记录、我爱你；+ 长噪音 4 段低分窗）。**仍缺**：真人近音件（现 7 件，规格 >=10）、干净呼唤补充（现 13 次，规格 >=20）、带噪呼唤补充（现 2 条，规格 >=10）。
+- **第 3 问已执行**（无需再授权）：sherpa-onnx 2.0.1 + core 依赖装好（pip 卡死后改 wheel 直接解包），paraformer-zh small model.int8.onnx **81.8 MB** 已从 hf-mirror 下载（curl --ssl-no-revoke 续传）；whisper/sherpa 真人 A/B 3 轮对比表已给出（	ests/2026-11-12-10-35-29_cc/record_3.md、	ests/opinion.md）：sim>=0.8 whisper 3/6 vs sherpa 2/6，sherpa 快 10-20 倍但无 VAD 会在静默处幻觉（嗯/北京/小一瓶），故 stt.engine 保持 whisper。
+- **第 1 问（清理目标目录）仍未答复 → 第 6 项继续不推进，未移动任何文件**。
