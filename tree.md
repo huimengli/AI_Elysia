@@ -1,13 +1,13 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-12-23-58-00（小收尾：favicon + near_miss 导出）。新增：
-- **`training/_t2_hot_export.py`**（只读导出 `hot_phrases` → `.tmp/hot_phrases_<时间戳>.csv`，列 `kind,text,count,first_seen,last_seen`，`DB=`/`KIND=` 可指定）、`jarvis/static/favicon.ico`（主题色 788 B 四档 ICO）、`jarvis/web.py` 的 `/favicon.ico` 路由 + `index.html` 的 `<link rel="icon">`；
-- `records/2026-11-12-23-58-00.md` + `tests/2026-11-12-23-58-00_cc/`；
-- 上一批新增：`training/_t2_ack_play_probe.py`、`training/_t2_wake_empty_probe.py`、`training/_t2_hot_bias_ab.py`、`records/2026-11-12-23-08-34.md`、`records/2026-11-12-23-08-35.md`、`tests/2026-11-12-23-08-34_cc/`、`tests/2026-11-12-23-08-35_cc/`。
+更新时间: 2026-11-13-00-12-17（收尾 5 项：ONNX 入 Git / hard_bug 归档压缩 / onnx_opinion 补录 / 唤醒模型可切换（9:00 开工）/ 明日开工清单）。新增：
+- **入 Git 的唤醒 ONNX**：`openWakeWord/output/aili_xiya_v0.9/aili_xiya_v0.9.onnx` + `.onnx.data`、`aili_xiya_v1.0c.onnx` + `.onnx.data`（并补上 v0.3 此前缺失的 `.onnx.data` —— onnxruntime 把权重写成外部数据文件，只提交 `.onnx` 的克隆无法加载模型）；
+- `records/2026-11-13-00-12-17.md`、`ai_buckup/hard_bug.md_2026-11-13-00-12-17.md`（321 行全量归档）、`ai_buckup/todo.md_2026-11-13-00-12-17.md`（122 行全量归档）；`ai_buckup/onnx_opinion.md` 追加 v1.0→v1.1（102→151 行）；`hard_bug.md` 压缩为「已解决一行摘要 + 未解决/部分解决全文」；`todo.md` 顶部加 2026-11-13 09:00 开工清单；
+- 上一批新增：`jarvis/static/favicon.ico` + `jarvis/web.py` 的 `/favicon.ico` 路由 + `index.html` 的 `<link rel="icon">`、`training/_t2_hot_export.py`（只读导出 `hot_phrases` CSV）、`records/2026-11-12-23-58-00.md` + `tests/2026-11-12-23-58-00_cc/`。
 
 结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本在 `training/`（86 个，已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：347
+### 文件数（git ls-files --cached --others --exclude-standard）：355
 ```
 JarvisAi/
 ├── .gitignore
@@ -29,6 +29,7 @@ JarvisAi/
 ├── tree.md
 ├── ai_buckup/
 │   ├── hard_bug.md_2026-10-13-17-45.md
+│   ├── hard_bug.md_2026-11-13-00-12-17.md
 │   ├── need_user.md_2026-10-13-09-56-54.md
 │   ├── need_user.md_2026-10-13-17-45.md
 │   ├── need_user.md_2026-10-13-21-12-19.md
@@ -50,6 +51,7 @@ JarvisAi/
 │   ├── todo.md_2026-11-10-21-52-25.md
 │   ├── todo.md_2026-11-12-16-58-46.md
 │   ├── todo.md_2026-11-12-19-23-02.md
+│   ├── todo.md_2026-11-13-00-12-17.md
 │   ├── tree.md_2026-11-11-21-15-00.md
 │   └── tree.md_2026-11-12-11-20-31.md
 ├── dsh-my-presets/
@@ -86,8 +88,15 @@ JarvisAi/
 ├── openWakeWord/
 │   ├── generate_samples.py
 │   └── output/
-│       └── aili_xiya_v0.3/
-│           └── aili_xiya_v0.3.onnx
+│       ├── aili_xiya_v0.3/
+│       │   ├── aili_xiya_v0.3.onnx
+│       │   └── aili_xiya_v0.3.onnx.data
+│       ├── aili_xiya_v0.9/
+│       │   ├── aili_xiya_v0.9.onnx
+│       │   └── aili_xiya_v0.9.onnx.data
+│       └── aili_xiya_v1.0c/
+│           ├── aili_xiya_v1.0c.onnx
+│           └── aili_xiya_v1.0c.onnx.data
 ├── records/
 │   ├── 2026-10-12-12-28-30.md
 │   ├── 2026-10-13-11-45.md
@@ -143,6 +152,7 @@ JarvisAi/
 │   ├── 2026-11-12-23-08-34.md
 │   ├── 2026-11-12-23-08-35.md
 │   ├── 2026-11-12-23-58-00.md
+│   ├── 2026-11-13-00-12-17.md
 │   ├── AI_Benchmark.md
 │   ├── JARVIS_STATE.md
 │   └── PROJECT_SUMMARY.txt
