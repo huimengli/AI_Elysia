@@ -1,7 +1,13 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-12-12-26（**第 6 项根目录清理完成，Q13 status: done**）。变动：根目录 **71 个 `_*` 的 `.py`**（可复用训练链与探针脚本）移入新目录 **`training/`**，`.gitignore` **移除 `_*.py` 规则**，这批脚本从此**进 Git、进本树**；根目录其余 **49 个 `_*`**（`.log`/`.txt`/`.yaml`/`.tar.gz`/`.jinja`/`.wav`，含原跟踪的 `_chat_template.jinja`）移入 `.tmp/`（仍被忽略）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 经 `git mv` 移入 `records/`；`jarvis_screen.png`、`love_silvia.txt` 按你要求**留在根目录**（未跟踪，不 commit）。留在根目录的还有：`start.bat`、`start_all.bat`、`install.bat`、`requirements.txt`、`config.yaml`、`LICENSE`、`README.md`、`AGENTS.md`、`design.md`、`progress.md`、`tree.md`、`todo.md`、`hard_bug.md`、`need_user.md`、`need_audio.md`、`.gitignore`。脚本移入 `training/` 后 28 个脚本的 `sys.path` 已补 `training` 目录（冒烟实测 `training/_t2_smoke_stream.py` 跑通，prefix 53）。新增 `need_audio.md`（格式 `"音频内容", "文件路径"`，路径为空 = 需你录制）。上一版（201 项）已归档 `ai_buckup/tree.md_2026-11-12-11-20-31.md`；`need_user.md` Q5-Q13 全部 done，归档 `ai_buckup/need_user.md_2026-11-12-12-20-21.md`；`progress.md` 归档 `ai_buckup/progress.md_2026-11-12-12-25-50.md`。
-### 文件数（git ls-files --cached --others --exclude-standard）：275
+更新时间: 2026-11-12-16-58-46。新增 3 项：
+- **`ai_buckup/onnx_opinion.md`** — 9 个自训练唤醒 ONNX（v0.1→v0.9）的横向对比台账（版本谱系 / 部署管线 3 轮实测 / 阈值取舍 / HB-032 边界复测 / 结论与缺口），关联 records/2026-11-12-16-58-46.md；
+- `records/2026-11-12-16-58-46.md` — 本批需求记录；
+- `ai_buckup/todo.md_2026-11-12-16-58-46.md` — `todo.md` 103 行 > 100 触发 AGENTS §3 归档（压缩版留在 `todo.md`，60 行）。
+
+结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本 **71 个在 `training/`**（已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。上一版（275 项）内容见归档链 `ai_buckup/tree.md_2026-11-12-11-20-31.md` 的更新说明。
+
+### 文件数（git ls-files --cached --others --exclude-standard）：278
 ```
 JarvisAi/
 ├── .gitignore
@@ -27,6 +33,7 @@ JarvisAi/
 │   ├── need_user.md_2026-10-13-17-45.md
 │   ├── need_user.md_2026-10-13-21-12-19.md
 │   ├── need_user.md_2026-11-12-12-20-21.md
+│   ├── onnx_opinion.md
 │   ├── progress.md_2026-10-15-13-49-00.md
 │   ├── progress.md_2026-11-08-12-40-22.md
 │   ├── progress.md_2026-11-08-18-48.md
@@ -37,6 +44,7 @@ JarvisAi/
 │   ├── progress.md_2026-11-10-23-00-30.md
 │   ├── progress.md_2026-11-12-12-25-50.md
 │   ├── todo.md_2026-11-10-21-52-25.md
+│   ├── todo.md_2026-11-12-16-58-46.md
 │   ├── tree.md_2026-11-11-21-15-00.md
 │   └── tree.md_2026-11-12-11-20-31.md
 ├── dsh-my-presets/
@@ -116,6 +124,7 @@ JarvisAi/
 │   ├── 2026-11-11-20-34-04.md
 │   ├── 2026-11-11-21-36-30.md
 │   ├── 2026-11-12-12-12-28.md
+│   ├── 2026-11-12-16-58-46.md
 │   ├── AI_Benchmark.md
 │   ├── JARVIS_STATE.md
 │   └── PROJECT_SUMMARY.txt
