@@ -48,3 +48,4 @@
 5. 浏览器共享插件阻塞于 Chrome `--remote-debugging-port=9222` + Playwright MCP 授权。
 6. 25 条更早的英文 commit 标题按你的选择保持原样，不动。
 - 最新一条：`45b0ce4` `fix(AI): 修复 pwsh 双引号转义吃字符造成的文档损伤（training/api_/asr_ab/vad_filter/threshold/tests 等），并记录落盘规矩`（7 files / 87+ / 132-；**已本地 commit，未 push**）。
+- 最新两条：`45b0ce4` `fix(AI): 修复 pwsh 双引号转义吃字符造成的文档损伤…`（7 files / 87+ / 132-）与 `f67e121` `docs(AI): tree.md 重生成（275 项，_chat_template.jinja 已随清理出树）`（1 file / 312+）。均**已本地 commit，未 push**。
