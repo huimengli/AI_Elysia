@@ -50,3 +50,4 @@
 6. 25 条更早的英文 commit 标题按你的选择保持原样，不动。
 - 最新一条：`45b0ce4` `fix(AI): 修复 pwsh 双引号转义吃字符造成的文档损伤（training/api_/asr_ab/vad_filter/threshold/tests 等），并记录落盘规矩`（7 files / 87+ / 132-；**已本地 commit，未 push**）。
 - 最新两条：`45b0ce4` `fix(AI): 修复 pwsh 双引号转义吃字符造成的文档损伤…`（7 files / 87+ / 132-）与 `f67e121` `docs(AI): tree.md 重生成（275 项，_chat_template.jinja 已随清理出树）`（1 file / 312+）。均**已本地 commit，未 push**。
+- 最新三条：`c19988c` `docs(AI): 把 45b0ce4 / f67e121 的 hash 追加到进度台账`（1 file）与 `f68a766` `docs(AI): 9 个唤醒 ONNX 全版本对比落盘 ai_buckup/onnx_opinion.md（谱系+3 轮部署矩阵+阈值取舍+HB-032 复测），todo.md 103 行归档压缩、tree.md 278 项`（6 files / 314+ / 96-）。均**已本地 commit，未 push**。
