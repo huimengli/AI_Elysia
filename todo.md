@@ -84,3 +84,4 @@
 - [ ] 严格判据「真人近音 fp <=1」未达标（v0.9 fp 6-11）：需要 >=10 件真人近音负样本与 >=10 句真人无关短句，仍阻塞于 Q13（status: wait）
 - [ ] ASR 引擎 A/B 3 轮（whisper vs sherpa，已知文本 6 件 + 12 条真实 capture wav，.tmp/probe_asr_ab.py，rounds 记录进 	ests/2026-11-12-10-35-29_cc/）→ 达标才把 stt.engine 设为默认
 - [ ] commit（中文主题）+ hash 追加台账，**禁止 push**
+- [ ] ASR：给 sherpa 路径加能量门（VAD/静音跳过，避免 嗯/北京/小一瓶 类幻觉），门生效后重跑 A/B 3 轮再决定 stt.engine 默认（当前保持 whisper；3 轮实测 sim whisper 3/6 vs sherpa 2/6，sherpa 快 10-20 倍）
