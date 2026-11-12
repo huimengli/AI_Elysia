@@ -8,7 +8,7 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 
 from jarvis.tts import speak_streamed, stop_speaking, is_speaking
 
@@ -55,6 +55,18 @@ async def _async_broadcast(event: dict) -> None:
 @app.get("/", response_class=HTMLResponse)
 async def index():
     return HTMLResponse((_STATIC_DIR / "index.html").read_text(encoding="utf-8"))
+
+
+@app.get("/favicon.ico", response_class=FileResponse)
+async def favicon():
+    """浏览器每次访问页面都会自动取 `/favicon.ico`；缺文件时控制台永远有一条 404
+    （实测 `tests/2026-11-12-23-08-35_cc/record_2.md`）。图标是主题色（粉 + 丁香 + 金）
+    的小圆盘，16/32/48/64 四档尺寸，放在 `jarvis/static/`（与 `index.html` 同一约定）。
+    """
+    p = _STATIC_DIR / "favicon.ico"
+    if not p.is_file():
+        return Response(status_code=204)  # 宁可不给图标，也不要抛 500
+    return FileResponse(p, media_type="image/x-icon")
 
 
 # ─── Provider APIs ───

@@ -114,3 +114,9 @@
 - [x] 3 轮验证全过（工具清单 / 打开 `http://127.0.0.1:7860/` 读快照 / `browser_find` 零截图读 4 盏灯，与 `/api/health` 一致）；页面唯一 console 错误 = favicon 404（良性）；未写 `hard_bug.md`（无阻塞）
 - [x] 落盘 + commit 中文主题 + hash 追加台账，禁止 push
 - [ ] 待你点头才动代码：把 Jarvis「看屏幕」任务从截图路径改走 `browser_snapshot`/`browser_find`/`browser_click`（零截图）
+
+## 2026-11-12-23-58-00 小收尾：favicon + near_miss 导出（→ records/2026-11-12-23-58-00.md）
+
+- [x] web UI 加 favicon：`jarvis/static/favicon.ico`（主题色 16/32/48/64 四档，788 B）+ `jarvis/web.py` `/favicon.ico` 路由（`FileResponse`，缺文件 204 不抛 500）+ `index.html` `<link rel="icon">`
+- [x] `training/_t2_hot_export.py`（入 Git，只读）：`hot_phrases` 按 `kind` 导出 CSV（`kind,text,count,first_seen,last_seen`，count 降序，`DB=`/`KIND=` 可指定）
+- [x] 3 轮验证全过（`curl` 200/788 字节哈希一致 / 浏览器 console **0 error**，原 1 条 404 消除 / 导出判据：现役 12 行、只 near_miss 1 行、临时库 60→20 行顺序正确、现役库未被污染）→ `tests/2026-11-12-23-58-00_cc/record_1..3.md` + `opinion.md`，累积 `tests/opinion.md`；`tree.md` 重建；commit 中文主题 + hash 追加台账，禁止 push；服务重启 + 4 灯复核

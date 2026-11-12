@@ -1,13 +1,13 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-12-23-08-34（未完项 1：「我没听清，请再说一遍」入 RAM 应答池 + hot_phrases 小表；未完项 4：浏览器连接器）。新增：
-- **`training/_t2_ack_play_probe.py`**（具名应答池 + 打断语义）、**`training/_t2_wake_empty_probe.py`**（空转录/低质量分支，monkeypatch 只测应答路径）、**`training/_t2_hot_bias_ab.py`**（hot_phrases 表 + whisper initial_prompt 偏置 A/B，复用 `_t2_asr_ab_gate.py` 的已知 6 件）；
-- `records/2026-11-12-23-08-34.md`、`records/2026-11-12-23-08-35.md`、`tests/2026-11-12-23-08-34_cc/`、`tests/2026-11-12-23-08-35_cc/`；
-- 上一批新增：`training/_t2_asr_ab_gate.py`、`records/2026-11-12-22-51-09.md`、`tests/2026-11-12-22-51-09_cc/`、`ai_buckup/need_user.md_2026-11-12-22-51-09.md`。
+更新时间: 2026-11-12-23-58-00（小收尾：favicon + near_miss 导出）。新增：
+- **`training/_t2_hot_export.py`**（只读导出 `hot_phrases` → `.tmp/hot_phrases_<时间戳>.csv`，列 `kind,text,count,first_seen,last_seen`，`DB=`/`KIND=` 可指定）、`jarvis/static/favicon.ico`（主题色 788 B 四档 ICO）、`jarvis/web.py` 的 `/favicon.ico` 路由 + `index.html` 的 `<link rel="icon">`；
+- `records/2026-11-12-23-58-00.md` + `tests/2026-11-12-23-58-00_cc/`；
+- 上一批新增：`training/_t2_ack_play_probe.py`、`training/_t2_wake_empty_probe.py`、`training/_t2_hot_bias_ab.py`、`records/2026-11-12-23-08-34.md`、`records/2026-11-12-23-08-35.md`、`tests/2026-11-12-23-08-34_cc/`、`tests/2026-11-12-23-08-35_cc/`。
 
-结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本在 `training/`（85 个，已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。
+结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本在 `training/`（86 个，已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：340
+### 文件数（git ls-files --cached --others --exclude-standard）：347
 ```
 JarvisAi/
 ├── .gitignore
@@ -67,6 +67,7 @@ JarvisAi/
 │   ├── wake.py
 │   ├── web.py
 │   ├── static/
+│   │   ├── favicon.ico
 │   │   └── index.html
 │   └── tools/
 │       ├── __init__.py
@@ -141,6 +142,7 @@ JarvisAi/
 │   ├── 2026-11-12-22-51-09.md
 │   ├── 2026-11-12-23-08-34.md
 │   ├── 2026-11-12-23-08-35.md
+│   ├── 2026-11-12-23-58-00.md
 │   ├── AI_Benchmark.md
 │   ├── JARVIS_STATE.md
 │   └── PROJECT_SUMMARY.txt
@@ -300,7 +302,12 @@ JarvisAi/
 │   │   ├── record_1.md
 │   │   ├── record_2.md
 │   │   └── record_3.md
-│   └── 2026-11-12-23-08-35_cc/
+│   ├── 2026-11-12-23-08-35_cc/
+│   │   ├── opinion.md
+│   │   ├── record_1.md
+│   │   ├── record_2.md
+│   │   └── record_3.md
+│   └── 2026-11-12-23-58-00_cc/
 │       ├── opinion.md
 │       ├── record_1.md
 │       ├── record_2.md
@@ -356,6 +363,7 @@ JarvisAi/
     ├── _t2_diag_v02b.py
     ├── _t2_exp_stream_vs_batch.py
     ├── _t2_hot_bias_ab.py
+    ├── _t2_hot_export.py
     ├── _t2_make_val_fp_v02.py
     ├── _t2_miya_score_curve.py
     ├── _t2_newaudio_probe.py

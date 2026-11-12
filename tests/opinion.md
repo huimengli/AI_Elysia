@@ -265,3 +265,9 @@ o_speech_seconds）本批未实施，仍挂在 todo。
 1. **阻塞原因不是 Chrome 调试端口，是连接器从未安装**：货架有 `[playwright]`（`none` 鉴权，另有 `chrome-devtools`/`firefox-devtools`），已配置的只有 `json-mcp-unity` 与 `custom-wow-sight`（都 `host-tools-pending`）。`mcp_connector_connect(connectorId="playwright")` **一次直连成功**，注册 **25 个工具**。
 2. **3 轮全过**：① 货架/状态探测 ✓；② 连接 + `browser_navigate` 到 `http://127.0.0.1:7860/`（`Page Title: 爱莉希雅`）+ `browser_snapshot` 读到 4 灯区 / LLM 下拉框 / 🔈 / textbox / 工具·实时·快捷·设置 ✓；③ `browser_find` 不截图读到 4 盏灯 —— 唤醒 `aili_xiya_v0.9.onnx / 0.75 / peak 0.422 / 23:51:46`、语音识别 `whisper small cpu zh`、LLM `:8080`、TTS `:9880`，与 `/api/health` 一致 ✓。页面唯一 console 错误 = `favicon.ico` 404（良性）。
 3. **零截图达成**：读页面走可访问性快照（`browser_snapshot`/`browser_find`），与 AGENTS「禁止大量截图」一致；若要共享**你正在用的 Chrome**（已打开的页面），才需要 Chrome 带 `--remote-debugging-port=9222` 启动 —— 必须你在 Chrome 侧配合，我不擅自拉起带调试端口的浏览器。
+
+## 2026-11-13 00:00 小收尾：favicon + near_miss 导出（详见 tests/2026-11-12-23-58-00_cc/opinion.md）
+
+1. **favicon**：`.tmp/gen_favicon.py`（PIL，主题色粉/丁香/金/玫瑰）→ `jarvis/static/favicon.ico`（16/32/48/64 四档，788 B）；`jarvis/web.py` 新增 `@app.get("/favicon.ico")`（`FileResponse`，缺文件 204 不抛 500）+ `index.html` 加 `<link rel="icon">`。3 轮：`curl` = **200 / 788 字节哈希一致**；浏览器 `console_messages(error)` **0 条**（上一批是 1 条 404）。
+2. **near_miss 导出**：`training/_t2_hot_export.py`（入 Git，**只读**）把 `hot_phrases` 导出 `.tmp/hot_phrases_<时间戳>.csv`，列 `kind,text,count,first_seen,last_seen` 按 count 降序，`DB=`/`KIND=` 可指定库与类别。判据全过：现役库 12 行（`near_miss 1 / user 11`）、只导 near_miss 1 行；临时库 60 行（40 user + 20 near_miss）与只导 20 行顺序正确；**现役库导出后仍 12 行（未被污染）**。
+3. **通路打通**：真实转录写入近音行 → 导出 CSV → 作后续重训/验收负样本（records/2026-11-11-21-36-30.md 第 3 项、Q13 真人近音来源同一）。现役库只 1 条 near_miss，需真实使用累积。
