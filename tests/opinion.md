@@ -131,8 +131,8 @@
 
 - 需求：①「有一次录制慢了30s」；② 用真人录音分割后重训练 onnx；③ 追加「将噪音和已有音频样本混合，进行抗干扰的后训练」（
 ecords/2026-11-10-21-02-16.md）。
-- 3 轮（零截图，脚本打分）：① 录音解码 36.12 s，ASR 词级时间戳只确认 **4 次**「爱莉希雅」（1.3–2.5、2.8–4.6、30.6–31.7、33.1–34.3，后两次繁体 愛里西亞），24 s 出现 prompt 词幻觉（该段无可识别语音），v0.3 全文件 mean 0.39 / peak 0.753 —— 噪声本身就能把分抬到 0.7；② 真人 clip（2 训练正 + 2 验收留出 + 11 真人负 + 10 静音负）走既有流式滑窗管线并入 v0.3 特征，steps 2500 训练 ili_xiya_v0.4.onnx：阈值 0.7 真人 fp 0.70→0.20（方向对），真人 recall 0.50（FAIL）；③ 噪声池按 SNR -5/0/5/10 dB 与真人/合成样本混合 164 条 + 8 条纯噪声负样本，真人行 ×5、带噪 ×2，训练 ili_xiya_v0.5.onnx：带噪 fp 0.69→0.00（抗干扰目标达成），但 recall 全面塌陷（合成 0.60、真人 0.00）=> 整体 **FAIL**。
-- 结论：抗干扰后训练**有效且值得保留**（带噪 fp 归零、真人 fp 大降），失败点不在方法而在**真人正样本量**（真人正特征仅 24/120 行，呼唤本身电平弱）。config.yaml **不改**，Jarvis 继续用 ili_xiya_v0.3.onnx + 	hreshold 0.7；v0.4/v0.5 留在 openWakeWord/output/ 作为下一轮补录后的基线。补录要求（≥20 次干净呼唤，安静+带噪各半、离麦近）已写入 
+- 3 轮（零截图，脚本打分）：① 录音解码 36.12 s，ASR 词级时间戳只确认 **4 次**「爱莉希雅」（1.3–2.5、2.8–4.6、30.6–31.7、33.1–34.3，后两次繁体 愛里西亞），24 s 出现 prompt 词幻觉（该段无可识别语音），v0.3 全文件 mean 0.39 / peak 0.753 —— 噪声本身就能把分抬到 0.7；② 真人 clip（2 训练正 + 2 验收留出 + 11 真人负 + 10 静音负）走既有流式滑窗管线并入 v0.3 特征，steps 2500 训练 aili_xiya_v0.4.onnx：阈值 0.7 真人 fp 0.70→0.20（方向对），真人 recall 0.50（FAIL）；③ 噪声池按 SNR -5/0/5/10 dB 与真人/合成样本混合 164 条 + 8 条纯噪声负样本，真人行 ×5、带噪 ×2，训练 aili_xiya_v0.5.onnx：带噪 fp 0.69→0.00（抗干扰目标达成），但 recall 全面塌陷（合成 0.60、真人 0.00）=> 整体 **FAIL**。
+- 结论：抗干扰后训练**有效且值得保留**（带噪 fp 归零、真人 fp 大降），失败点不在方法而在**真人正样本量**（真人正特征仅 24/120 行，呼唤本身电平弱）。config.yaml **不改**，Jarvis 继续用 aili_xiya_v0.3.onnx + threshold 0.7；v0.4/v0.5 留在 openWakeWord/output/ 作为下一轮补录后的基线。补录要求（≥20 次干净呼唤，安静+带噪各半、离麦近）已写入 
 eed_user.md Q8。
 - 新登记遗留：高分未标注窗口（27.0–30.2、31.7–32.7）未入库，等 Q8 确认；「无人说话录满 30 s」的代码修复（
 o_speech_seconds）本批未实施，仍挂在 todo。
@@ -171,7 +171,7 @@ o_speech_seconds）本批未实施，仍挂在 todo。
 
 ## 2026-11-12-10-35-29 批次（真人补录负样本 → v0.9；TTS 合成负样本实测排除）— 3 轮验证结论
 
-3 轮一致（	ests/2026-11-12-10-35-29_cc/，阈值 0.7，部署管线逐块 1280 + reset + 2 s 冷却）：
+3 轮一致（tests/2026-11-12-10-35-29_cc/，阈值 0.7，部署管线逐块 1280 + reset + 2 s 冷却）：
 
 | 模型 | 13 次真人呼唤（36.12 s） | 真人近音 fp（7 件） | 真人无关短句 fp（7 件） | 合成对抗（20 条） | 定标纯噪声 | 长噪音 4 段 | 环境音 10 s |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -187,7 +187,7 @@ o_speech_seconds）本批未实施，仍挂在 todo。
 
 ## ASR 引擎 A/B（3 轮，2026-11-12-10-35-29 第 3 轮记录；引擎开关来自 2026-11-11-20-34-04 第 4 项）
 
-3 轮（sr_ab_r3/r4/r5.log）结果**逐条完全一致**，耗时稳定：
+3 轮（asr_ab_r3/r4/r5.log）结果**逐条完全一致**，耗时稳定：
 
 | 真值（文件名） | whisper sim | sherpa sim | whisper 耗时 | sherpa 耗时 |
 | --- | --- | --- | --- | --- |
@@ -199,8 +199,8 @@ o_speech_seconds）本批未实施，仍挂在 todo。
 | 米希雅 | 0.67 | 0.67 | 2745-3167 ms | **134-150 ms** |
 
 - **sim >=0.8：whisper 3/6，sherpa 2/6（三轮同）**。长句 18.30 s：whisper 8218 ms vs sherpa 418 ms，文本质量相当。
-- **sherpa 无 VAD，是致命弱点**：12 条真实抓取里 7 条几乎无人声，whisper（ad_filter=True）正确返回空串（走「没听清」路径），sherpa 产生幻觉：嗯 / 有有逼 / 北京 / 你就我特我 / 小一瓶 / 啊 —— 会被当作用户指令送进 LLM 触发错误动作。
+- **sherpa 无 VAD，是致命弱点**：12 条真实抓取里 7 条几乎无人声，whisper（vad_filter=True）正确返回空串（走「没听清」路径），sherpa 产生幻觉：嗯 / 有有逼 / 北京 / 你就我特我 / 小一瓶 / 啊 —— 会被当作用户指令送进 LLM 触发错误动作。
 - sherpa 写不出唤醒词正字：爱丽希亚 / 泰利西亚泰利西亚（whisper 爱莉希雅）。
-- **结论：stt.engine 保持 whisper，sherpa 作为网页可选项保留**（长句/低延迟场景手动切换，快 10-20 倍）。分发已实测：PUT /api/settings {"stt":{"engine":"sherpa"}} → 	ranscribe_audio 走 sherpa 得 你能看得见屏幕吗；切回 whisper 得 你能看得见屏幕吗?（同一音频，两条路径都正确）。
-- 待办（写 	odo.md）：给 sherpa 路径加能量门（VAD/静音跳过），门生效后重跑 A/B 3 轮再决定默认；热词表（2026-11-11-21-36-30 第 2 项）接 sherpa 原生 hotwords + whisper initial_prompt。
-- 顺带修正的 API（前两轮是失败诊断，不是引擎质量结论）：rom_paraformer(paraformer=, tokens=, num_threads=)（无 paraformer_model/language_hints）；OfflineStream.accept_waveform(sample_rate, samples)（无 ccept_audio）；probe 需带 HF_ENDPOINT/HF_HOME/HF_HUB_DISABLE_XET，否则 whisper 去联网下载报 LocalEntryNotFoundError。
+- **结论：stt.engine 保持 whisper，sherpa 作为网页可选项保留**（长句/低延迟场景手动切换，快 10-20 倍）。分发已实测：PUT /api/settings {"stt":{"engine":"sherpa"}} → transcribe_audio 走 sherpa 得 你能看得见屏幕吗；切回 whisper 得 你能看得见屏幕吗?（同一音频，两条路径都正确）。
+- 待办（写 todo.md）：给 sherpa 路径加能量门（VAD/静音跳过），门生效后重跑 A/B 3 轮再决定默认；热词表（2026-11-11-21-36-30 第 2 项）接 sherpa 原生 hotwords + whisper initial_prompt。
+- 顺带修正的 API（前两轮是失败诊断，不是引擎质量结论）：from_paraformer(paraformer=, tokens=, num_threads=)（无 paraformer_model/language_hints）；OfflineStream.accept_waveform(sample_rate, samples)（无 accept_audio）；probe 需带 HF_ENDPOINT/HF_HOME/HF_HUB_DISABLE_XET，否则 whisper 去联网下载报 LocalEntryNotFoundError。

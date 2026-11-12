@@ -313,7 +313,7 @@
 - 时间：2026-11-11-21:12 发现
 - 状态：未解决（测量规范已定，数据缺口需用户补录音，见 need_user.md Q13）
 - 影响：唤醒验收与模型换代判据的边界样本结论会随运行翻转。真人近音负样本 '爱丽安娜'/'爱丽丝' 在 v0.6 上 0.7 阈值下的检出 1/1 → 1/0 两次运行不一致，直接决定「是否换模型」的判定。
-- 现象：同一音频、同一 ili_xiya_v0.6.onnx、同一部署管线，3 次独立 Model 实例（.tmp\bats\v06determinism.log）：ailianna max 0.753 / 0.730 / 0.732（≥0.7 的 chunk 数 7/4/4），aisli max 0.681 / 0.713 / 0.671（0/1/0）。漂移 ±0.02–0.07。
+- 现象：同一音频、同一 aili_xiya_v0.6.onnx、同一部署管线，3 次独立 Model 实例（.tmp\bats\v06determinism.log）：ailianna max 0.753 / 0.730 / 0.732（≥0.7 的 chunk 数 7/4/4），aisli max 0.681 / 0.713 / 0.671（0/1/0）。漂移 ±0.02–0.07。
 - 尝试：把打分改成与线上完全一致（1280 chunk 逐块、检出后 reset、2 s 冷却）仍不复现同值；训练日志 Final Model False Positives per Hour: 0.0（三次训练都是 0.0）也压不住边界翻转。
 - 根因：openwakeword.utils.AudioFeatures.__init__ 用 
 p.random.randint(-1000, 1000, 16000*4) 的随机噪声初始化特征缓冲（utils.py L169），1 s warmup 前缀进入 embedding 流状态，逐 chunk 分数随之每次漂移；贴近 0.7 的近音样本因此落在阈值两侧。

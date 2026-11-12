@@ -68,8 +68,8 @@
 
 ## 2026-11-11-21-36-30 「我没听清，请再说一遍」入 ack 池 + sqlite 热词(热句)小表（→ records/2026-11-11-21-36-30.md）**本批只落盘，明天开工**
 
-- [ ] 「我没听清，请再说一遍」预合成 wav 入内存 ack 池（config.yaml 	ts.ack_phrases + jarvis/tts.py），**只在识别失败/空转录时播放**，不改 barge-in 语义
-- [ ] memory.db 新增小表 hot_phrases(text, kind, count, first_seen, last_seen)，kind = user / hot / near_miss；写入点为 	ranscribe_audio 成功与近音误识，上限 200 行、按 count 淘汰
+- [ ] 「我没听清，请再说一遍」预合成 wav 入内存 ack 池（config.yaml tts.ack_phrases + jarvis/tts.py），**只在识别失败/空转录时播放**，不改 barge-in 语义
+- [ ] memory.db 新增小表 hot_phrases(text, kind, count, first_seen, last_seen)，kind = user / hot / near_miss；写入点为 transcribe_audio 成功与近音误识，上限 200 行、按 count 淘汰
 - [ ] 热词表接 ASR 偏置：whisper 用 stt.initial_prompt 拼 top-N，sherpa-onnx 用原生 hotwords；与 ASR A/B（2026-11-11-20-34 第 4 项）一起 3 轮验收
 - [ ] 续传 paraformer-zh model.int8.onnx（81.8 MB，hf-mirror 多次停滞于 9.6 MB，需换源）→ 跑 .tmp/probe_asr_ab.py 3 轮 A/B（已知文本 6 件 + 12 条真实 capture wav）
 - [ ] commit（中文主题）+ hash 追加台账，**禁止 push**
@@ -82,18 +82,22 @@
 - [x] TTS 合成 16 件近音词/无关短句 → 7 件峰值 >=0.7 剔除、9 件低分件排除，**结论：TTS 合成负样本对本项目无效**（同音色 = 唤醒词音色）
 - [x] v0.9 训练（正 x5 / 新负 x2，steps 3000）+ 3 轮部署矩阵 + 阈值 0.75/0.80 扫描 → **采用 v0.9 + 0.75**（12 检出 / fp 6 / 对抗 4 / 环境 0，两轴同时优于现役）
 - [ ] 严格判据「真人近音 fp <=1」未达标（v0.9 fp 6-11）：需要 >=10 件真人近音负样本与 >=10 句真人无关短句，仍阻塞于 Q13（status: wait）
-- [ ] ASR 引擎 A/B 3 轮（whisper vs sherpa，已知文本 6 件 + 12 条真实 capture wav，.tmp/probe_asr_ab.py，rounds 记录进 	ests/2026-11-12-10-35-29_cc/）→ 达标才把 stt.engine 设为默认
+- [ ] ASR 引擎 A/B 3 轮（whisper vs sherpa，已知文本 6 件 + 12 条真实 capture wav，.tmp/probe_asr_ab.py，rounds 记录进 tests/2026-11-12-10-35-29_cc/）→ 达标才把 stt.engine 设为默认
 - [ ] commit（中文主题）+ hash 追加台账，**禁止 push**
 - [ ] ASR：给 sherpa 路径加能量门（VAD/静音跳过，避免 嗯/北京/小一瓶 类幻觉），门生效后重跑 A/B 3 轮再决定 stt.engine 默认（当前保持 whisper；3 轮实测 sim whisper 3/6 vs sherpa 2/6，sherpa 快 10-20 倍）
 
 ## 新需求 2026-11-12-12-12-28（Q13 答复 + 根目录清理）(→ records/2026-11-12-12-12-28.md)
 
-- [ ] Q13 标 status: done 并归档 need_user.md 到 ai_buckup/（AGENTS §3）
-- [ ] 新建 need_audio.md：逐条 ""音频内容"", ""文件路径""（无音频则路径留空，需用户录）
-- [ ] 根目录全部 _*.py 移入 training/，并从 .gitignore 移除该规则（进 Git、进 tree.md）
-- [ ] 根目录其余 _* 文件（.log/.txt/.yaml/.gz/.jinja/.wav）移入 .tmp/（仍被忽略）
-- [ ] jarvis_screen.png、love_silvia.txt **留在根目录**（用户明确不动）
-- [ ] AI_Benchmark.md、JARVIS_STATE.md、PROJECT_SUMMARY.txt 移入 records/（git mv，保留历史）
-- [ ] 修 sys.path 与训练/验证调用路径（脚本从 training/ 导入），复跑一次训练链冒烟
-- [ ] 重建 tree.md（training/*.py 入树），commit（中文主题）+ hash 追加台账，**禁止 push**
-- [ ] 下载类任务一律后台任务，不阻塞（Q13 第 3 问）
+- [x] Q13 标 status: done 并归档 need_user.md 到 ai_buckup/（AGENTS §3）
+- [x] 新建 need_audio.md：逐条 ""音频内容"", ""文件路径""（无音频则路径留空，需用户录）
+- [x] 根目录全部 _*.py 移入 training/，并从 .gitignore 移除该规则（进 Git、进 tree.md）
+- [x] 根目录其余 _* 文件（.log/.txt/.yaml/.gz/.jinja/.wav）移入 .tmp/（仍被忽略）
+- [x] jarvis_screen.png、love_silvia.txt **留在根目录**（用户明确不动）
+- [x] AI_Benchmark.md、JARVIS_STATE.md、PROJECT_SUMMARY.txt 移入 records/（git mv，保留历史）
+- [x] 修 sys.path 与训练/验证调用路径（脚本从 training/ 导入），复跑一次训练链冒烟
+- [x] 重建 tree.md（training/*.py 入树），commit（中文主题）+ hash 追加台账，**禁止 push**
+- [x] 下载类任务一律后台任务，不阻塞（Q13 第 3 问）
+
+- [x] 2026-11-12 12:30 修文档转义损伤：pwsh 双引号 heredoc 会吃掉反引号转义（	=tab、
+=换行、=BEL、、），曾把 training/api_/asr_ab/vad_filter/from_paraformer/threshold/tests 写坏；已逐处修回（hard_bug.md、records/2026-11-11-20-34-04.md、tests/opinion.md、todo.md 内控制字符清零）。规矩：含反引号/CJK 的文本一律用 write 工具或 @' ... '@ 单引号 heredoc，Add-Content 只用单引号 heredoc。
+- [x] 2026-11-12 12:30 修文档转义损伤：pwsh 双引号字符串/heredoc 会吃掉反引号转义（反引号+t=制表符、反引号+n=换行、反引号+a=BEL、反引号+f、反引号+v），曾把 training / api_ / asr_ab / vad_filter / from_paraformer / threshold / tests / negx_ 写坏；已逐处修回（hard_bug.md、records/2026-11-11-20-34-04.md、tests/opinion.md、todo.md 内控制字符清零）。规矩：含反引号与 CJK 的文本一律用 write 工具，追加用 @' ... '@ 单引号 heredoc，禁用 @" ... "@ 写含反引号的内容。
