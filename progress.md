@@ -53,3 +53,4 @@
 - 最新三条：`c19988c` `docs(AI): 把 45b0ce4 / f67e121 的 hash 追加到进度台账`（1 file）与 `f68a766` `docs(AI): 9 个唤醒 ONNX 全版本对比落盘 ai_buckup/onnx_opinion.md（谱系+3 轮部署矩阵+阈值取舍+HB-032 复测），todo.md 103 行归档压缩、tree.md 278 项`（6 files / 314+ / 96-）。均**已本地 commit，未 push**。
 - 最新四条：`e4599e9` `docs(AI): 把 c19988c / f68a766 的 hash 追加到进度台账`（1 file）与 `ed7e504` `docs(AI): tree.md 头部修正 todo 压缩版行数（81 行 / 非空 60 行）`（1 file / 1+ / 1-）。均**已本地 commit，未 push**；`e4599e9` / `ed7e504` 这两条 hash 追加 commit 的自身 hash 按惯例不再单独入账。
 - 最新五条：`77750e1` `docs(AI): 把 e4599e9 / ed7e504 的 hash 追加到进度台账`（1 file）与 `95722b9` `docs(AI): 补入上批 progress.md 归档件（tree.md 已列，此前未跟踪）`（1 file / 102+）。均**已本地 commit，未 push**。
+- 最新六条：`54c797c` `docs(AI): 把 77750e1 / 95722b9 的 hash 追加到进度台账`（1 file）与 `498ee45` `docs(AI): tree.md 重生成（278 项，progress.md 归档件已跟踪，计数不变）`（1 file / 4+ / 4-；本条由 `aa3d23c` 本地 `--amend` 改写主题而来，未 push）。本批 `tree.md` 278 项、`todo.md` 81 行、`progress.md` 56 行。
