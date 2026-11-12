@@ -1,13 +1,13 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-12-16-58-46。新增 3 项：
-- **`ai_buckup/onnx_opinion.md`** — 9 个自训练唤醒 ONNX（v0.1→v0.9）的横向对比台账（版本谱系 / 部署管线 3 轮实测 / 阈值取舍 / HB-032 边界复测 / 结论与缺口），关联 records/2026-11-12-16-58-46.md；
-- `records/2026-11-12-16-58-46.md` — 本批需求记录；
-- `ai_buckup/todo.md_2026-11-12-16-58-46.md` — `todo.md` 103 行 > 100 触发 AGENTS §3 归档（压缩版留在 `todo.md`，60 行）。
+更新时间: 2026-11-12-17-22-40（新补录音频验收批）。新增：
+- **`training/_t2_newaudio_probe.py`**（新件 + 全矩阵部署管线探针，可复用入 Git）、**`training/_t2_v10_clips.py`**（14xx clip 切分）、**`training/_t2_v10_features.py`**（特征并入 v0.9 集）、`openWakeWord/train_config_v10.yaml`；
+- `records/2026-11-12-17-22-40.md` 本批需求记录 + `tests/2026-11-12-17-22-40_cc/record_1..3.md` + `opinion.md`；
+- 上一批新增：`ai_buckup/onnx_opinion.md`（9 个唤醒 ONNX 横向对比台账）、`ai_buckup/todo.md_2026-11-12-16-58-46.md`（`todo.md` 103 行归档）、`ai_buckup/progress.md_2026-11-12-12-25-50.md`（已补入跟踪）。
 
-结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本 **71 个在 `training/`**（已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。上一版（275 项）内容见归档链 `ai_buckup/tree.md_2026-11-12-11-20-31.md` 的更新说明。
+结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本在 `training/`（本批后 74 个，已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录；本批新增 §7 与 §5 现状更新）。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：278
+### 文件数（git ls-files --cached --others --exclude-standard）：286
 ```
 JarvisAi/
 ├── .gitignore
@@ -125,6 +125,7 @@ JarvisAi/
 │   ├── 2026-11-11-21-36-30.md
 │   ├── 2026-11-12-12-12-28.md
 │   ├── 2026-11-12-16-58-46.md
+│   ├── 2026-11-12-17-22-40.md
 │   ├── AI_Benchmark.md
 │   ├── JARVIS_STATE.md
 │   └── PROJECT_SUMMARY.txt
@@ -244,7 +245,12 @@ JarvisAi/
 │   │   ├── record_4.md
 │   │   ├── record_5.md
 │   │   └── record_6.md
-│   └── 2026-11-12-10-35-29_cc/
+│   ├── 2026-11-12-10-35-29_cc/
+│   │   ├── opinion.md
+│   │   ├── record_1.md
+│   │   ├── record_2.md
+│   │   └── record_3.md
+│   └── 2026-11-12-17-22-40_cc/
 │       ├── opinion.md
 │       ├── record_1.md
 │       ├── record_2.md
@@ -298,6 +304,7 @@ JarvisAi/
     ├── _t2_diag_v02b.py
     ├── _t2_exp_stream_vs_batch.py
     ├── _t2_make_val_fp_v02.py
+    ├── _t2_newaudio_probe.py
     ├── _t2_smoke_stream.py
     ├── _t2_stream_features_v02.py
     ├── _t2_synth_neg.py
@@ -316,6 +323,8 @@ JarvisAi/
     ├── _t2_v06_clips.py
     ├── _t2_v06_features.py
     ├── _t2_v06_noisy_clips.py
+    ├── _t2_v10_clips.py
+    ├── _t2_v10_features.py
     ├── _t2_verify_onnx.py
     ├── _tts_400.py
     ├── _tts_api_test.py
