@@ -179,27 +179,51 @@ def _resolve_ack_dir() -> Path:
 # made the wake answer feel slow. The stream is opened once and reused, and the
 # clips are cached at startup, so the ack starts as soon as the bytes are written.
 _ack_cache: list[tuple[np.ndarray, int]] = []
+_ack_named: dict[str, tuple[np.ndarray, int]] = {}
 _ack_pos = 0
 _out_stream = None
 
 
 def preload_ack_audio() -> int:
-    """Load every tts.ack_dir wav into RAM once (called at startup)."""
-    global _ack_cache
+    """Load every tts.ack_dir wav into RAM once (called at startup).
+
+    所有 clip 统一重采样到目录里最常见的采样率（`ack_no_heard.wav` 是 32 kHz，其余 24 kHz），
+    否则 `play_ack_phrase` 第一次播它时 `_output_stream` 要重开流、实测 ~3.4 s，
+    应答就会变慢（T8 的提速全靠「缓存 PCM + 复用同一条输出流」）。
+    同时登记 **具名缓存** `_ack_named[文件名去扩展名] = (audio, rate)`，供 `play_ack_phrase` 取句。
+    """
+    global _ack_cache, _ack_named, _ack_named
     ack_dir = _resolve_ack_dir()
     wavs = sorted(ack_dir.glob("*.wav")) if ack_dir.is_dir() else []
-    cache = []
+    raw = []
     for p in wavs:
         try:
             with wave.open(str(p), "rb") as w:
                 rate = w.getframerate()
                 pcm = w.readframes(w.getnframes())
             if pcm:
-                cache.append((np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32767, rate))
+                raw.append((p.stem, np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32767, rate))
         except Exception as e:
             print(f"[TTS] ack preload skipped {p.name}: {e}")
+    if not raw:
+        _ack_cache = []
+        _ack_named = {}
+        print("[TTS] ack audio preloaded: 0 clips in memory")
+        return 0
+    rates = [r for _, _, r in raw]
+    target = max(set(rates), key=rates.count)
+    cache = []
+    named = {}
+    for stem, audio, rate in raw:
+        if rate != target:
+            n = max(1, int(len(audio) * target / rate))
+            audio = np.interp(np.linspace(0, len(audio) - 1, n), np.arange(len(audio)), audio)
+        cache.append((audio, target))
+        named[stem] = (audio, target)
     _ack_cache = cache
-    print(f"[TTS] ack audio preloaded: {len(cache)} clips in memory")
+    _ack_named = named
+    print(f"[TTS] ack audio preloaded: {len(cache)} clips in memory（统一 {target} Hz，"
+          f"具名 {sorted(named)}）")
     # Warm the output stream at startup too: opening it costs ~3.4 s (measured),
     # so paying that here keeps the *first* wake answer as fast as the rest.
     if cache:
@@ -234,6 +258,31 @@ def _output_stream(rate: int):
     return _out_stream
 
 
+def _play_cached(audio: np.ndarray, rate: int, label: str, t0: float) -> None:
+    """Play cached PCM through the reused output stream; interruptible via stop_speaking()."""
+    _interrupt.clear()
+    _speaking.set()
+    stream = None
+    try:
+        stream = _output_stream(rate)
+        print(f"[TTS] {label} stream ready in {1000 * (time.perf_counter() - t0):.0f} ms")
+        chunk = max(1, int(rate * 0.1))
+        for i in range(0, len(audio), chunk):
+            if _interrupt.is_set():
+                break
+            stream.write(audio[i : i + chunk])
+        print(f"[TTS] {label} played ({len(audio) / rate:.2f} s), "
+              f"total {1000 * (time.perf_counter() - t0):.0f} ms")
+    finally:
+        if stream is not None and _interrupt.is_set():
+            try:
+                stream.stop()  # flush the queue so stop_speaking is instant
+            except Exception:
+                pass
+        _speaking.clear()
+        _interrupt.clear()
+
+
 def play_ack_wav() -> None:
     """T8: play a pre-synthesized wake-ack wav picked at random from tts.ack_dir.
 
@@ -251,26 +300,23 @@ def play_ack_wav() -> None:
     t0 = time.perf_counter()
     audio, rate = _ack_cache[_ack_pos % len(_ack_cache)]
     _ack_pos += 1
-    _interrupt.clear()
-    _speaking.set()
-    stream = None
-    try:
-        stream = _output_stream(rate)
-        print(f"[TTS] ack stream ready in {1000 * (time.perf_counter() - t0):.0f} ms")
-        chunk = max(1, int(rate * 0.1))
-        for i in range(0, len(audio), chunk):
-            if _interrupt.is_set():
-                break
-            stream.write(audio[i : i + chunk])
-        print(f"[TTS] ack played ({len(audio) / rate:.2f} s), total {1000 * (time.perf_counter() - t0):.0f} ms")
-    finally:
-        if stream is not None and _interrupt.is_set():
-            try:
-                stream.stop()  # flush the queue so stop_speaking is instant
-            except Exception:
-                pass
-        _speaking.clear()
-        _interrupt.clear()
+    _play_cached(audio, rate, "ack", t0)
+
+
+def play_ack_phrase(name: str) -> bool:
+    """Play the **named** pre-synthesized clip (`tts.ack_dir`/<name>.wav) from RAM.
+
+    用于「没听清」这类语义应答：它不是每次唤醒都播的轮播 ack，而是特定分支（空转录 /
+    低质量转录）才播的句子，所以按文件名取。返回是否播出（缓存没有该句时 False，
+    调用方回退到 live TTS）。与 barge-in / `stop_speaking()` 语义完全一致。
+    """
+    if not _ack_named:
+        preload_ack_audio()
+    clip = _ack_named.get(name)
+    if clip is None:
+        return False
+    _play_cached(clip[0], clip[1], f"ack[{name}]", time.perf_counter())
+    return True
 
 
 def _produce_segments(sentences: list[str], q: "queue.Queue") -> None:

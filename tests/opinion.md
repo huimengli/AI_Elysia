@@ -252,3 +252,16 @@ o_speech_seconds）本批未实施，仍挂在 todo。
 2. **逐窗拼接 = 音节切碎**：concat + THR 0.015 把已知集从 2/6 打到 **1/6**（`米希雅`→「对呀」、`爱丽丝`→「还一个」，5 件里 4 件降）；100 ms 窗会在轻声/擦音中间切。
 3. **门限必须低**：span + 0.015 仍切轻声音节（`电视机`→「电脑」、`米希雅` 整件没，已知集 1/6）；span + **0.008** 复原全部已知件（**2/6**），**乱码 0 件**（无门 1、whisper 9）、**耗时 5308 ms（无门 10847 ms，减半）**，8 条 30 s 无声件从 627-868 ms 降到 26-40 ms。
 4. **sherpa 天花板不在静音**：已知集 sim 停在 2/6（whisper 3/6），瓶颈是 Paraformer 对近音的声学判别（爱莉希雅→爱丽西雅/艾丽安娜/泰利西亚）→ **`stt.engine` 保持 whisper，`config.yaml` 未改**；能量门作为可用组件留用。Q7 的「sherpa 加能量门后重跑 3 轮」待办结案。
+
+## 2026-11-12 23:08-23:42 未完项 1：「我没听清，请再说一遍」入 RAM 应答池 + hot_phrases 小表（详见 tests/2026-11-12-23-08-34_cc/opinion.md）
+
+1. **实现**：`jarvis/data/ack/ack_no_heard.wav`（现役 :9880 预合成 3.32 s @32 kHz）；`jarvis/tts.py` 的 `preload_ack_audio` 统一采样率 + 具名缓存 `_ack_named`，新增 `play_ack_phrase(name)` 与共用 `_play_cached()`（打断/`stop_speaking` 语义不变，`play_ack_wav` 轮播不变）；`jarvis/main.py` 的 `_ask_repeat_if_unmuted()` 只在 `Transcription empty` 与 `Low-quality transcription` 两分支播该句（缓存缺句才回退 live TTS）。
+2. **3 轮**：具名池 6 clip 统一 32000 Hz、`play_ack_phrase` 3330/3300/3330 ms（流就绪 0 ms），打断清队列 1219 ms 后 `is_speaking=False`；分支接线 empty/lowq 都播具名句、normal 不播；`hot_phrases(text,kind,count,first_seen,last_seen)` 写入/累加/上限 200 淘汰均正确。
+3. **偏置判据不通过 → 默认关**：`HOT_BIAS=1` 时长句 ↑（0.92→0.96、0.83→0.86）但**短句被吸附到热词**（爱丽安娜 0.75→0.67、爱丽丝 0.33→0.29、米希雅 0.57→0.50，变差 3 件），且一次 61.8 s 转录失控、总耗时 23125→81531 ms；`HOT_BIAS=0` 时 B 与 A 逐件完全一致（变差 0）。`config.yaml` 加 **`stt.hot_bias: false`**，表只作数据源（统计 + `near_miss` 训练/验收导出）。
+4. **探针纪律**：低质量件必须用**无 CJK 且 ≤20 字符**的退化输出（literal `You`，见 records/2026-11-08-18-54-18.md）；第一次注入「嗯」被判据当成「能理解」→ 真跑 LLM/TTS、真开 Edge、压死 :8080/:9880。探针用每次独立的临时 sqlite（第一轮在现役 `memory.db` 造 210 filler 挤掉真热词，已清理）；`record_phrase` 形参不能叫 `text`（遮蔽 sqlalchemy `text()`）。
+
+## 2026-11-12 23:45-23:53 未完项 4：浏览器共享插件（详见 tests/2026-11-12-23-08-35_cc/opinion.md）
+
+1. **阻塞原因不是 Chrome 调试端口，是连接器从未安装**：货架有 `[playwright]`（`none` 鉴权，另有 `chrome-devtools`/`firefox-devtools`），已配置的只有 `json-mcp-unity` 与 `custom-wow-sight`（都 `host-tools-pending`）。`mcp_connector_connect(connectorId="playwright")` **一次直连成功**，注册 **25 个工具**。
+2. **3 轮全过**：① 货架/状态探测 ✓；② 连接 + `browser_navigate` 到 `http://127.0.0.1:7860/`（`Page Title: 爱莉希雅`）+ `browser_snapshot` 读到 4 灯区 / LLM 下拉框 / 🔈 / textbox / 工具·实时·快捷·设置 ✓；③ `browser_find` 不截图读到 4 盏灯 —— 唤醒 `aili_xiya_v0.9.onnx / 0.75 / peak 0.422 / 23:51:46`、语音识别 `whisper small cpu zh`、LLM `:8080`、TTS `:9880`，与 `/api/health` 一致 ✓。页面唯一 console 错误 = `favicon.ico` 404（良性）。
+3. **零截图达成**：读页面走可访问性快照（`browser_snapshot`/`browser_find`），与 AGENTS「禁止大量截图」一致；若要共享**你正在用的 Chrome**（已打开的页面），才需要 Chrome 带 `--remote-debugging-port=9222` 启动 —— 必须你在 Chrome 侧配合，我不擅自拉起带调试端口的浏览器。

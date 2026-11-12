@@ -35,6 +35,8 @@ def _resolve_path(raw: str) -> Path:
 
 
 class Memory:
+    _HOT_CAP = 200  # hot_phrases 表行数上限（超出按 count 淘汰）
+
     def __init__(
         self,
         db_path: str | None = None,
@@ -77,7 +79,64 @@ class Memory:
                 "CREATE TABLE IF NOT EXISTS summaries "
                 "(id INTEGER PRIMARY KEY, content TEXT, created_at TEXT)"
             ))
+            # 热词（热句）小表（records/2026-11-11-21-36-30.md / 2026-11-12-23-08-34.md）：
+            # kind = user（用户说过的话）/ hot（反复出现的热词）/ near_miss（近音误识）；
+            # 上限 _HOT_CAP 行，超出按 count 淘汰；时间戳用 AGENTS 统一格式 yyyy-MM-dd-HH-mm-ss。
+            conn.execute(text(
+                "CREATE TABLE IF NOT EXISTS hot_phrases "
+                "(text TEXT PRIMARY KEY, kind TEXT, count INTEGER, "
+                " first_seen TEXT, last_seen TEXT)"
+            ))
             conn.commit()
+
+    def record_phrase(self, phrase: str, kind: str = "user") -> None:
+        """Record/累加 a phrase in the `hot_phrases` table (whisper 偏置的来源).
+
+        注意：局部变量不能叫 `text` —— 会遮蔽 sqlalchemy 的 `text()`（实测
+        `TypeError: 'str' object is not callable`）。
+        """
+        p = (phrase or "").strip()
+        if not p:
+            return
+        now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        with self._engine.connect() as conn:
+            conn.execute(text(
+                "INSERT INTO hot_phrases (text, kind, count, first_seen, last_seen) "
+                "VALUES (:t, :k, 1, :n, :n) "
+                "ON CONFLICT(text) DO UPDATE SET "
+                "count = min(count + 1, :cap), kind = :k, last_seen = :n"
+            ), {"t": p, "k": kind, "n": now, "cap": 1000})
+            # 表要「小」：超出上限时淘汰 count 最低的行（保留 top _HOT_CAP）
+            n_rows = conn.execute(text("SELECT COUNT(*) FROM hot_phrases")).scalar()
+            if n_rows > self._HOT_CAP:
+                conn.execute(text(
+                    "DELETE FROM hot_phrases WHERE text NOT IN "
+                    "(SELECT text FROM hot_phrases ORDER BY count DESC, last_seen DESC "
+                    "LIMIT :keep)"
+                ).params(keep=self._HOT_CAP))
+            conn.commit()
+
+    def top_hot_phrases(self, n: int = 12, kind: str | None = None) -> list[str]:
+        """Top-N phrases by count (whisper `initial_prompt` / sherpa hotwords)."""
+        with self._engine.connect() as conn:
+            if kind:
+                rows = conn.execute(text(
+                    "SELECT text FROM hot_phrases WHERE kind = :k "
+                    "ORDER BY count DESC, last_seen DESC LIMIT :n"
+                ), {"k": kind, "n": n}).fetchall()
+            else:
+                rows = conn.execute(text(
+                    "SELECT text FROM hot_phrases ORDER BY count DESC, last_seen DESC LIMIT :n"
+                ), {"n": n}).fetchall()
+        return [r[0] for r in rows]
+
+    def hot_phrase_rows(self) -> list[tuple]:
+        """(text, kind, count, first_seen, last_seen) for inspection/tests."""
+        with self._engine.connect() as conn:
+            return conn.execute(text(
+                "SELECT text, kind, count, first_seen, last_seen FROM hot_phrases "
+                "ORDER BY count DESC, last_seen DESC"
+            )).fetchall()
 
     def store_fact(self, fact: str) -> None:
         """Store a semantic fact. Identical facts are deduplicated by hash ID."""

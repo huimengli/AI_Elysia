@@ -153,6 +153,38 @@ def _trim_leading_silence(audio: np.ndarray, sample_rate: int = 16000) -> np.nda
     return audio
 
 
+# 热词偏置（records/2026-11-11-21-36-30.md 第 2 项，2026-11-12-23-08-34 落地）：
+# main 从 `memory.hot_phrases` 取 top-N 灌进来，whisper 走 initial_prompt 追加子句。
+_hot_words: list[str] = []
+
+
+def set_hot_words(words: list[str]) -> None:
+    """Push the top-N hot phrases from the hot_phrases table into the STT bias."""
+    cleaned = [w.strip() for w in words if w and w.strip()]
+    # whisper 的 initial_prompt 不宜太长，这里按字面控制在 ~200 字符内
+    merged, total = [], 0
+    for w in cleaned:
+        if total + len(w) + 1 > 200:
+            break
+        merged.append(w)
+        total += len(w) + 1
+    _hot_words.clear()
+    _hot_words.extend(merged)
+
+
+def get_hot_words() -> list[str]:
+    return list(_hot_words)
+
+
+def _bias_prompt(base: str | None) -> str | None:
+    """config 的 initial_prompt + 当前热词表 top-N（空表时保持原样）。"""
+    base = (base or "").strip()
+    if not _hot_words:
+        return base or None
+    clause = "、".join(_hot_words)
+    return f"{base}{clause}。" if base else f"以下是简体中文的普通话语口语。{clause}。"
+
+
 def transcribe_audio(audio: np.ndarray) -> str:
     """Transcribe a float32 numpy audio array (16kHz mono) to text."""
     # language="en" was hardcoded here, so Chinese speech was decoded as English
@@ -164,8 +196,9 @@ def transcribe_audio(audio: np.ndarray) -> str:
     # initial_prompt biases the decoder: an explicit Simplified-Chinese prompt with
     # this project's vocabulary keeps whisper small from answering in Traditional
     # (observed: `[You] 我愛你`, `你能看得见屏幕吗？` → `你能看的就`) and stabilises
-    # short utterances. Tunable via config.yaml stt.initial_prompt.
-    prompt = stt.get("initial_prompt") or None
+    # short utterances. Tunable via config.yaml stt.initial_prompt, plus the runtime
+    # hot-phrase bias from `memory.hot_phrases` (set_hot_words / _bias_prompt).
+    prompt = _bias_prompt(stt.get("initial_prompt"))
     audio = _trim_leading_silence(audio)
     if stt.get("engine", "whisper") == "sherpa":
         # Engine switch (records/2026-11-11-20-34-04.md 第 4 项): sherpa-onnx Paraformer

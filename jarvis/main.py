@@ -23,8 +23,8 @@ for _stream in (sys.stdout, sys.stderr):
         pass
 
 from jarvis.wake import listen_for_wake_word
-from jarvis.stt import record_until_silence, transcribe_audio, set_abort_event
-from jarvis.tts import speak, speak_streamed, is_speaking, stop_speaking, play_ack_wav, preload_ack_audio
+from jarvis.stt import record_until_silence, transcribe_audio, set_abort_event, set_hot_words
+from jarvis.tts import speak, speak_streamed, is_speaking, stop_speaking, play_ack_wav, play_ack_phrase, preload_ack_audio
 from jarvis.context import ContextManager
 from jarvis.memory import Memory
 from jarvis.events import EventLog
@@ -129,6 +129,51 @@ def _speak_if_unmuted(text: str) -> None:
     """Speak text only if not muted."""
     if not _muted.is_set():
         speak(text)
+
+
+def _ask_repeat_if_unmuted() -> None:
+    """「我没听清，请再说一遍」——优先播 RAM 里预合成的具名 ack（`ack_no_heard.wav`），
+    缓存缺该句时才回退 live TTS（records/2026-11-12-23-08-34.md）。
+
+    只在**空转录**与**低质量转录**两个分支调用，不是每次唤醒都播；
+    `stop_speaking()` / barge-in 语义不变（`play_ack_phrase` 走同一条复用输出流与 `_interrupt`）。
+    """
+    if _muted.is_set():
+        return
+    if play_ack_phrase("ack_no_heard"):
+        return
+    speak("我没听清，请再说一遍。")
+
+
+def _record_hot_phrase(text: str) -> None:
+    """写入 `hot_phrases`（records/2026-11-11-21-36-30.md 第 2 项），并按配置回灌偏置。
+
+    - `user`：真实转录成功的整句；
+    - `near_miss`：含唤醒词近音的句（与「爱莉希雅」的 difflib 相似度在 0.5-0.9，
+      实测的误识形如 爱丽安娜 / 爱丽丝 / 米希雅 / 泰利西亚，可导出成训练与验收数据）；
+    - **偏置默认关闭**（`stt.hot_bias: false`）：第 3 轮 A/B 实测，把热词灌进 whisper 的
+      `initial_prompt` 会让**短句被吸附到热词**（`爱丽安娜`→「爱莉希雅」sim 0.25、
+      `爱丽丝`→「爱莉希。」sim 0.29，两件变差），所以表只作为数据源（统计 + 训练导出），
+      只有显式 `stt.hot_bias: true` 才灌进 prompt。
+    """
+    import difflib
+
+    t = text.strip()
+    if not t:
+        return
+    try:
+        memory.record_phrase(t, "user")
+        best = max((difflib.SequenceMatcher(None, w, t).ratio()
+                    for w in re.findall(r"[\u4e00-\u9fff]{2,5}", t)), default=0.0)
+        if 0.5 <= best < 0.9:
+            memory.record_phrase(t, "near_miss")
+        if _load_config().get("stt", {}).get("hot_bias", False):
+            set_hot_words(memory.top_hot_phrases(12))
+        else:
+            set_hot_words([])
+        print(f"[热词] 表 {len(memory.hot_phrase_rows())} 行，偏置={'开' if _load_config().get('stt', {}).get('hot_bias', False) else '关'}")
+    except Exception as e:
+        print(f"[热词] 记录失败（不影响对话）：{e}")
 
 
 def _speak_streamed_if_unmuted(text: str) -> None:
@@ -526,15 +571,20 @@ def _handle_wake_inner() -> None:
     if not user_text.strip():
         print("[爱莉希雅] Transcription empty — didn't catch anything.")
         event_log.log("system", "Wake: no voice recognized", "voice")
-        _speak_if_unmuted("我没听清，请再说一遍。")
+        _ask_repeat_if_unmuted()  # 预合成 ack，不走 live TTS
         _broadcast({"type": "status", "message": "就绪。"})
         return
     print(f"[You] {user_text}")
 
+    # 热词表写入 + 偏置回灌（records/2026-11-11-21-36-30.md 第 2 项）：
+    # 真实转录成功后记 `user`；含唤醒词近音（sim 在 0.5-0.9 之间）记 `near_miss`；
+    # 然后取 top-N 灌进 whisper 的 initial_prompt（下次转录生效）。
+    _record_hot_phrase(user_text)
+
     if not _looks_understandable(user_text):
         print(f"[爱莉希雅] Low-quality transcription ({user_text!r}) — asking to repeat.")
         event_log.log("system", f"Wake: low-quality transcription: {user_text}", "voice")
-        _speak_if_unmuted("我没听清，请再说一遍。")
+        _ask_repeat_if_unmuted()  # 同上：预合成 ack
         _broadcast({"type": "status", "message": "就绪。"})
         return
 

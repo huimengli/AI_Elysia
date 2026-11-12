@@ -96,4 +96,21 @@
 - [x] `training/_t2_asr_ab_gate.py`（入 Git）三配置对照（whisper 现役 / sherpa 无门 / sherpa 能量门），已知 6 件 + 抓取 12 件
 - [x] 3 轮 A/B（concat 0.015 → 1/6 否决；span 0.015 → 1/6；**span 0.008 → 2/6、乱码 0、耗时 5308 ms 减半**）→ **`stt.engine` 保持 whisper，`config.yaml` 未改**（sherpa 瓶颈是近音声学判别，不在静音）
 - [x] 落 `tests/2026-11-12-22-51-09_cc/record_1..3.md` + `opinion.md`，累积 `tests/opinion.md`；`tree.md` 重建；commit 中文主题 + hash 追加台账，禁止 push；服务重启 + 4 灯复核
-- [ ] 未完项（同批不做）：「我没听清，请再说一遍」预合成进 RAM 应答池（records/2026-11-11-21-36-30.md）、20 轮明确测试补齐（2026-11-08-20-44-17 已 1/20；2026-11-09-19-45-46 已 1/3）、`need_audio.md` 补录缺口、浏览器共享插件（Chrome `--remote-debugging-port=9222`）
+- [x] 「我没听清，请再说一遍」预合成进 RAM 应答池（**已完成 2026-11-12-23-08-34**，见下一节）；余下未完项：20 轮明确测试补齐（2026-11-08-20-44-17 已 1/20；2026-11-09-19-45-46 已 1/3）、`need_audio.md` 补录缺口、浏览器共享插件（Chrome `--remote-debugging-port=9222`）
+
+## 2026-11-12-23-08-34 未完项 1：应答句「我没听清，请再说一遍」入 RAM 应答池（→ records/2026-11-12-23-08-34.md）
+
+- [x] GPT-SoVITS 预合成 `jarvis/data/ack/ack_no_heard.wav`（现役 `:9880/tts`，3.32 s @32 kHz，与现有 5 条同目录同格式；wav 不入 Git）
+- [x] `jarvis/tts.py`：统一采样率 + 具名缓存 `_ack_named` + `play_ack_phrase(name)` + 共用 `_play_cached()`，`play_ack_wav()` 轮播行为不变
+- [x] `jarvis/main.py`：`_ask_repeat_if_unmuted()`（先具名 ack，缺句回退 live TTS），只接 `Transcription empty` 与 `Low-quality transcription`；barge-in / `stop_speaking` 语义不变（打断清队列 1219 ms、`is_speaking=False`）
+- [x] `memory.db` 加 `hot_phrases(text, kind, count, first_seen, last_seen)`（`user`/`hot`/`near_miss`，上限 200 按 count 淘汰）；写入点 = 真实转录后整句 + 近音句；`stt.set_hot_words`/`_bias_prompt` + `config.yaml` `stt.hot_bias: false`（**偏置默认关**：开则长句升 2 件、短句被吸附 3 件变差、耗时 3.5 倍；表只作数据源）
+- [x] 3 轮验证（具名池 / 分支接线 / 表 + initial_prompt A/B）→ `tests/2026-11-12-23-08-34_cc/record_1..3.md` + `opinion.md`，累积 `tests/opinion.md`；`tree.md` 重建；commit 中文主题 + hash 追加台账，禁止 push；服务重启 + 4 灯复核
+
+## 2026-11-12-23-08-35 未完项 4：浏览器共享插件（Playwright MCP + Chrome 9222）（→ records/2026-11-12-23-08-35.md）
+
+- [x] `mcp_connector_catalog` / `mcp_connector_status` 查是否已有 Playwright/浏览器类连接器 → 货架有 `[playwright]`(none 鉴权) + `chrome-devtools` + `firefox-devtools`；已配置的只有 `json-mcp-unity`/`custom-wow-sight`（均 `host-tools-pending`），**浏览器类从未连接**
+- [x] 确认本机 Chrome 路径与「需以 `--remote-debugging-port=9222` 启动」这一用户配合项 → **原阻塞判断被推翻**：Playwright 连接器自带浏览器，`mcp_connector_connect` 直连成功，**不需要改 Chrome 启动参数**；共享你正在用的 Chrome 才需要 9222（你在 Chrome 侧配合，我不擅自拉起）
+- [x] 连接后 `mcp_connector_tools_list` = **25 个工具**（navigate/snapshot/find/click/type/evaluate/console/network_requests…），限制：读页面走可访问性快照（与「禁止大量截图」一致）
+- [x] 3 轮验证全过（工具清单 / 打开 `http://127.0.0.1:7860/` 读快照 / `browser_find` 零截图读 4 盏灯，与 `/api/health` 一致）；页面唯一 console 错误 = favicon 404（良性）；未写 `hard_bug.md`（无阻塞）
+- [x] 落盘 + commit 中文主题 + hash 追加台账，禁止 push
+- [ ] 待你点头才动代码：把 Jarvis「看屏幕」任务从截图路径改走 `browser_snapshot`/`browser_find`/`browser_click`（零截图）
