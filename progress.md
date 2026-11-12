@@ -76,3 +76,5 @@ p.random 噪声初始化特征缓冲，**同一音频同一模型 3 次独立实
 - config.yaml 已切 ili_xiya_v0.9.onnx + 	hreshold: 0.75，Jarvis 重启后 health 显示 ili_xiya_v0.9.onnx / threshold 0.75（零截图，走 HTTP 文本）。
 - ASR 引擎可用性修正（sherpa-onnx 2.0.1 实测签名）：rom_paraformer(paraformer=..., tokens=..., num_threads=...)（无 paraformer_model/language_hints）；OfflineStream 只有 ccept_waveform(sample_rate, samples)（无 ccept_audio）；	ranscribe_audio 已接引擎分发 + sherpa 空结果/异常回退 whisper；paraformer-zh small model.int8.onnx 81.8 MB 下载完成（curl --ssl-no-revoke 续传）。
 - 并发 4 个探针会触发 MemoryError（_streaming_melspectrogram，与 v0.8 训练 DefaultCPUAllocator 同源）；验收必须单探针串行。
+- 最新一条：`733bf52` `docs(AI): 重建 tree.md（201 项，新增 tests/2026-11-12-10-35-29_cc，config 切 v0.9+0.75）`（1 file；**已本地 commit，未 push**）。
+- 前两条：`10398c8` `test(AI): 真人补录 15 件负样本训练 v0.9，3 轮矩阵后采用 v0.9+阈值0.75，实测排除 TTS 合成负样本并修正 sherpa API`（8 files / 131+ / 5-）；`096f5b9` `docs(AI): ASR 引擎 A/B 三轮结论（whisper 保持默认，sherpa 快 10-20 倍但无 VAD 会幻觉）`（3 files / 65+）。均**已本地 commit，未 push**。
