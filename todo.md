@@ -59,3 +59,13 @@
 - [x] `training/_t2_newaudio_probe.py` 的 `环境音（安静房间）` 期望 1 → **0**（该件无呼唤）
 - [x] `tests/2026-11-12-20-03-41_cc/record_2.md`、`record_3.md` 追加更正节（0.70 下 v1.1 环境音 1 次 = BAD，v0.9 = OK）
 - [x] 累积 `tests/opinion.md` 追加本批结论（含期望口径更正）
+
+## 2026-11-12-21-40-35 Q14 裁决（选项 1）+ 重训 v1.0b（→ records/2026-11-12-21-40-35.md）
+
+- [x] `need_user.md` Q14 append 答复 + status: done + 归档 `ai_buckup/need_user.md_2026-11-12-21-40-35.md`（60 行 → 压缩 25 行）
+- [x] 音节级诊断：**高分不在音节上，而在说完后的衰减/静音尾巴上**（`米雅` 有声段内最高 0.604，峰值 0.827 落在 rms=12.8 的静音窗；`14次件` 峰值 0.869 落在 rms=15.6）→ `training/_t2_miya_score_curve.py` + `.tmp/bats/miya_curve.log`，写在 `tests/2026-11-12-21-40-35_cc/record_1.md`
+- [x] `training/_t2_v10b_features.py`：v0.9 基线 + 14xx（正 ×5 / 合格负 ×1），剔除 `negx_tr_1401`（雅诗兰黛 0.822）与 `negx_tr_1402`（米雅 0.827）→ 26515 / 5649 / 58104 / 5028
+- [x] `openWakeWord/train_config_v10b.yaml` → 训练 **v1.0b**：**Recall 0.6106、FP/hour 0.0、Accuracy 0.7208**，`aili_xiya_v1.0b.onnx` 13,852 B
+- [x] 3 轮矩阵 @0.70 / @0.75 vs v0.9：**v1.0b 无一轴更好 → 不采用，保持 v0.9 + 0.75**（@0.75 14 次件 11、基线 8、新正 17 vs 24；@0.70 定标纯噪声 1 BAD、新正 24 vs 28）
+- [x] 3 轮落 `tests/2026-11-12-21-40-35_cc/record_1..3.md` + `opinion.md`，累积 `tests/opinion.md` 已追加；commit 中文主题 + hash 追加台账，禁止 push；`tree.md` 重建
+- [ ] **新规则待用户同意（不自行发明，已写 need_user.md Q15，status: wait）**：正样本训练窗锚定有声段、把尾部静音压到最短（现 `[检出-0.5, 检出+1.0]` 含 ~1 s 尾音）；负样本剔除「以纯静音为主的窗」；真人近音件只在音节窗作验收集 → 裁决后重训 v1.0c

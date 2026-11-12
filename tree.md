@@ -1,13 +1,13 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-12-20-47-51（多音色 TTS 训练集批：流萤 + 白厄 + Kokoro，3 轮）。新增：
-- **`training/_t2_v11_tts.py`**（7 音色 × 20 文本生成，GSV 运行时换权重 + 切回、Kokoro `lang_code="z"`）、**`training/_t2_v11_score.py`**（逐件新建实例打分 + 入库判据）、**`training/_t2_v11_clips.py`**（15xx clip 切分）、**`training/_t2_v11_features.py`**（合格件并入 v0.9 基线特征）、`openWakeWord/train_config_v11.yaml`；
-- `records/2026-11-12-18-49-50.md`（多音色需求）、`records/2026-11-12-19-23-02.md`（流萤权重）、`records/2026-11-12-20-03-41.md`（白厄 v2ProPlus 权重）、`records/2026-11-12-20-47-51.md`（环境音期望更正）、`tests/2026-11-12-20-03-41_cc/record_1..3.md` + `opinion.md`；
-- 上一批归档：`ai_buckup/todo.md_2026-11-12-19-23-02.md`（`todo.md` 压缩前的 103 行版本）。
+更新时间: 2026-11-12-21-40-35（Q14 裁决 + v1.0b 批，3 轮）。新增：
+- **`training/_t2_miya_score_curve.py`**（逐 1280 chunk 分数曲线 + RMS 音节段对齐，证明高分在尾音静音窗）、**`training/_t2_v10b_features.py`**（v0.9 基线 + 14xx，按 Q14 规则剔除峰值 >=0.80 的真人件）；
+- `records/2026-11-12-21-40-35.md` + `tests/2026-11-12-21-40-35_cc/record_1..3.md` + `opinion.md`；`ai_buckup/need_user.md_2026-11-12-21-40-35.md`（Q14 完整问答归档，status: done）；
+- 上一批新增：`records/2026-11-12-20-47-51.md`（环境音期望更正）、`training/_t2_v11_tts.py`、`training/_t2_v11_score.py`、`training/_t2_v11_clips.py`、`training/_t2_v11_features.py`、`tests/2026-11-12-20-03-41_cc/`（多音色批 3 轮）、`ai_buckup/todo.md_2026-11-12-19-23-02.md`。
 
-结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本在 `training/`（本批后 78 个，已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。
+结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本在 `training/`（本批后 80 个，已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：299
+### 文件数（git ls-files --cached --others --exclude-standard）：307
 ```
 JarvisAi/
 ├── .gitignore
@@ -33,6 +33,7 @@ JarvisAi/
 │   ├── need_user.md_2026-10-13-17-45.md
 │   ├── need_user.md_2026-10-13-21-12-19.md
 │   ├── need_user.md_2026-11-12-12-20-21.md
+│   ├── need_user.md_2026-11-12-21-40-35.md
 │   ├── onnx_opinion.md
 │   ├── progress.md_2026-10-15-13-49-00.md
 │   ├── progress.md_2026-11-08-12-40-22.md
@@ -131,6 +132,7 @@ JarvisAi/
 │   ├── 2026-11-12-19-23-02.md
 │   ├── 2026-11-12-20-03-41.md
 │   ├── 2026-11-12-20-47-51.md
+│   ├── 2026-11-12-21-40-35.md
 │   ├── AI_Benchmark.md
 │   ├── JARVIS_STATE.md
 │   └── PROJECT_SUMMARY.txt
@@ -260,7 +262,12 @@ JarvisAi/
 │   │   ├── record_1.md
 │   │   ├── record_2.md
 │   │   └── record_3.md
-│   └── 2026-11-12-20-03-41_cc/
+│   ├── 2026-11-12-20-03-41_cc/
+│   │   ├── opinion.md
+│   │   ├── record_1.md
+│   │   ├── record_2.md
+│   │   └── record_3.md
+│   └── 2026-11-12-21-40-35_cc/
 │       ├── opinion.md
 │       ├── record_1.md
 │       ├── record_2.md
@@ -314,6 +321,7 @@ JarvisAi/
     ├── _t2_diag_v02b.py
     ├── _t2_exp_stream_vs_batch.py
     ├── _t2_make_val_fp_v02.py
+    ├── _t2_miya_score_curve.py
     ├── _t2_newaudio_probe.py
     ├── _t2_smoke_stream.py
     ├── _t2_stream_features_v02.py
@@ -335,6 +343,7 @@ JarvisAi/
     ├── _t2_v06_noisy_clips.py
     ├── _t2_v10_clips.py
     ├── _t2_v10_features.py
+    ├── _t2_v10b_features.py
     ├── _t2_v11_clips.py
     ├── _t2_v11_features.py
     ├── _t2_v11_score.py
