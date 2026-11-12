@@ -1,13 +1,12 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-12-22-11-29（Q15 改窗口约定 → v1.0c，3 轮）。新增：
-- **`training/_t2_v10c_features.py`**（正样本窗截前 0.8 s、负样本剔除 24 帧 RMS<120 纯静音窗、真人近音件不入训）；
-- `records/2026-11-12-22-11-29.md` + `tests/2026-11-12-22-11-29_cc/record_1..3.md` + `opinion.md`；`ai_buckup/need_user.md_2026-11-12-22-11-29.md`（Q15 完整问答归档，status: done）；
-- 上一批新增：`training/_t2_miya_score_curve.py`、`training/_t2_v10b_features.py`、`records/2026-11-12-21-40-35.md`、`tests/2026-11-12-21-40-35_cc/`、`ai_buckup/need_user.md_2026-11-12-21-40-35.md`。
+更新时间: 2026-11-12-22-30-00（Q16 只 B：0.70 复测 v1.0c，3 轮 @0.65/0.70/0.72）。新增：
+- `records/2026-11-12-22-30-00.md` + `tests/2026-11-12-22-30-00_cc/record_1..3.md` + `opinion.md`；`ai_buckup/need_user.md_2026-11-12-22-30-00.md`（Q16 完整问答归档，status: done）；
+- 上一批新增：`training/_t2_v10c_features.py`、`records/2026-11-12-22-11-29.md`、`tests/2026-11-12-22-11-29_cc/`、`ai_buckup/need_user.md_2026-11-12-22-11-29.md`。
 
-结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本在 `training/`（本批后 81 个，已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。
+结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本在 `training/`（81 个，已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：314
+### 文件数（git ls-files --cached --others --exclude-standard）：320
 ```
 JarvisAi/
 ├── .gitignore
@@ -35,6 +34,7 @@ JarvisAi/
 │   ├── need_user.md_2026-11-12-12-20-21.md
 │   ├── need_user.md_2026-11-12-21-40-35.md
 │   ├── need_user.md_2026-11-12-22-11-29.md
+│   ├── need_user.md_2026-11-12-22-30-00.md
 │   ├── onnx_opinion.md
 │   ├── progress.md_2026-10-15-13-49-00.md
 │   ├── progress.md_2026-11-08-12-40-22.md
@@ -135,6 +135,7 @@ JarvisAi/
 │   ├── 2026-11-12-20-47-51.md
 │   ├── 2026-11-12-21-40-35.md
 │   ├── 2026-11-12-22-11-29.md
+│   ├── 2026-11-12-22-30-00.md
 │   ├── AI_Benchmark.md
 │   ├── JARVIS_STATE.md
 │   └── PROJECT_SUMMARY.txt
@@ -274,7 +275,12 @@ JarvisAi/
 │   │   ├── record_1.md
 │   │   ├── record_2.md
 │   │   └── record_3.md
-│   └── 2026-11-12-22-11-29_cc/
+│   ├── 2026-11-12-22-11-29_cc/
+│   │   ├── opinion.md
+│   │   ├── record_1.md
+│   │   ├── record_2.md
+│   │   └── record_3.md
+│   └── 2026-11-12-22-30-00_cc/
 │       ├── opinion.md
 │       ├── record_1.md
 │       ├── record_2.md
