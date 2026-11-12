@@ -79,3 +79,18 @@ p.random 噪声初始化特征缓冲，**同一音频同一模型 3 次独立实
 - 最新一条：`733bf52` `docs(AI): 重建 tree.md（201 项，新增 tests/2026-11-12-10-35-29_cc，config 切 v0.9+0.75）`（1 file；**已本地 commit，未 push**）。
 - 前两条：`10398c8` `test(AI): 真人补录 15 件负样本训练 v0.9，3 轮矩阵后采用 v0.9+阈值0.75，实测排除 TTS 合成负样本并修正 sherpa API`（8 files / 131+ / 5-）；`096f5b9` `docs(AI): ASR 引擎 A/B 三轮结论（whisper 保持默认，sherpa 快 10-20 倍但无 VAD 会幻觉）`（3 files / 65+）。均**已本地 commit，未 push**。
 - 最新一条：`2846dcc` `docs(AI): Q13 追加进度——真人补录 15 件负样本已入库、ASR 依赖与模型已就位并给出 A/B 对比表，清理目标目录仍等答复`（1 file / 6+；**已本地 commit，未 push**）。上一条 hash 的记录 commit 不再追加。
+
+## 2026-11-12-12-12 批次（Q13 答复 → 第 6 项根目录清理结案）
+
+- **Q13 status: done**（12:12 答复），
+eed_user.md 已归档 i_buckup/need_user.md_2026-11-12-12-20-21.md 并 compact（Q5-Q13 结论摘要留在文件里，无 status: wait 条目）。
+- **清理执行（移动，不删除）**：根目录 **71 个 _* .py** → 新目录 **	raining/**，并**从 .gitignore 移除 _*.py**（这批脚本进 Git、进 	ree.md）；根目录其余 **49 个 _***（35 .log / 9 .txt / 2 .yaml / 1 .tar.gz / 1 .jinja / 1 .wav，含原跟踪的 _chat_template.jinja）→ .tmp/（仍被忽略）；AI_Benchmark.md、JARVIS_STATE.md、PROJECT_SUMMARY.txt → ecords/（git mv，保留历史）；**jarvis_screen.png、love_silvia.txt 按你的要求留在根目录**（未跟踪，未 commit）；start*.bat、install.bat、equirements.txt、config.yaml、LICENSE、README.md、AGENTS.md、design.md、progress.md、	ree.md、	odo.md、hard_bug.md、
+eed_user.md、
+eed_audio.md、.gitignore 留在根目录。
+- **连带修复**：脚本移入 	raining/ 后 **28 个脚本的 sys.path 补 	raining 目录**；冒烟实测 	raining/_t2_smoke_stream.py 跑通（prefix 53、逐件滑窗 M/spf/bounds/vr/win 正常，exit 0）。
+- **新增 
+eed_audio.md**（格式 "音频内容", "文件路径"，路径为空 = 需你录制）：已到位 6 正样本 + 7 近音 + 7 无关短句 + 长噪音 + 环境音；缺（路径留空）：干净呼唤补 ≥10 次、带噪呼唤补 ≥8 条、真人近音补 ≥3 件（禁 爱丽西亚/艾丽西亚 类）、无关短句补 ≥3 句、竞品唤醒词真人句 ≥5 条、「我没听清，请再说一遍」真人录音、安静房间 10 s 干净环境音。
+- **	ree.md 重建**：非忽略文件 **275**（清理前 201；	raining/*.py 入树、records 新增 3 份、
+eed_audio.md 入树、根目录 _* 出树）。旧版归档 i_buckup/tree.md_2026-11-12-11-20-31.md。
+- 下载类任务一律**后台任务，不阻塞**（你的第 3 问）；paraformer-zh small 81.8 MB 已后台下载完成。
+- 本批 commit：c5cb0c chore(AI): 根目录清理——71 个可复用脚本移入 training/ 并入 Git、49 个 _* 日志类移入 .tmp、3 份总结移入 records，新增 need_audio.md，Q13 结案；hash 台账与归档 commit 随后。**已本地 commit，未 push**。
