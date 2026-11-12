@@ -3,7 +3,7 @@
 更新时间: 2026-11-12-16-58-46。新增 3 项：
 - **`ai_buckup/onnx_opinion.md`** — 9 个自训练唤醒 ONNX（v0.1→v0.9）的横向对比台账（版本谱系 / 部署管线 3 轮实测 / 阈值取舍 / HB-032 边界复测 / 结论与缺口），关联 records/2026-11-12-16-58-46.md；
 - `records/2026-11-12-16-58-46.md` — 本批需求记录；
-- `ai_buckup/todo.md_2026-11-12-16-58-46.md` — `todo.md` 103 行 > 100 触发 AGENTS §3 归档（压缩版留在 `todo.md`，81 行 / 非空 60 行）。
+- `ai_buckup/todo.md_2026-11-12-16-58-46.md` — `todo.md` 103 行 > 100 触发 AGENTS §3 归档（压缩版留在 `todo.md`，60 行）。
 
 结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本 **71 个在 `training/`**（已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。上一版（275 项）内容见归档链 `ai_buckup/tree.md_2026-11-12-11-20-31.md` 的更新说明。
 
