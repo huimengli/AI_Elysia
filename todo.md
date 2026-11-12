@@ -82,9 +82,18 @@
 ## 2026-11-12-22-30-00 Q16 裁决（只 B）→ 用 0.70 复测 v1.0c（→ records/2026-11-12-22-30-00.md）
 
 - [x] `need_user.md` Q16 标 status: done + 归档 `ai_buckup/need_user.md_2026-11-12-22-30-00.md` + 压缩
-- [ ] 3 轮复测 @0.70（`NINST=3 / 5 / 7` 独立实例），对照 v0.9@0.75；判据不变
-- [ ] 落 `tests/2026-11-12-22-30-00_cc/record_1..3.md` + `opinion.md`，累积 `tests/opinion.md`；`tree.md` 重建；commit 中文主题 + hash 追加台账，禁止 push；服务重启 + 4 灯复核
+- [x] 3 轮复测 @0.65 / 0.70 / 0.72（`NINST=3/5/7` 独立实例），对照 v0.9；判据不变 → 复测可重复、0.65 禁区、最佳点 0.72，**不换现役，保持 v0.9+0.75**
+- [x] 落 `tests/2026-11-12-22-30-00_cc/record_1..3.md` + `opinion.md`，累积 `tests/opinion.md`；`tree.md` 重建（320 项）；commit `d283fe9` + hash `8d99b42` + 收尾 `6cc0000`，禁止 push；服务重启 + 4 灯复核
 
 ## 2026-11-12-22-40-00 Q17 待裁决：补录 / 换 v1.0c+0.72 / 保持不动（→ need_user.md Q17）
 
-- [ ] **need_user.md Q17（status: wait）**：A 补录（干净呼唤 ≥20 次、带噪呼唤 ≥10 次）重训 v1.0d / B 换 v1.0c+0.72 为现役（违反 Q12 召回不低于基线，需明确批准）/ C 保持 v0.9+0.75 做未完项
+- [x] **need_user.md Q17（status: done，22:51 裁决「C 保持 v0.9+0.75，做别的未完项」）**：A 补录未选（缺口留 `need_audio.md`）/ B 换 v1.0c+0.72 未获批准 / **C 已执行**（sherpa 能量门，见下一节）
+
+## 2026-11-12-22-51-09 Q17 裁决 C → sherpa 能量门 + 3 轮 A/B（→ records/2026-11-12-22-51-09.md）
+
+- [x] `need_user.md` Q17 标 status: done + 归档 `ai_buckup/need_user.md_2026-11-12-22-51-09.md` + 压缩
+- [x] `jarvis/stt.py`：新增 `_energy_gate`（100 ms 窗 RMS；`span` 只掐头尾静音 / `concat` 逐窗拼接已否决）+ config 键 `stt.sherpa.energy_gate`（默认 true）、`energy_mode`（span）、`energy_threshold`（最终默认 **0.008**）；sherpa 分支调用，whisper 分支不变
+- [x] `training/_t2_asr_ab_gate.py`（入 Git）三配置对照（whisper 现役 / sherpa 无门 / sherpa 能量门），已知 6 件 + 抓取 12 件
+- [x] 3 轮 A/B（concat 0.015 → 1/6 否决；span 0.015 → 1/6；**span 0.008 → 2/6、乱码 0、耗时 5308 ms 减半**）→ **`stt.engine` 保持 whisper，`config.yaml` 未改**（sherpa 瓶颈是近音声学判别，不在静音）
+- [x] 落 `tests/2026-11-12-22-51-09_cc/record_1..3.md` + `opinion.md`，累积 `tests/opinion.md`；`tree.md` 重建；commit 中文主题 + hash 追加台账，禁止 push；服务重启 + 4 灯复核
+- [ ] 未完项（同批不做）：「我没听清，请再说一遍」预合成进 RAM 应答池（records/2026-11-11-21-36-30.md）、20 轮明确测试补齐（2026-11-08-20-44-17 已 1/20；2026-11-09-19-45-46 已 1/3）、`need_audio.md` 补录缺口、浏览器共享插件（Chrome `--remote-debugging-port=9222`）

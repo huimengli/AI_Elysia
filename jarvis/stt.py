@@ -50,9 +50,48 @@ def _get_sherpa():
     return _sherpa_rec
 
 
+def _energy_gate(audio: np.ndarray, sample_rate: int = 16000,
+                threshold: float = 0.008, window_ms: int = 100,
+                mode: str = "span") -> np.ndarray:
+    """Silence skip for the sherpa path (records/2026-11-12-22-51-09.md).
+
+    whisper 有 `vad_filter=True`，Paraformer 什么都没有 —— 含长静音的整段会让 sherpa
+    吐乱码（上一批 A/B：whisper 3/6 vs sherpa 2/6，sim >= 0.8）。两种模式：
+
+    - `mode="span"`（默认）：**只掐头尾静音**，保留第一个/最后一个 voiced 窗之间的一切，
+      前后各留 100 ms。第 1 轮实测：`mode="concat"` 在 THR=0.015 下把已知集从 2/6 打到 1/6
+      —— 逐窗拼接会在音节中间切（100 ms 窗会切掉轻声/擦音），丢掉上下文；
+    - `mode="concat"`：按 `window_ms` 窗算 RMS，只保留 voiced 窗并拼接（逐件打分用）。
+
+    全静音时返回原数组（不制造空输入）。"""
+    window = max(1, int(sample_rate * window_ms / 1000))
+    n = len(audio)
+    voiced = []
+    for i in range(0, n, window):
+        seg = audio[i : i + window]
+        if len(seg) < window * 0.3:
+            continue
+        if float(np.sqrt(np.mean(seg.astype(np.float32) ** 2))) > threshold:
+            voiced.append(i)
+    if not voiced:
+        return audio
+    if mode == "concat":
+        return np.concatenate([audio[i : i + window] for i in voiced])
+    pad = int(sample_rate * 0.1)
+    a = max(0, voiced[0] - pad)
+    b = min(n, voiced[-1] + window + pad)
+    return audio[a:b]
+
+
 def _sherpa_transcribe(audio: np.ndarray) -> str:
     """sherpa-onnx 2.0.1: OfflineStream 只有 `accept_waveform(sample_rate, samples)`，
     没有 `accept_audio`（实测 AttributeError）。`audio` 是 [-1,1] 的 float 数组，16 kHz。"""
+    sh = _load_config()["stt"].get("sherpa", {})
+    if sh.get("energy_gate", True):
+        # 默认 0.008：第 1 轮 0.015 在 span 模式下把已知集从 2/6 打到 1/6（切掉轻声音节），
+        # 第 3 轮 0.008 保住 2/6、乱码 0、耗时减半（tests/2026-11-12-22-51-09_cc/opinion.md）
+        audio = _energy_gate(audio, threshold=float(sh.get("energy_threshold", 0.008)),
+                             mode=sh.get("energy_mode", "span"))
     rec = _get_sherpa()
     stream = rec.create_stream()
     stream.accept_waveform(16000, np.asarray(audio, dtype=np.float32))

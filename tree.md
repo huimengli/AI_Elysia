@@ -1,12 +1,13 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-12-22-30-00（Q16 只 B：0.70 复测 v1.0c，3 轮 @0.65/0.70/0.72）。新增：
-- `records/2026-11-12-22-30-00.md` + `tests/2026-11-12-22-30-00_cc/record_1..3.md` + `opinion.md`；`ai_buckup/need_user.md_2026-11-12-22-30-00.md`（Q16 完整问答归档，status: done）；
-- 上一批新增：`training/_t2_v10c_features.py`、`records/2026-11-12-22-11-29.md`、`tests/2026-11-12-22-11-29_cc/`、`ai_buckup/need_user.md_2026-11-12-22-11-29.md`。
+更新时间: 2026-11-12-22-51-09（Q17 裁决 C：sherpa 能量门 + 3 轮 A/B）。新增：
+- **`training/_t2_asr_ab_gate.py`**（三配置对照：whisper 现役 / sherpa 无门 / sherpa 能量门，已知 6 件 + 抓取 12 件）；`jarvis/stt.py` 新增 `_energy_gate`（`span` 只掐头尾静音 / `concat` 已否决，默认 span + THR 0.008）；
+- `records/2026-11-12-22-51-09.md` + `tests/2026-11-12-22-51-09_cc/record_1..3.md` + `opinion.md`；`ai_buckup/need_user.md_2026-11-12-22-51-09.md`（Q17 完整问答归档，status: done）；
+- 上一批新增：`records/2026-11-12-22-30-00.md`、`tests/2026-11-12-22-30-00_cc/`、`ai_buckup/need_user.md_2026-11-12-22-30-00.md`。
 
-结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本在 `training/`（81 个，已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。
+结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本在 `training/`（82 个，已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：320
+### 文件数（git ls-files --cached --others --exclude-standard）：327
 ```
 JarvisAi/
 ├── .gitignore
@@ -35,6 +36,7 @@ JarvisAi/
 │   ├── need_user.md_2026-11-12-21-40-35.md
 │   ├── need_user.md_2026-11-12-22-11-29.md
 │   ├── need_user.md_2026-11-12-22-30-00.md
+│   ├── need_user.md_2026-11-12-22-51-09.md
 │   ├── onnx_opinion.md
 │   ├── progress.md_2026-10-15-13-49-00.md
 │   ├── progress.md_2026-11-08-12-40-22.md
@@ -136,6 +138,7 @@ JarvisAi/
 │   ├── 2026-11-12-21-40-35.md
 │   ├── 2026-11-12-22-11-29.md
 │   ├── 2026-11-12-22-30-00.md
+│   ├── 2026-11-12-22-51-09.md
 │   ├── AI_Benchmark.md
 │   ├── JARVIS_STATE.md
 │   └── PROJECT_SUMMARY.txt
@@ -280,7 +283,12 @@ JarvisAi/
 │   │   ├── record_1.md
 │   │   ├── record_2.md
 │   │   └── record_3.md
-│   └── 2026-11-12-22-30-00_cc/
+│   ├── 2026-11-12-22-30-00_cc/
+│   │   ├── opinion.md
+│   │   ├── record_1.md
+│   │   ├── record_2.md
+│   │   └── record_3.md
+│   └── 2026-11-12-22-51-09_cc/
 │       ├── opinion.md
 │       ├── record_1.md
 │       ├── record_2.md
@@ -330,6 +338,7 @@ JarvisAi/
     ├── _smoke_check.py
     ├── _smoke_ws.py
     ├── _sync_repo.py
+    ├── _t2_asr_ab_gate.py
     ├── _t2_augment_dryrun.py
     ├── _t2_diag_v02b.py
     ├── _t2_exp_stream_vs_batch.py
