@@ -7,7 +7,7 @@
 
 结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本在 `training/`（86 个，已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：404
+### 文件数（git ls-files --cached --others --exclude-standard）：416
 ```
 JarvisAi/
 ├── .gitignore
@@ -52,6 +52,7 @@ JarvisAi/
 │   ├── todo.md_2026-11-12-16-58-46.md
 │   ├── todo.md_2026-11-12-19-23-02.md
 │   ├── todo.md_2026-11-13-00-12-17.md
+│   ├── todo.md_2026-11-13-14-22-30.md
 │   ├── tree.md_2026-11-11-21-15-00.md
 │   └── tree.md_2026-11-12-11-20-31.md
 ├── dsh-my-presets/
@@ -59,6 +60,7 @@ JarvisAi/
 │   └── package.json
 ├── jarvis/
 │   ├── __init__.py
+│   ├── apps.py
 │   ├── context.py
 │   ├── events.py
 │   ├── llm.py
@@ -155,6 +157,7 @@ JarvisAi/
 │   ├── 2026-11-13-00-12-17.md
 │   ├── 2026-11-13-11-12-00.md
 │   ├── 2026-11-13-12-59-10.md
+│   ├── 2026-11-13-13-46-12.md
 │   ├── AI_Benchmark.md
 │   ├── JARVIS_STATE.md
 │   └── PROJECT_SUMMARY.txt
@@ -345,29 +348,39 @@ JarvisAi/
 │   │   ├── record_1.md
 │   │   ├── record_2.md
 │   │   └── record_3.md
-│   └── 2026-11-13-12-59-10_cc/
+│   ├── 2026-11-13-12-59-10_cc/
+│   │   ├── opinion.md
+│   │   ├── record_1.md
+│   │   ├── record_10.md
+│   │   ├── record_11.md
+│   │   ├── record_12.md
+│   │   ├── record_13.md
+│   │   ├── record_14.md
+│   │   ├── record_15.md
+│   │   ├── record_16.md
+│   │   ├── record_17.md
+│   │   ├── record_18.md
+│   │   ├── record_19.md
+│   │   ├── record_2.md
+│   │   ├── record_20.md
+│   │   ├── record_21.md
+│   │   ├── record_3.md
+│   │   ├── record_4.md
+│   │   ├── record_5.md
+│   │   ├── record_6.md
+│   │   ├── record_7.md
+│   │   ├── record_8.md
+│   │   └── record_9.md
+│   └── 2026-11-13-13-46-12_cc/
 │       ├── opinion.md
 │       ├── record_1.md
-│       ├── record_10.md
-│       ├── record_11.md
-│       ├── record_12.md
-│       ├── record_13.md
-│       ├── record_14.md
-│       ├── record_15.md
-│       ├── record_16.md
-│       ├── record_17.md
-│       ├── record_18.md
-│       ├── record_19.md
 │       ├── record_2.md
-│       ├── record_20.md
-│       ├── record_21.md
 │       ├── record_3.md
 │       ├── record_4.md
 │       ├── record_5.md
 │       ├── record_6.md
 │       ├── record_7.md
-│       ├── record_8.md
-│       └── record_9.md
+│       └── record_8.md
 └── training/
     ├── _chk_feat_stats.py
     ├── _chk_jieba_fast.py
