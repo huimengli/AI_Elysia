@@ -7,7 +7,7 @@
 
 结构现状（承 2026-11-12-12-26 根目录清理，Q13 结案）：可复用脚本在 `training/`（86 个，已入 Git、入本树）；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪）；`AI_Benchmark.md`、`JARVIS_STATE.md`、`PROJECT_SUMMARY.txt` 已 `git mv` 入 `records/`；`need_audio.md` 为缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：355
+### 文件数（git ls-files --cached --others --exclude-standard）：359
 ```
 JarvisAi/
 ├── .gitignore
@@ -317,7 +317,12 @@ JarvisAi/
 │   │   ├── record_1.md
 │   │   ├── record_2.md
 │   │   └── record_3.md
-│   └── 2026-11-12-23-58-00_cc/
+│   ├── 2026-11-12-23-58-00_cc/
+│   │   ├── opinion.md
+│   │   ├── record_1.md
+│   │   ├── record_2.md
+│   │   └── record_3.md
+│   └── 2026-11-13-00-12-17_cc/
 │       ├── opinion.md
 │       ├── record_1.md
 │       ├── record_2.md
