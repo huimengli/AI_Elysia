@@ -30,6 +30,18 @@ def resume_wake_mic() -> None:
     _mic_pause.clear()
 
 
+# ─── Model/threshold hot reload (records/2026-11-13-00-12-17.md 第 4 项) ───
+# The settings page writes model + threshold into config.yaml, then raises this
+# flag; the listening loop rebuilds the Model on its next iteration. The mic
+# stream is reused (chunk_size stays 1280), so only the ONNX graph + weights swap.
+_reload = threading.Event()
+
+
+def request_wake_reload() -> None:
+    """Ask the listening loop to re-read wake_word (model + threshold) from config."""
+    _reload.set()
+
+
 # ─── Live wake-word state, read by GET /api/health (2026-11-09-20-35-43) ───
 # Everything the wake loop knows about itself, published for the UI's 唤醒 lamp.
 # Model construction sets online; the mic-pause window (STT holds the device)
@@ -91,6 +103,36 @@ def listen_for_wake_word(callback) -> None:
     print("[爱莉希雅] Listening for wake word...")
     try:
         while True:
+            # ── Hot reload: settings changed model and/or threshold ──
+            if _reload.is_set():
+                _reload.clear()
+                new_cfg = _load_config()["wake_word"]
+                new_spec = new_cfg["model"]
+                new_key = Path(new_spec).stem if Path(new_spec).exists() else new_spec
+                if new_key != _model_key:
+                    try:
+                        new_model = Model(wakeword_models=[new_spec], inference_framework="onnx")
+                    except Exception as e:
+                        # A bad/missing model must not kill listening — keep the old one.
+                        print(f"[Wake] reload failed ({e}); keeping {state['model']}")
+                    else:
+                        oww = new_model
+                        _model_key = new_key
+                        cfg = new_cfg
+                        state["model"] = Path(new_spec).name
+                        state["threshold"] = new_cfg["threshold"]
+                        oww.reset()
+                        # Model() starts with a random-seeded feature buffer (HB-032) and
+                        # needs 1 s warmup; ignore hits during the swap.
+                        _ignore_until[0] = time.time() + 2.0
+                        _peak = 0.0
+                        print(f"[Wake] reloaded {state['model']} / threshold {state['threshold']}")
+                else:
+                    cfg = new_cfg
+                    state["threshold"] = new_cfg["threshold"]
+                    print(f"[Wake] threshold -> {cfg['threshold']}")
+                continue
+
             # ── Mic pause: STT is recording, yield the hardware ──
             if _mic_pause.is_set():
                 state["listening"] = False

@@ -3,6 +3,24 @@ wake_word:
     aili_xiya_v0.9\\aili_xiya_v0.9.onnx"
   threshold: 0.75
   chunk_size: 1280
+  model_options:
+  - label: "v0.3\uFF082026-10-17 PASS\uFF1Arecall 0.94 / fp 0.09\uFF0C\u63A8\u8350\
+      \u9608\u503C 0.70\uFF09"
+    model: "C:\\Users\\\u697C\u542C\\Desktop\\git\\JarvisAi\\openWakeWord\\output\\\
+      aili_xiya_v0.3\\aili_xiya_v0.3.onnx"
+    threshold: 0.7
+  - label: "v0.9\uFF08\u73B0\u5F79\uFF0C\u63A8\u8350\uFF1A14 \u6B21\u4EF6 12 / \u8FD1\
+      \u97F3 fp 6 / \u5BF9\u6297 4 / \u73AF\u5883\u97F3 0\uFF0C\u9608\u503C 0.75\uFF09"
+    model: "C:\\Users\\\u697C\u542C\\Desktop\\git\\JarvisAi\\openWakeWord\\output\\\
+      aili_xiya_v0.9\\aili_xiya_v0.9.onnx"
+    threshold: 0.75
+  - label: "v1.0c\uFF08\u97F3\u8282\u7A97\u7EA6\u5B9A\uFF1A\u5224\u522B\u8F74\u9996\
+      \u6B21\u8FBE\u6807 fp 1 / \u5BF9\u6297 3 / \u5B9A\u6807\u4E0E\u73AF\u5883 0\uFF0C\
+      \u53EC\u56DE\u584C\uFF0C\u53EF\u7528\u533A\u95F4 0.70-0.72\uFF0C\u63A8\u8350\
+      \ 0.72\uFF09"
+    model: "C:\\Users\\\u697C\u542C\\Desktop\\git\\JarvisAi\\openWakeWord\\output\\\
+      aili_xiya_v1.0c\\aili_xiya_v1.0c.onnx"
+    threshold: 0.72
 stt:
   engine: whisper
   model: small
@@ -12,10 +30,6 @@ stt:
   beam_size: 10
   best_of: 5
   no_speech_seconds: 2.0
-  # 热词偏置开关（records/2026-11-12-23-08-34.md 第 3 轮 A/B）：false = `hot_phrases` 只作数据源。
-  # 实测开=true 时长句略升（0.92→0.96、0.83→0.86），但**短句被吸附到热词**
-  # （爱丽安娜 0.75→0.67、爱丽丝 0.33→0.29、米希雅 0.57→0.50，3 件变差），且出现过一次 61.8 s 的
-  # 转录失控（总耗时 23125→81531 ms），所以默认关。
   hot_bias: false
   initial_prompt: "\u4EE5\u4E0B\u662F\u7B80\u4F53\u4E2D\u6587\u7684\u666E\u901A\u8BDD\
     \u53E3\u8BED\u3002\u7231\u8389\u5E0C\u96C5\u3001\u5C4F\u5E55\u3001\u770B\u5F97\
@@ -30,10 +44,6 @@ stt:
     tokens_file: tokens.txt
     num_threads: 2
     language_hints: zh
-    # 能量门（records/2026-11-12-22-51-09.md 3 轮 A/B 后落地）：sherpa 无 VAD，静音件会吐乱码。
-    # energy_mode: span = 只掐头尾静音、保留中间全部内容（100 ms 窗 RMS，前后各留 100 ms）。
-    # concat（逐窗拼接）已否决 —— 100 ms 窗会在轻声/擦音中间切，已知集 2/6 打到 1/6。
-    # 阈值必须低：0.015 会切掉轻声音节（电视机→电脑），0.008 复原全部已知件、乱码 0、耗时减半。
     energy_gate: true
     energy_mode: span
     energy_threshold: 0.008

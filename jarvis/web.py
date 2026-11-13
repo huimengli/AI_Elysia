@@ -138,10 +138,24 @@ async def api_get_settings():
     """Return all configurable settings."""
     from jarvis.main import _load_config
     cfg = _load_config()
+    wake = cfg.get("wake_word", {})
+    # Selectable wake models (records/2026-11-13-00-12-17.md 第 4 项): only the
+    # options declared in config.yaml (the ones tracked in Git), each with the
+    # threshold that was verified for it in ai_buckup/onnx_opinion.md.
+    options = [
+        {
+            "label": o.get("label", Path(o.get("model", "")).stem),
+            "model": o.get("model", ""),
+            "threshold": o.get("threshold"),
+            "current": o.get("model") == wake.get("model"),
+        }
+        for o in wake.get("model_options", [])
+    ]
     return JSONResponse({
         "tts": cfg.get("tts", {}),
         "stt": cfg.get("stt", {}),
-        "wake_word": cfg.get("wake_word", {}),
+        "wake_word": wake,
+        "wake_model_options": options,
         "context": cfg.get("context", {}),
         "llm": {
             "temperature": cfg.get("llm", {}).get("temperature", 0.7),
@@ -162,7 +176,8 @@ async def api_update_settings(request: Request):
         cfg.setdefault("tts", {}).update(body["tts"])
     if "stt" in body:
         cfg.setdefault("stt", {}).update(body["stt"])
-    if "wake_word" in body:
+    wake_changed = "wake_word" in body
+    if wake_changed:
         cfg.setdefault("wake_word", {}).update(body["wake_word"])
     if "context" in body:
         cfg.setdefault("context", {}).update(body["context"])
@@ -173,6 +188,11 @@ async def api_update_settings(request: Request):
         cfg.setdefault("tools", {}).update(body["tools"])
 
     _save_config(cfg)
+    if wake_changed:
+        # model + threshold were written together; make the listening loop pick
+        # them up without a restart (records/2026-11-13-00-12-17.md 第 4 项).
+        from jarvis.wake import request_wake_reload
+        request_wake_reload()
     return JSONResponse({"status": "ok"})
 
 

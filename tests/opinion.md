@@ -271,3 +271,11 @@ o_speech_seconds）本批未实施，仍挂在 todo。
 1. **favicon**：`.tmp/gen_favicon.py`（PIL，主题色粉/丁香/金/玫瑰）→ `jarvis/static/favicon.ico`（16/32/48/64 四档，788 B）；`jarvis/web.py` 新增 `@app.get("/favicon.ico")`（`FileResponse`，缺文件 204 不抛 500）+ `index.html` 加 `<link rel="icon">`。3 轮：`curl` = **200 / 788 字节哈希一致**；浏览器 `console_messages(error)` **0 条**（上一批是 1 条 404）。
 2. **near_miss 导出**：`training/_t2_hot_export.py`（入 Git，**只读**）把 `hot_phrases` 导出 `.tmp/hot_phrases_<时间戳>.csv`，列 `kind,text,count,first_seen,last_seen` 按 count 降序，`DB=`/`KIND=` 可指定库与类别。判据全过：现役库 12 行（`near_miss 1 / user 11`）、只导 near_miss 1 行；临时库 60 行（40 user + 20 near_miss）与只导 20 行顺序正确；**现役库导出后仍 12 行（未被污染）**。
 3. **通路打通**：真实转录写入近音行 → 导出 CSV → 作后续重训/验收负样本（records/2026-11-11-21-36-30.md 第 3 项、Q13 真人近音来源同一）。现役库只 1 条 near_miss，需真实使用累积。
+
+## 2026-11-13-00-12-17_cc（第 4 项：设置里可切换唤醒 ONNX，3 轮，全 PASS）
+
+- 用户 00:12 第 4 项「将唤醒 onnx 做进设置中，允许用户选择，暂时只提供 git 中有的选项(0.3,0.9,1.0c)」→ 10:30 开工，11:05 完成 3 轮。
+- **实现**：`config.yaml` `wake_word.model_options`（3 条 label/model/threshold，数据驱动）；`wake.py` `_reload` Event + `request_wake_reload()`，监听循环内重建 `Model()` 并复用 mic 流、同步 `state`，失败保留旧模型；`web.py` GET 返回 `wake_model_options`（含 `current`）、PUT 成对写 model+threshold 后触发重载；`index.html` 唤醒词组加下拉 + `pickWakeModel()` 预填推荐阈值 + 保存时成对提交。
+- **3 轮**：① GET 恰好 3 项（v0.3 0.70 / v0.9 0.75 / v1.0c 0.72），`current` = v0.9，未入 Git 的版本不出现；② PUT 切 v1.0c+0.72 → health 即刻变 `aili_xiya_v1.0c.onnx`/0.72、4 灯 online、`listening=True`，日志 `[Wake] reloaded …`，新峰值 0.717/0.523 证明分数来自新模型（键名 `Path().stem` 解析正确）；③ 浏览器（零截图）选 v0.9 → 阈值预填 0.75 → 保存 toast「已重载」→ health/config 均 v0.9+0.75，**重启后仍 v0.9/0.75**，console 0 error。
+- **规矩新增**：切换必须 **model + threshold 成对**（v1.0c 留 0.75 会塌召回）；预测键名用 filename stem，否则恒 0 永不触发；`browser_click` 用精确按钮文本避免 strict mode violation。
+- **现役：v0.9 + 0.75，已切回。** 本地 commit，未 push。
