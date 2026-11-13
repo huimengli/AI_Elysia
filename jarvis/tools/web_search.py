@@ -1,5 +1,7 @@
 import html
+import json
 import re
+import urllib.parse
 import urllib.request
 
 from ddgs import DDGS
@@ -17,13 +19,25 @@ def search(query: str, max_results: int = 5) -> str:
 
 
 def get_weather(location: str = "") -> str:
-    """Get current weather using wttr.in (no API key needed)."""
+    """Get current weather using wttr.in (no API key needed).
+
+    HB-035（2026-11-13）：中文地名以前直接拼进 URL，`urllib` 在 ascii 编码阶段就崩
+    （`'ascii' codec can't encode characters`，12:12:23 连 3 次）。现在路径段按
+    `quote(..., safe="")` 编码，并且改用 `format=j1`（纯 ASCII 的 JSON），中文文案
+    在 Python 侧拼装，URL 里不再出现任何非 ASCII 字节。
+    """
     try:
-        loc = location.replace(" ", "+") if location else ""
-        url = f"https://wttr.in/{loc}?format=%l：天气%C，气温%t，湿度%h，风%w"
+        loc = urllib.parse.quote(location.strip(), safe="") if location.strip() else ""
+        url = f"https://wttr.in/{loc}?format=j1"
         req = urllib.request.Request(url, headers={"User-Agent": "curl/7.0"})
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            return resp.read().decode("utf-8").strip()
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode("utf-8", errors="ignore"))
+        cur = data["current_condition"][0]
+        area = (data.get("nearest_area", [{}])[0].get("areaName", [{}])[0].get("value")
+                or location.strip() or "本地")
+        desc = cur.get("weatherDesc", [{}])[0].get("value", "")
+        return (f"{area}：{desc}，气温 {cur.get('temp_C')}°C，"
+                f"湿度 {cur.get('humidity')}%，风速 {cur.get('windspeedKmph')} km/h")
     except Exception as e:
         return f"天气查询失败：{e}"
 

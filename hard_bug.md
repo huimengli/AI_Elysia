@@ -49,3 +49,32 @@
 - **HB-029** `HF_ENDPOINT=hf-mirror.com` 缺 `https://` scheme → whisper 加载抛「URL missing protocol」；方案启动 env 一律带 scheme。
 - **HB-030** 单次 abort 后全局 `_abort` Event 永久置位，污染其后所有 Web/语音请求（每次 0 s 回「已停止。」）→ `_process_request` 顶部 `_abort.clear()`（abort 是一次性信号，不是持久状态）。
 - **HB-031** 误唤醒 + 录音期 barge-in 的 `abort_all()` 误杀并发 Web 轮次 + `oww.predict` MemoryError 崩进程 → BUSY 分支先查 `is_recording()`（录音期不打断，仅 2 s 冷却）、IDLE 分支若 `is_speaking()` 视为自身回声（`stop_speaking()` + 3 s 冷却）、predict 加 try/except。
+
+## HB-033 · 2026-11-13 · **已解决（12:20 修复+3 轮）** · `set_volume` 虚假成功、`get_volume` 读错端点
+
+- **影响**：音量类指令永远「报告成功、实际无效」；模型拿不到失败信号，2026-11-08 治理的「工具失败要直说」被工具本身架空。比「模型编造」更危险。
+- **现象**（`tests/2026-11-08-20-44-17_cc/record_9.md`，12:12:48）：说「把音量调大」→ 回复「音量已调至最大 (100%)」→ **你核对设备音量仍是 20%**。绕开对话直调工具（零截图）：
+  ```
+  before: 当前音量 0%。
+  音量已设为 40%。      ← 声称成功
+  after: 当前音量 0%。   ← 未变
+  ```
+- **尝试**：直调 `set_volume(40)` + `get_volume()` 复测，确认与模型无关，是工具层问题。
+- **根因**：[jarvis/tools/system.py](jarvis/tools/system.py:33) 跑完 PowerShell **不检查 returncode / 不检查输出**，无条件 `return f"音量已设为 {level}%。"`；`get_volume` 用 `GetDefaultAudioEndpoint(0,1)`（`eConsole`），与播放器看到的 20% 不是同一端点，读数恒 0%。
+- **方案（已实施）**：`set_volume` 跑完**复读音量做证据**：读数与目标一致（含浮点容差）才返回成功，否则返回 `音量设置失败（stdout/stderr）`；`get_volume` 改读 `GetDefaultAudioEndpoint(0,0)`（`eMultimedia`）。3 轮见 `tests/2026-11-13-12-13-14_cc/`。
+
+## HB-034 · 2026-11-13 · **已解决（12:20 修复+3 轮）** · `read_screen` / `find_on_screen` 因 GBK 解码崩在 reader 线程
+
+- **影响**：屏幕读取能力整条不可用（「你能看得见屏幕吗？」必失败）；`find_on_screen` 依赖 `read_screen`，一并失效。
+- **现象**（`record_10.md`，12:13:14；日志 1832-1852 行两次）：`UnicodeDecodeError: 'gbk' codec can't decode byte 0x9c` 抛在 `subprocess.py:1597 _readerthread`，随后 `[Tool: read_screen] 工具「读取屏幕」执行失败：'NoneType' object has no attribute 'strip'`。
+- **尝试**：读日志定位解码位置；与轮 6 的 `'NoneType' ... strip'` 症状比对，确认**同名症状、不同根因**（轮 6 是 `title=None`）。
+- **根因**：[jarvis/tools/desktop.py](jarvis/tools/desktop.py:117) 的 `_ocr_image` 用 `subprocess.run(..., text=True)`，读取线程按本机代码页 GBK 解码 PowerShell OCR 输出；`result.stdout` 变 `None` → `.strip()` 崩。同文件族已有正确写法 `_ps_utf8`（`text=False` + `decode("utf-8", errors="ignore")`）没被复用。
+- **方案（已实施）**：PowerShell 里先设 `[Console]::OutputEncoding = UTF8`，用 `text=False` 拿字节再按 UTF-8 解码；OCR 空结果仍返回 `NO_TEXT`。3 轮见 `tests/2026-11-13-12-13-14_cc/`。
+
+## HB-035 · 2026-11-13 · **已解决（12:20 修复+3 轮）** · `get_weather` 中文地名未 URL quote → ascii 编码崩
+
+- **影响**：所有中文地名的天气查询必失败（12:12:23 连 3 次）。
+- **现象**（`record_10.md` 备注；日志 1771-1773 行）：`天气查询失败：'ascii' codec can't encode characters in position 15-17: ordinal not in range(128)`。
+- **尝试**：直调 `get_weather("北京")` 复现，确认与模型无关。
+- **根因**：[jarvis/tools/web_search.py](jarvis/tools/web_search.py:19) 把中文地名**拼进 URL 未 quote**，`urllib` 在 ascii 编码阶段崩。
+- **方案（已实施）**：`urllib.parse.quote(location, safe="")` 后拼 URL。3 轮见 `tests/2026-11-13-12-13-14_cc/`。

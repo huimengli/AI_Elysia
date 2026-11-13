@@ -78,6 +78,7 @@ def read_screen() -> str:
 def _ocr_image(image_path: str) -> str:
     """Run Windows OCR on an image file, return text with positions."""
     ps = f"""
+[Console]::OutputEncoding=[System.Text.Encoding]::UTF8
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
 $null = [Windows.Media.Ocr.OcrEngine,Windows.Foundation,ContentType=WindowsRuntime]
 $null = [Windows.Graphics.Imaging.BitmapDecoder,Windows.Foundation,ContentType=WindowsRuntime]
@@ -114,11 +115,16 @@ foreach ($line in $result.Lines) {{
 }}
 $output -join "`n"
 """
+    # HB-034（2026-11-13）：以前用 text=True，读取线程按本机代码页 GBK 解码 OCR 输出，
+    # 遇到 0x9c 直接崩在 subprocess._readerthread 里，result.stdout 变 None，
+    # 于是 result.stdout.strip() 报 'NoneType' object has no attribute 'strip'
+    # （12:13:14 的「屏幕读取失败」根因，日志 start7860_1105.log 1832-1852 行）。
+    # 现在拿字节再按 UTF-8 解码（PS 侧已设 [Console]::OutputEncoding = UTF8）。
     result = subprocess.run(
         ["powershell", "-command", ps],
-        capture_output=True, text=True, timeout=15,
+        capture_output=True, text=False, timeout=15,
     )
-    text = result.stdout.strip()
+    text = result.stdout.decode("utf-8", errors="ignore").strip()
     if not text:
         return NO_TEXT
     return text

@@ -279,3 +279,11 @@ o_speech_seconds）本批未实施，仍挂在 todo。
 - **3 轮**：① GET 恰好 3 项（v0.3 0.70 / v0.9 0.75 / v1.0c 0.72），`current` = v0.9，未入 Git 的版本不出现；② PUT 切 v1.0c+0.72 → health 即刻变 `aili_xiya_v1.0c.onnx`/0.72、4 灯 online、`listening=True`，日志 `[Wake] reloaded …`，新峰值 0.717/0.523 证明分数来自新模型（键名 `Path().stem` 解析正确）；③ 浏览器（零截图）选 v0.9 → 阈值预填 0.75 → 保存 toast「已重载」→ health/config 均 v0.9+0.75，**重启后仍 v0.9/0.75**，console 0 error。
 - **规矩新增**：切换必须 **model + threshold 成对**（v1.0c 留 0.75 会塌召回）；预测键名用 filename stem，否则恒 0 永不触发；`browser_click` 用精确按钮文本避免 strict mode violation。
 - **现役：v0.9 + 0.75，已切回。** 本地 commit，未 push。
+
+## 2026-11-13-12-25-43_cc（20 轮第 9/10 轮暴露的 3 条工具层缺陷，修 + 3 轮，全 PASS）
+
+- **音量虚假成功（HB-033）**：`set_volume` 不检查 returncode/输出、无条件返回成功 → 12:13:03 回复「已调至最大 (100%)」而设备 20%。三层根因：① 无证据校验；② `[MMDeviceEnumerator] -as [IMMDeviceEnumerator]` 在 PowerShell 里**返回 null**（COM coclass 不被 `-as` 激活）→ 调用链打在 null 上；③ 服务在 harness 后台任务里 python 子进程 `%TEMP%` 禁写，`Add-Type -TypeDefinition` 编译被拒。修法：C# 类内 `new MMDeviceEnumerator()` COM 激活 + **复读音量作证据**（差 ≤2 才报成功，否则带 stdout/stderr 报失败）+ 读 `eMultimedia`（role=0）+ `$env:TEMP` 指到工作区 `.tmp/pscompile`。3 轮：直调 `20→60（已复读确认）→60→20（已复读确认）→20`，服务级日志两次「已复读确认」+ 独立复测 60/20 一致。
+- **屏幕读取 GBK 崩（HB-034）**：`_ocr_image` 用 `text=True`，reader 线程按 GBK 解码 OCR 输出崩在 `0x9c` → `stdout` 变 None → `'NoneType' ... strip'`。修法：PS 设 `[Console]::OutputEncoding = UTF8` + `text=False` + UTF-8 解码。3 轮：`read_screen` 返回真实 OCR 文本。诚实记录：**WinRT OCR 中文质量差**（字间插空格、有错字）→ `find_on_screen` 的按空格分词子串匹配在中文上不可靠，留下一批改匹配方式。
+- **天气 ascii 崩（HB-035）**：中文地名未 URL quote + `format=` 带中文 → `'ascii' codec can't encode`。修法：`quote(location, safe="")` + `format=j1`（纯 ASCII JSON，中文在 Python 侧拼）。3 轮：`Beijing：Smoky haze，气温 11°C，湿度 50%，风速 4 km/h`。
+- **规矩新增**：**工具必须自带证据**（复读/复测），证据不符就返回失败文本 —— 虚假成功比编造更危险，它让「工具失败要直说」被工具本身架空；**PowerShell 里 COM coclass 不能用 `-as` 激活**，必须 C# 类 `new`；**凡要 `Add-Type -TypeDefinition` 的工具把 `$env:TEMP` 指到工作区**；**对 PowerShell 输出不要用 `text=True`**（GBK 会崩在 reader 线程）。
+- 20 轮第 11-20 轮（打断三态、近音、安静/轻敲、空转录、长句）**未跑**，需你在麦克风前配合。待修两条：`show_notification` 的 `title=None`（2026-11-08 计划①「dispatch 按 schema 强制参数类型」没落地，轮 6 复现）、`find_on_screen` 中文匹配方式。现役 **v0.9 + 0.75** 未动，音量已还原 20%。已本地 commit，未 push。
