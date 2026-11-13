@@ -198,6 +198,15 @@ context = ContextManager()
 memory = Memory()
 event_log = EventLog()  # T7: operation log → sqlite (jarvis/data/events.db)
 
+# 本机常用应用表（records/2026-11-13-13-46-12.md）：open_app 先匹配这张表。
+# 幂等灌入，失败不阻塞启动（表已存在时只是跳过，扫描一次约 2 s）。
+try:
+    from jarvis.apps import populate as _populate_apps
+    _apps_stats = _populate_apps()
+    print(f"[Apps] {_apps_stats}")
+except Exception as e:
+    print(f"[Apps] WARN: 应用表灌入失败，open_app 将只走其它路径：{e}")
+
 
 def _system_prompt() -> str:
     now = datetime.now().strftime("%A, %B %d %Y, %I:%M %p")

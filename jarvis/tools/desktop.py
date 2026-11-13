@@ -214,14 +214,27 @@ def find_on_screen(text: str) -> str:
 # ──────────────── Window Management ────────────────
 
 def get_open_windows() -> str:
-    """Return titles of all open windows."""
+    """Return titles of all open windows.
+
+    HB-034 家族延伸（2026-11-13，UI 历史里那条「工具「列出窗口」执行失败：'NoneType'
+    object has no attribute 'strip'」）：老实现用 `text=True`，PowerShell 输出里有
+    **非 GBK 字符**（窗口标题里的 emoji、生僻字、全角符号）时 reader 线程被 GBK 解码崩掉
+    → `result.stdout` 变 `None` → `.strip()` 抛 `'NoneType'`。现在显式让 PowerShell 输出
+    UTF-8，按 UTF-8 解码，并且**读不到就如实报**，不再假成功。
+    """
     result = subprocess.run(
-        ["powershell", "-command",
+        ["powershell", "-NoProfile", "-command",
+         "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
          "Get-Process | Where-Object {$_.MainWindowTitle} | "
          "Select-Object -ExpandProperty MainWindowTitle"],
-        capture_output=True, text=True,
+        capture_output=True, text=False,
     )
-    return result.stdout.strip() or "没有可识别的窗口。"
+    out = result.stdout.decode("utf-8", errors="ignore").strip()
+    if result.returncode == 0:
+        # 空输出是合法结果（此刻确实没有带标题的窗口），不能算失败
+        return out if out else "没有可识别的窗口。"
+    err = result.stderr.decode("utf-8", errors="ignore").strip()
+    return f"列窗口失败（returncode {result.returncode}）：{err or '无输出'}"
 
 
 def focus_window(title: str) -> str:

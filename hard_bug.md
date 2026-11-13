@@ -112,3 +112,11 @@
 - **根因**：`_coerce`（`jarvis/tools/router.py` 第 320 行）对 schema 声明为 string 的**缺失参数**无脑给 `""`，覆盖工具默认值
 - **方案**（待实施）：`_coerce` 优先取 schema 的 `default`，否则保留工具默认（不写入 key），再兜底 `""`；同时把需要默认值的项在 schema 里显式声明
 - **关联**：`tests/2026-11-13-12-59-10_cc/record_17.md`
+
+## HB-041 · 2026-11-13 14:30 · 已解决（修 + 复测）· 拼音索引对纯英文应用名失效
+- **影响**：拼音直达层对 `apps` 表里 **158/227 条纯英文名**（`Google Chrome`、`OneDrive`、`aida64`、`launcher`…）完全失效，`py` 列是空串；同时「`dnSpy.exe - 快捷方式`」被索引成 `kuaijiefangshi`，与 `HaoZip - 快捷方式` 撞车，拼音查询会撞上无关条目
+- **现象**：启动日志 `pinyin_filled: 158` 与探测时「227 已填满」矛盾 → 直查库确认 158 条 `py = ''`
+- **尝试**：先以为是补列逻辑没跑（`_fill_missing_pinyin` 只填空串，撞车行 py 非空所以不会被重算）→ 改成重算全部行
+- **根因**：`pypinyin` 的 `errors="ignore"` **丢弃非中文字符**，纯英文名拼音串为空；中文名里的「- 快捷方式」尾巴被当成索引主体
+- **方案**（已实施）：**没有中文时用名字本身的小写字母当索引**；**算拼音前先剥「- 快捷方式」/「- Shortcut」尾巴**；`_fill_missing_pinyin()` 改为重算全部行。复测：`py` 为空 0 条，`Google Chrome -> googlechrome`、`aida64 -> aida`、`dnSpy -> dnspyexe`、`HaoZip -> haozip`，`open_app('chrome')` → `已打开：Google Chrome（复读确认进程 chrome）`
+- **关联**：`tests/2026-11-13-13-46-12_cc/record_7.md`

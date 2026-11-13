@@ -132,15 +132,19 @@ TOOL_SCHEMAS = [
     # --- Apps & processes ---
     {"type": "function", "function": {
         "name": "open_app",
-        "description": "Open app by name: chrome, firefox, edge, brave, discord, telegram, slack, teams, zoom, vscode, terminal, cmd, powershell, git bash, spotify, vlc, steam, epic games, notepad, notepad++, word, excel, powerpoint, paint, snipping tool, explorer, task manager, calculator, settings, control panel.",
+        "description": "Open an installed app on this machine. Matches a local app table of ~227 entries (scanned from the Start Menu plus system apps), so Chinese names, English process names and pinyin all work. When several entries are close, it reports the candidates instead of picking one — ask the user which one.",
         "parameters": {"type": "object", "properties": {
-            "name": {"type": "string"}}, "required": ["name"]}}},
+            "name": {"type": "string",
+                     "description": "Pass the name exactly as heard: Chinese (记事本), English (notepad, chrome) or pinyin (jishiben). Do not translate or substitute a name the user did not say."},
+            }, "required": ["name"]}}},
 
     {"type": "function", "function": {
         "name": "kill_process",
         "description": "Kill/close a running process by name (e.g. chrome, spotify, discord).",
         "parameters": {"type": "object", "properties": {
-            "name": {"type": "string"}}, "required": ["name"]}}},
+            "name": {"type": "string",
+                     "description": "Process name in English (notepad, mspaint). Non-Latin names are stripped and the kill fails, so use the process name, not the window title."},
+            }, "required": ["name"]}}},
 
     # --- Screen vision & mouse (AGENTIC) ---
     {"type": "function", "function": {
@@ -184,7 +188,9 @@ TOOL_SCHEMAS = [
         "name": "focus_window",
         "description": "Bring a window to foreground by partial title.",
         "parameters": {"type": "object", "properties": {
-            "title": {"type": "string"}}, "required": ["title"]}}},
+            "title": {"type": "string",
+                      "description": "A fragment of the title as shown on screen. Titles are localized: Notepad shows 「无标题 - 记事本」, so use Chinese fragments (记事本), not the process name."},
+            }, "required": ["title"]}}},
 
     {"type": "function", "function": {
         "name": "get_open_windows",
