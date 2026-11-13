@@ -1,0 +1,11 @@
+# 轮 3 — `web_search` + `fetch_page`（外网可达性）
+- **时间**：2026-11-13 13:20-13:27
+- **场景**：先工具级直调，再服务级（浏览器输入框打字「上网搜一下 openWakeWord 是什么」，零截图）
+- **期望**（轮 3 判据）：搜索有结果；网页正文抽取无标签残留
+- **实际**：
+  - 工具级：`搜索失败：error sending request for url (https://html.duckduckgo.com/html/) > operation timed out`；`fetch_page` 对 `https://example.com` → `The handshake operation timed out`；`https://openwakeword.org/` → `getaddrinfo failed`
+  - 连通性探针：`curl example.com rc=000`、`curl openwakeword.org 000`，并伴随 `failed to load native root certificate: failed to open current user certificate store: 拒绝访问`
+  - 服务级（13:27:35，日志 1371 行）：`[Tool: web_search] 搜索失败：error sending request for url (https://search.yahoo.com/search;...)`；随后 `[Tool: fetch_page] 读取网页失败 https://en.wikipedia.org/wiki/Open_WakeWord：handshake timed out`
+  - 对照组：`get_weather` 走 `wttr.in` **通**（12:29 与本轮 13:25 都拿到北京数据）
+- **结果**：**FAIL（能力不可用）**，根因是**本机外网不可达**，不是工具代码缺陷。判据诚实：不能因为「工具如实报了失败」就算 PASS。
+- **备注**：**「网络边界」要分三层写清楚**：① 我这条 Agent 会话里的 python 子进程无外网；② 服务（后台 job）同样打不通大部分外网（yahoo/DuckDuckGo/Wikipedia/example.com 全超时），只有 `wttr.in` 通；③ `web_search`/`fetch_page` 的可用性取决于运营是否给出可达的检索端点。`web_search` 内部走 `search()`（`jarvis/tools/web_search.py` 第 10 行），不是 `web_search` 同名函数 —— 直调时名字要写对。

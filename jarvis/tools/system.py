@@ -166,13 +166,22 @@ def get_system_info() -> str:
 
 
 def set_brightness(level: int) -> str:
-    """Set screen brightness (0-100). Only works on laptops."""
+    """Set screen brightness (0-100). Only works on panels exposing WMI brightness.
+
+    老实现也是「跑了就算成功」的写法（HB-033 同族）。现在失败时把 stderr（UTF-8 解码）
+    带进文案，让模型拿到真实失败信号；台式机没有 `WmiMonitorBrightnessMethods`，
+    期望就是走失败分支。
+    """
     level = max(0, min(100, level))
-    ps = f"(Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness(1,{level})"
-    result = subprocess.run(["powershell", "-command", ps], capture_output=True, text=True)
+    ps = (f"[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
+          f"(Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods)"
+          f".WmiSetBrightness(1,{level})")
+    result = subprocess.run(["powershell", "-NoProfile", "-command", ps],
+                            capture_output=True, text=False, timeout=20)
+    err = result.stderr.decode("utf-8", errors="ignore").strip()
     if result.returncode == 0:
         return f"亮度已设为 {level}%。"
-    return "这台台式机不支持通过 WMI 调节亮度。"
+    return f"亮度设置失败（台式机通常不支持 WMI 调亮度）：{err or '无输出'}"
 
 
 def lock_screen() -> str:
@@ -197,22 +206,39 @@ def power_command(action: str) -> str:
 
 
 def show_notification(title: str, message: str) -> str:
-    """Show a Windows toast notification."""
+    """Show a notification.
+
+    HB-037（2026-11-13，`tests/2026-11-13-12-59-10_cc/record_16.md`）：原来的
+    `ToastNotificationManager` 路径**在这台机器上根本弹不出来** ——
+    `CreateToastNotifier` 报 `The process has no package identity (0x80073D54)`
+    （Python/PowerShell 进程没有 UWP 包标识，UWP toast 必须由有包标识的应用创建），
+    而且模板 1 的 `text` 节点枚举也报 `Collection was modified`。老实现把这条全崩的
+    路径包装成「已弹出通知」，属于虚假成功。现在改用 **NotifyIcon 气泡**（传统
+    toast，不需要包标识），并把 stdout/stderr（UTF-8）带进失败文案。
+    """
     safe_title = title.replace("'", "''")
     safe_msg = message.replace("'", "''")
     ps = (
-        "[Windows.UI.Notifications.ToastNotificationManager,Windows.UI.Notifications,ContentType=WindowsRuntime] > $null;"
-        "$xml = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent(1);"
-        "$text = $xml.GetElementsByTagName('text');"
-        f"$text[0].AppendChild($xml.CreateTextNode('{safe_title}')) > $null;"
-        f"$text[1].AppendChild($xml.CreateTextNode('{safe_msg}')) > $null;"
-        "$toast = [Windows.UI.Notifications.ToastNotification]::new($xml);"
-        "[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('爱莉希雅').Show($toast)"
+        "$env:TEMP='" + _PS_TEMP + "'; $env:TMP=$env:TEMP; "
+        "Add-Type -AssemblyName System.Windows.Forms,System.Drawing; "
+        "$n = New-Object System.Windows.Forms.NotifyIcon; "
+        "$n.Icon = [System.Drawing.SystemIcons]::Information; "
+        f"$n.BalloonTipTitle = '{safe_title}'; "
+        f"$n.BalloonTipText = '{safe_msg}'; "
+        "$n.Visible = $true; "
+        "$n.ShowBalloonTip(4000); "
+        "Start-Sleep -Seconds 4; "
+        "$n.Visible = $false; $n.Dispose(); "
+        "Write-Output 'balloon shown'"
     )
-    result = subprocess.run(["powershell", "-command", ps], capture_output=True, text=True)
-    if result.returncode == 0:
-        return f"已弹出通知：{title}"
-    return f"通知失败：{result.stderr.strip()}"
+    os.makedirs(_PS_TEMP, exist_ok=True)
+    result = subprocess.run(["powershell", "-NoProfile", "-command", ps],
+                            capture_output=True, text=False, timeout=25)
+    out = result.stdout.decode("utf-8", errors="ignore").strip()
+    err = result.stderr.decode("utf-8", errors="ignore").strip()
+    if result.returncode == 0 and "balloon shown" in out:
+        return f"已弹出通知：{title} — {message}"
+    return f"通知失败：{err or out or '无输出'}"
 
 
 # --- Timer / Reminder ---

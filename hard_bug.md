@@ -78,3 +78,37 @@
 - **尝试**：直调 `get_weather("北京")` 复现，确认与模型无关。
 - **根因**：[jarvis/tools/web_search.py](jarvis/tools/web_search.py:19) 把中文地名**拼进 URL 未 quote**，`urllib` 在 ascii 编码阶段崩。
 - **方案（已实施）**：`urllib.parse.quote(location, safe="")` 后拼 URL。3 轮见 `tests/2026-11-13-12-13-14_cc/`。
+
+## HB-036 · 2026-11-13 13:25 · 已解决（修 + 复测）· `type_text` 中文虚假成功
+- **影响**：语音助手让模型「输入文字」时，中文一个字都写不进去却报成功；模型拿到假成功，后续动作全建立在假事实
+- **现象**：新起记事本、聚焦、`type_text('爱莉希雅工具测试')` → 返回「已输入文本…」，而记事本标题保持 `无标题 - 记事本`（无 `*` 已修改标记）；ASCII `ABC123` 则标题变 `*无标题 - 记事本`
+- **尝试**：先用 OCR 当证据（不可靠，中文插空格）；再用剪贴板 `ctrl+a`/`ctrl+c`（当时 hotkey 未验，证据 False）；最后用标题 `*` 做确定性证据
+- **根因**：`pyautogui.write` 对键盘不可映射字符（中文）**静默跳过、不抛异常**；老实现无条件 `return "已输入文本：…"`
+- **方案**（已实施）：全部字符可映射时正常键入；含不可映射字符走**剪贴板粘贴**（`set_clipboard(text)` + `ctrl+v`），并**先保存后还原**用户剪贴板；文案明写「键盘打不出 N 个字符」
+- **关联**：`tests/2026-11-13-12-59-10_cc/record_8.md`、`need_user.md`（剪贴板 JWT 被覆盖）
+
+## HB-037 · 2026-11-13 13:26 · 已解决（修 + 3 轮）· UWP toast 在本机永远弹不出
+- **影响**：`show_notification` 与依赖它的 `set_timer` 提醒全部不可用；老实现把全崩路径包装成「已弹出通知」，模型拿到假成功
+- **现象**：正常参数与空参都失败，stderr：`Collection was modified; enumeration operation may not execute`（模板 1 的 text 节点枚举）、`You cannot call a method on a null-valued expression`（`$text[1]` null）、`CreateToastNotifier` → `The process has no package identity. (HRESULT: 0x80073D54)`
+- **尝试**：UTF-8 解码 + returncode 校验（止住了 `'NoneType' ... strip'`，但弹不出就是弹不出）
+- **根因**：**UWP toast 必须由有包标识的应用创建**，Python/PowerShell 进程没有包标识 → 该 API 路径在本机不可用
+- **方案**（已实施）：改用 **NotifyIcon 气泡**（传统 toast，不需要包标识），`Write-Output 'balloon shown'` 作证据，stderr 进失败文案。诚实边界：**气泡是否真出现在屏幕无法程序验证**，需用户肉眼确认
+- **关联**：`tests/2026-11-13-12-59-10_cc/record_16.md`、`record_17.md`
+
+## HB-038 · 2026-11-13 13:25 · 已解决（修 + 复测）· `press_key` 对不可识别键名报成功
+- **现象**：`press_key("not_a_key")` 返回「已按下：not_a_key」，键盘上没有任何动作
+- **根因**：无条件 `return`，没有键名校验
+- **方案**（已实施）：逐段校验 `pyautogui.KEYBOARD_KEYS`，不可识别返回「按键失败：无法识别 …（可用键如 enter/space/tab/esc/ctrl/alt/shift/a-z/0-9）」
+- **关联**：`tests/2026-11-13-12-59-10_cc/record_9.md`
+
+## HB-039 · 2026-11-13 13:26 · 已解决（修 + 复测）· `screenshot` 写桌面被沙箱拒
+- **现象**：`PermissionError: [Errno 13] Permission denied: 'C:\Users\楼听\Desktop\jarvis_tool_test.png'`（服务作为 harness 后台任务启动时桌面禁写）
+- **根因**：产物写到 `~/Desktop`，与 HB-033 延伸同族（禁写边界）
+- **方案**（已实施）：写工作区 `.tmp/screens/`，文案给出真实路径与字节数（实测 419024 字节）；不读图
+- **关联**：`tests/2026-11-13-12-59-10_cc/record_19.md`
+
+## HB-040 · 2026-11-13 13:26 · 未解决 · `_coerce` 把可选参数的默认值架空
+- **现象**：`dispatch("set_timer", {"seconds": 3})` → 文案「已设置 3秒 后的提醒：」尾巴为空；`set_timer` 自己的默认中文 `'定时到了！'` 从未生效
+- **根因**：`_coerce`（`jarvis/tools/router.py` 第 320 行）对 schema 声明为 string 的**缺失参数**无脑给 `""`，覆盖工具默认值
+- **方案**（待实施）：`_coerce` 优先取 schema 的 `default`，否则保留工具默认（不写入 key），再兜底 `""`；同时把需要默认值的项在 schema 里显式声明
+- **关联**：`tests/2026-11-13-12-59-10_cc/record_17.md`

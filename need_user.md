@@ -45,3 +45,12 @@
 - 含义：**不换模型与阈值**（`config.yaml` 保持 `aili_xiya_v0.9.onnx` + `threshold 0.75`）；**不补录**（A 未选）；换 v1.0c+0.72 为现役（B）未获批准。
 - 转为执行：推进未完项，按优先级先做 **sherpa 能量门（VAD/静音跳过）→ 重跑 3 轮 A/B（whisper 3/6 vs sherpa 2/6 的既有对照）**，随后「我没听清，请再说一遍」预合成进 RAM 应答池、20 轮明确测试补齐。
 - v1.0c（可用区间 0.70-0.72）与 `aili_xiya_v1.0c.onnx` 留盘，结论在 `tests/2026-11-12-22-30-00_cc/opinion.md`；补录缺口保留在 `need_audio.md`（A 待用户日后补录）。
+
+## Q18 · 2026-11-13 13:30 · status: wait
+**剪贴板里的 JWT 被测试覆盖，无法恢复。** 13:21 读剪贴板时原内容是 193 字符的 JWT（`sub=lt, role=admin`）。轮 9 做 `ctrl+a`/`ctrl+c` 证据实验时把它覆盖成记事本内容。我没有把它写进任何文件、没有 commit。请确认：① 该 token 是否还能重新取得；② 今后凡写剪贴板的工具（`set_clipboard`、`type_text` 粘贴路径）都按「先保存后还原」实现（已实施），且保存必须发生在任何复制类按键实验之前。
+
+## Q19 · 2026-11-13 13:30 · status: wait
+**通知气泡需要你肉眼确认。** `show_notification` 改成 NotifyIcon 气泡（UWP toast 在本机无包标识，`0x80073D54` 弹不出）。程序侧只能证明 PS 回 `balloon shown`、returncode 0；**气泡是否真出现在屏幕无法程序验证**。13:30 与 13:31:22 各触发过一次（标题「爱莉希雅」），请告诉我你有没有看到。
+
+## Q20 · 2026-11-13 13:30 · status: wait
+**真锁屏（`lock_screen`）我没做，等你说「锁」。** 我把它拆到批次收尾，因为锁屏会打断当前会话与正在跑的服务/采样器。你已授权真锁屏；`lock_screen` 用 `rundll32 user32.dll,LockWorkStation`，无证据校验，判据只能由你肉眼确认。要我现在做吗？

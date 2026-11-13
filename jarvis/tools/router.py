@@ -13,7 +13,8 @@ from jarvis.tools.desktop import (
     media_control, screenshot,
     click_at, scroll_screen, move_mouse, read_screen, find_on_screen,
 )
-from jarvis.tools.subagent import delegate_task
+# `delegate_task` 已从工具面摘掉（2026-11-13 12:59 用户规矩：爱莉希雅不允许启动
+# 子智能体）。jarvis/tools/subagent.py 文件保留，只是不再暴露给模型。
 
 TOOL_MAP = {
     # Web
@@ -56,9 +57,7 @@ TOOL_MAP = {
     "power_command":    lambda a: power_command(a["action"]),
     # Notifications & timers
     "show_notification": lambda a: show_notification(a["title"], a["message"]),
-    "set_timer":        lambda a: set_timer(int(a["seconds"]), a.get("message", "Timer done!")),
-    # Subagent
-    "delegate_task":    lambda a: delegate_task(a["task"], a.get("context", "")),
+    "set_timer":        lambda a: set_timer(int(a["seconds"]), a.get("message", "定时到了！")),
 }
 
 # Chinese display names for spoken / on-screen reports (records/2026-11-09-21-55-14.md).
@@ -96,7 +95,6 @@ TOOL_LABELS = {
     "power_command": "电源操作",
     "show_notification": "发送通知",
     "set_timer": "设置计时器",
-    "delegate_task": "委派任务",
 }
 
 
@@ -311,14 +309,7 @@ TOOL_SCHEMAS = [
             "seconds": {"type": "integer"},
             "message": {"type": "string"}}, "required": ["seconds"]}}},
 
-    # --- Subagent ---
-    {"type": "function", "function": {
-        "name": "delegate_task",
-        "description": "Delegate a subtask to a fast local AI model (Ollama). Use for: summarizing text, reformatting data, writing boilerplate, simple Q&A. Provide the task and optional context.",
-        "parameters": {"type": "object", "properties": {
-            "task": {"type": "string", "description": "What the subagent should do"},
-            "context": {"type": "string", "description": "Optional context/data for the subtask"}},
-            "required": ["task"]}}},
+    # Subagent 已摘掉：delegate_task 不再暴露给模型（2026-11-13 12:59 规矩）
 ]
 
 

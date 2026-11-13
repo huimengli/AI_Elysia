@@ -287,3 +287,12 @@ o_speech_seconds）本批未实施，仍挂在 todo。
 - **天气 ascii 崩（HB-035）**：中文地名未 URL quote + `format=` 带中文 → `'ascii' codec can't encode`。修法：`quote(location, safe="")` + `format=j1`（纯 ASCII JSON，中文在 Python 侧拼）。3 轮：`Beijing：Smoky haze，气温 11°C，湿度 50%，风速 4 km/h`。
 - **规矩新增**：**工具必须自带证据**（复读/复测），证据不符就返回失败文本 —— 虚假成功比编造更危险，它让「工具失败要直说」被工具本身架空；**PowerShell 里 COM coclass 不能用 `-as` 激活**，必须 C# 类 `new`；**凡要 `Add-Type -TypeDefinition` 的工具把 `$env:TEMP` 指到工作区**；**对 PowerShell 输出不要用 `text=True`**（GBK 会崩在 reader 线程）。
 - 20 轮第 11-20 轮（打断三态、近音、安静/轻敲、空转录、长句）**未跑**，需你在麦克风前配合。待修两条：`show_notification` 的 `title=None`（2026-11-08 计划①「dispatch 按 schema 强制参数类型」没落地，轮 6 复现）、`find_on_screen` 中文匹配方式。现役 **v0.9 + 0.75** 未动，音量已还原 20%。已本地 commit，未 push。
+
+## 2026-11-13-12-59-10_cc（32 个工具全过一遍，20 轮 + 1 附加项，零截图）
+
+- **最重要的一条：「跑了就算成功」的工具批量存在**。这一轮抓出同一族五条虚假成功：`set_volume`（音量，前批已修）、`type_text`（中文静默跳过却报成功，HB-036）、`press_key`（`not_a_key` 也报「已按下」，HB-038）、`show_notification`（UWP toast 在本机永远弹不出，`0x80073D54` 无包标识，却报「已弹出通知」，HB-037）、`set_brightness`（文案对但无原因无证据）。**规矩加强：工具必须自带证据**（复读/复测/产物字节/枚举校验），证据不符就返回失败文本。
+- **本机环境边界必须写进代码，不能靠文档**：① `%TEMP%` 禁写 → `Add-Type -TypeDefinition` 的 `$env:TEMP` 指到工作区 `.tmp/pscompile`（音量、`focus_window`），`run_python` 临时脚本指到 `.tmp/pyrun`；② 桌面禁写 → `screenshot` 写工作区 `.tmp/screens`（HB-039）；③ **外网不可达**：yahoo/DuckDuckGo/Wikipedia/example.com 全超时，只有 `wttr.in` 通（天气可用）—— 判据要诚实，「工具如实报失败」不等于 PASS（轮 3 记 FAIL）。
+- **中文与本地化的坑**：窗口标题是中文本地化的（`无标题 - 记事本`），`focus_window('Notepad')` 匹配不到；`pyautogui.write` 打不出中文（不可映射字符静默跳过）→ 走剪贴板粘贴且**先保存后还原**；OCR 中文插空格 → **不能拿 OCR 当写入证据**，标题 `*` 已修改标记与剪贴板才是确定性证据。
+- **一处更正（我先前说错了）**：`_coerce` 早已落地（把 string 的 `None` 强制成 `""`），20 轮轮 6 的 `'NoneType' ... strip'` 真实根因是 `text=True` 的 GBK reader 线程崩（HB-034 家族），不是「dispatch 没强制参数类型」。新暴露 **HB-040**：`_coerce` 对缺失的可选参数无脑给 `""`，把工具默认值架空（`set_timer` 的中文默认文案被覆盖成空串）。
+- **副作用披露（不隐瞒）**：剪贴板里的 193 字符 JWT（`sub=lt, role=admin`）在轮 9 的 `ctrl+c` 实验中被覆盖，**无法恢复**（Q18，未 commit 未落盘）；`next` 让播放器跳下一首（已授权）；`mute` 连打两次回到原状态；记事本已清场；音量/剪贴板已还原；亮度未改动（台式机 WMI Access denied，如实报失败）；**真锁屏未做**（拆到收尾，Q20）；`power_command` 只测拒绝分支，未触发任何电源操作。
+- **新规矩**：**爱莉希雅不允许启动子智能体** → `delegate_task` 从 TOOL_MAP / TOOL_SCHEMAS / TOOL_LABELS 摘除（`subagent.py` 保留），实测 `dispatch` 返回「未知工具」，工具数 32/32。现役 **v0.9 + 0.75** 未动，4 灯 online。已本地 commit，未 push。

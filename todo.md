@@ -65,3 +65,21 @@
 - [x] **HB-035 天气 ascii 崩**：`quote(location, safe="")` + `format=j1`（纯 ASCII JSON，中文在 Python 侧拼）→ 3 轮 PASS
 - [ ] **待修 1**：`show_notification` 的 `title=None` 会炸（`'NoneType' ... 'strip'`，轮 6 复现）—— 2026-11-08 计划①「dispatch 按 schema 把参数强制成字符串/整数（`None`→空串，缺参→默认值）」**至今没落地**，要在 `router.py` 里做参数强制化，并把同类「跑了就算成功」的工具（`open_app`、`press_key`、`type_text`）都加上证据校验
 - [ ] **待修 2**：`find_on_screen` 的中文匹配不可靠（WinRT OCR 字间插空格 + 有错字，按空格分词算 overlap 基本匹配不上）→ 改成按行文本包含匹配，不用空格分词
+
+## 2026-11-13-12-59-10 全部工具 20 轮明确测试（→ records/2026-11-13-12-59-10.md）
+
+- [ ] **新规矩：爱莉希雅不允许启动子智能体** —— `delegate_task` 从 TOOL_MAP 与 schema 摘掉（`jarvis/tools/subagent.py` 文件保留不删）
+- [ ] 20 轮（覆盖 32 个工具，逐轮 `tests/2026-11-13-12-59-10_cc/record_1..20.md` + `opinion.md` + 累积 `tests/opinion.md`，零截图）：轮 1 `get_time`+`get_system_info`、2 音量、3 `web_search`+`fetch_page`、4 `open_url`、5 `get_weather`、6 `open_app`+`get_open_windows`、7 `focus_window`、8 `type_text`、9 `press_key`、10 `move_mouse`+`click_at`、11 `scroll_screen`、12 `kill_process`（只杀记事本）、13 `write_file`+`read_file`+`list_files`、14 `run_python`、15 剪贴板 set/get+还原、16 `show_notification`（正常参数 + `title=None` 空参，**空参必须不崩**）、17 `set_timer`、18 `set_brightness`+还原、19 `power_command` 拒绝分支 + `screenshot`、20 `media_control` + `lock_screen`（真锁屏，最后做）
+- [ ] 已授权的高风险项：lock_screen（真锁屏）/ power_command（只测拒绝分支，不真关机）/ set_brightness / kill_process（目标只用记事本）/ click_at+move_mouse+scroll_screen+press_key+type_text（只落在记事本）/ set_clipboard（测后还原）/ screenshot + media_control。**子智能体（含爱莉希雅自己的 delegate_task）不允许启动**
+
+## 2026-11-13-12-59-10 全部工具 20 轮：已完成（→ tests/2026-11-13-12-59-10_cc/）
+
+- [x] 20 轮 + 附加项轮 21 全部落盘（32 个工具全过一遍，零截图）。逐轮 PASS：1、2、4、5、6、7（判据修正后）、8（修后）、9（修后）、10、11、12、13、14、15、16（修后，工具级+服务级）、17（部分）、18、19（拒绝分支+修后）、20 的 media、21。FAIL：轮 3（外网不可达，环境限制）；`screenshot` 修前（桌面禁写）
+- [x] 五条「跑了就算成功」全部封住：`set_volume`（复读证据，前批已修）、`type_text`（HB-036 剪贴板粘贴 + 先存后还）、`press_key`（HB-038 键名校验）、`show_notification`（HB-037 NotifyIcon 气泡）、`set_brightness`（带真原因）
+- [x] 环境边界写进代码：`$env:TEMP` → `.tmp/pscompile`（音量 + `focus_window`）、`run_python` 临时脚本 → `.tmp/pyrun`、`screenshot` → `.tmp/screens`（HB-039）
+- [x] `delegate_task` 三处摘除，`dispatch` 返回「未知工具」，工具数 32/32
+- [ ] **HB-040**：`_coerce` 把可选参数的默认值架空（`set_timer` 的中文默认文案被空串覆盖）
+- [ ] **`find_on_screen` 中文匹配方式**（OCR 插空格 → 按空格分词的 overlap 在中文上不可靠）
+- [ ] **`lock_screen` 真锁屏**（已授权，拆到收尾，等你说「锁」；Q20）
+- [ ] **通知气泡肉眼确认**（Q19）；**剪贴板 JWT 覆盖的善后**（Q18）
+- [ ] 20 轮明确测试的**轮 11-20**（打断三态 / 近音 / 安静与轻敲 / 空转录 / 长句，需你在麦克风前配合，`tests/2026-11-08-20-44-17_cc/`）
