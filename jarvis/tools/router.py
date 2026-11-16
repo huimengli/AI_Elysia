@@ -145,10 +145,10 @@ TOOL_SCHEMAS = [
 
     {"type": "function", "function": {
         "name": "manage_browser_windows",
-        "description": "Count browser windows against the limit of 3. Reports the current titles; closes windows only when the user authorised automatic closing.",
+        "description": "Count the browser windows jarvis started itself against the limit of 3 (the user's own windows are not counted), and close the extras. Returns titles and the result of any kill.",
         "parameters": {"type": "object", "properties": {
             "close_extra": {"type": "boolean",
-                            "description": "true only when the user has authorised closing extra windows. Only instances jarvis started itself are killed; never the user's own browser."}},
+                            "description": "true to close windows beyond the limit. Only pids jarvis recorded at launch are killed — the user's own browser is never a target (authorised 2026-11-16 20:09)."}},
             "required": []}}},
 
     {"type": "function", "function": {

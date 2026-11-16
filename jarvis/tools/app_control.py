@@ -196,13 +196,16 @@ def open_url(url: str) -> str:
                     f"{sorted(k for k in keys if k in t.lower())[0]}，没有再起新实例）\n"
                     f"{focus_window(t)}")
 
-    # Window limit (user rule 19:47, `<=3`): count first, refuse to start a 4th.
-    n = len(_browser_windows())
-    if n >= WINDOW_LIMIT:
-        titles = "、".join(t for _, _, t in _browser_windows())
-        return (f"浏览器窗口已有 {n} 个（上限 {WINDOW_LIMIT}），**拒绝再起新实例**。当前窗口："
-                f"{titles}。要开新页请在已有窗口里导航（navigate_url），或先关窗口"
-                f"（我起的那批可用 manage_browser_windows 关，需你授权，见 need_user Q29）。")
+    # Window limit (user rule 20:09: **只限 jarvis 起的窗口 ≤3** — the user's own
+    # browser windows are not counted): count only windows whose pid jarvis
+    # started, then refuse to start a 4th.
+    mine = _jarvis_windows()
+    if len(mine) >= WINDOW_LIMIT:
+        titles = "、".join(t for _, _, t in mine)
+        return (f"我自己起的浏览器窗口已有 {len(mine)} 个（上限 {WINDOW_LIMIT}，"
+                f"你的窗口不计），**拒绝再起新实例**。当前我的窗口：{titles}。"
+                f"要在已有窗口里打开请用 navigate_url；要腾位用 manage_browser_windows"
+                f"（已授权关我自己起的 pid，见 need_user Q29）。")
 
     exe = _browser_exe()
     if exe:
@@ -228,13 +231,27 @@ def open_url(url: str) -> str:
         # (EPERM on piped stdio), and Chromium exits immediately anyway.
         proc = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         _launched_pids.append(proc.pid)
+        _save_pids(_launched_pids)
         how = f"已用 {os.path.basename(exe)} 带参数启动 {url}"
         waited = 0.0
         last = ""
+        recorded = None
         while waited < 12.0:
             hit, last = _window_evidence(keys)
             if hit:
-                return f"{how}，并复读到窗口证据：{hit[0]}（匹配关键词 {hit[1]}，用了 {waited:.1f} 秒）"
+                # The Popen pid is a launcher that exits at once; the window
+                # belongs to the Chrome instance that took the handoff (measured
+                # 2026-11-16 20:12: pids 20256/21016/22356 recorded, every window
+                # titled by pid 18400). Record the window's own pid.
+                for _, p, t in _visible_windows():
+                    if t == hit[0].split("（进程")[0].strip():
+                        if p not in _launched_pids:
+                            _launched_pids.append(p)
+                            _save_pids(_launched_pids)
+                        recorded = p
+                        break
+                return (f"{how}，并复读到窗口证据：{hit[0]}（匹配关键词 {hit[1]}，"
+                        f"用了 {waited:.1f} 秒，记录窗口 pid {recorded} 为我起的窗口）")
             time.sleep(1.0)
             waited += 1.0
         return (f"{how}，但 12 秒内没有复读到匹配 {sorted(keys)} 的窗口标题，"
@@ -291,36 +308,80 @@ def _browser_windows() -> list[tuple[int, int, str]]:
 
 
 WINDOW_LIMIT = 3
-_launched_pids: list[int] = []  # browser instances jarvis itself started
+
+# Pids of browser instances jarvis itself started, persisted so a restart still
+# knows which windows are "mine" (user rule 2026-11-16 20:09: 「启动时候就记录PID，
+# 允许JARVIS自己关闭自己启动PID」). Gitignored file, never committed.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PID_FILE = os.path.join(_REPO_ROOT, ".tmp", "jarvis_browser_pids.json")
+
+
+def _load_pids() -> list[int]:
+    try:
+        import json
+
+        with open(PID_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        return [int(p) for p in data if str(p).isdigit()]
+    except Exception:
+        return []
+
+
+def _save_pids(pids: list[int]) -> None:
+    import json
+
+    try:
+        os.makedirs(os.path.dirname(PID_FILE), exist_ok=True)
+        with open(PID_FILE, "w", encoding="utf-8") as f:
+            json.dump(sorted(set(pids)), f)
+    except Exception:
+        pass
+
+
+_launched_pids: list[int] = _load_pids()
+
+
+def _jarvis_windows() -> list[tuple[int, int, str]]:
+    """Browser windows whose pid is one jarvis started itself."""
+    return [w for w in _browser_windows() if w[1] in _launched_pids]
 
 
 def manage_browser_windows(close_extra: bool = False) -> str:
-    """Count browser windows and enforce the user's limit of 3.
+    """Count browser windows against the limit of 3, closing only jarvis' own.
 
-    Closing is a process kill, so it only runs for instances launched with the
-    workspace profile `.tmp/chrome_profile` (never the user's signed-in profile),
-    and only when `close_extra` is true — which the model sets only after the
-    user authorised automatic closing (need_user Q29).
+    The limit counts windows jarvis started itself (user rule 20:09: 只限 jarvis 起的
+    窗口 ≤3, the user's own windows are not counted). Closing is a process kill, so
+    it runs only for pids recorded in `.tmp/jarvis_browser_pids.json` — the user's
+    signed-in browser can never be a target.
     """
-    wins = _browser_windows()
-    head = f"浏览器窗口 {len(wins)} 个（上限 {WINDOW_LIMIT}）：" + \
-           "、".join(t for _, _, t in wins[:WINDOW_LIMIT + 3])
-    if not wins:
-        return head
-    if not close_extra:
-        return head + "。未关闭任何窗口（关闭需你授权）。"
-
-    # Only instances jarvis itself launched (recorded pids), never the user's
-    # chrome. Window titles carry no profile marker, so pids are the evidence.
-    mine = [(h, p, t) for h, p, t in wins if p in _launched_pids]
+    all_wins = _browser_windows()
+    mine = _jarvis_windows()
+    head = (f"我起的浏览器窗口 {len(mine)} 个（上限 {WINDOW_LIMIT}，你的窗口不计）："
+            + "、".join(t for _, _, t in mine) + f"。浏览器窗口共 {len(all_wins)} 个。")
     if not mine:
-        return head + "。无法从窗口标题认出我起的实例（profile 标记不在标题里），未关闭任何窗口，请手动关。"
+        return head + "没有我起的窗口（记录文件里没有可对应的 pid），没有可关的对象。"
+    if not close_extra:
+        return head + "未关闭任何窗口。"
+    extras = mine[WINDOW_LIMIT:]
+    if not extras:
+        return head + f"未超过上限，无需关闭。"
+    # A Chrome instance owns several windows under one pid. Killing that pid
+    # closes every window of the instance, so extras sharing a pid with a window
+    # that should be kept cannot be closed individually — refuse and say so.
+    kept_pids = {p for _, p, _ in mine[:WINDOW_LIMIT]}
+    shared = [(t, p) for _, p, t in extras if p in kept_pids]
+    if shared:
+        return (head + f"超出上限 {len(extras)} 个，但**其中 {len(shared)} 个与要保留的窗口共用同一个"
+                f" Chrome 实例 pid**（杀 pid 会连整实例一起关），所以**拒绝杀进程**，请手动关："
+                + "、".join(f"{t}（进程 {p}）" for t, p in shared))
     killed, failed = [], []
-    for _, p, t in mine[WINDOW_LIMIT:]:
+    for _, p, t in extras:
         r = subprocess.run(["taskkill", "/PID", str(p), "/T", "/F"],
                            capture_output=True, text=True)
         (killed if r.returncode == 0 else failed).append(f"{t}（进程 {p}）")
-    return (head + f"。关掉超出上限的 {len(mine) - WINDOW_LIMIT} 个（只认 profile 标记 {mark}）："
+    kept = [p for p in _launched_pids if p not in {p for _, p, _ in killed}]
+    _save_pids(kept)
+    return (head + f"关掉超出上限的 {len(extras)} 个（只杀记录里的 pid）："
             + f"成功 {len(killed)}、失败 {len(failed)}。"
             + (f"已关：{'; '.join(killed)}" if killed else "")
             + (f" 失败：{'; '.join(failed)}" if failed else ""))

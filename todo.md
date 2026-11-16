@@ -90,3 +90,6 @@ ole=status）；#modelSelect aria-label「当前 LLM 提供方」、#muteBtn ari
 - [ ] 2026-11-16-19-47 **Chrome 管理器（浏览器窗口 ≤3）** → `records/2026-11-16-19-47-00.md`：计数 chrome/msedge 可见顶层窗口；`open_url` 先查后开，达 3 拒绝新开并如实报；新工具 `manage_browser_windows`（标签「管理浏览器窗口」）报清单+数量；**关闭动作需授权**（Q29，只关我起的未登录 profile 窗口）
 - [ ] 2026-11-16-19-47 **丙方案：直接导航第一支视频 URL** → 同上 record：jarvis 进程内请求 B 站搜索页/接口解析第一个 `bvid` → `open_url` 在已有窗口导航，不靠视觉坐标点击（19:28 三次全偏）；**沙箱子进程无外网**，只能在 jarvis（你的 start_all）侧实测；被反爬挡则如实报
 - [x] 2026-11-16-19-39 **轮 4 落盘**（`tests/2026-11-16-12-18-00_music_cc/record_4.md`）：**进入视频页达标**（真值坐标 (284,592) → 标题变「"回到最初的美好吧~"—《稻香》_哔哩哔哩_bilibili」）；**你 19:47 确认「前面播放了」** → 播放判据达标（你亲眼）；随后 chrome 崩溃对话框（异常 0x00000008），你判定**内存溢出** → `hard_bug.md` HB-047 状态 open
+
+- [ ] 2026-11-16-20-09 **Q29 口径落地** → `need_user.md` Q29 已 done：`open_url` 把自起浏览器 pid 写 `.tmp/jarvis_browser_pids.json`（模块加载读回，重启后认得）；**上限只数 jarvis 起的窗口 ≤3**；`close_extra=true` 已授权（只杀记录里的 pid）
+- [ ] 2026-11-16-20-09 **我启 jarvis 实测开 chrome**（你的要求）：你的 jarvis 占 `:7860` → 端口冲突如实报；开 chrome 能力用 `open_url` 当场复现（窗口标题 + 记录 pid）
