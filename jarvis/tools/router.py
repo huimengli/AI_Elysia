@@ -1,6 +1,8 @@
 """Maps LLM tool call names to Python functions and provides tool schemas."""
 from jarvis.tools.web_search import search, fetch_page, get_weather
-from jarvis.tools.app_control import open_app, open_url, kill_process
+from jarvis.tools.app_control import (open_app, open_url, kill_process,
+                                       play_first_video, manage_browser_windows,
+                                       navigate_url)
 from jarvis.tools.file_ops import read_file, write_file, list_files
 from jarvis.tools.code_exec import run_python
 from jarvis.tools.system import (
@@ -22,6 +24,9 @@ TOOL_MAP = {
     "web_search":       lambda a: search(a["query"]),
     "fetch_page":       lambda a: fetch_page(a["url"]),
     "open_url":         lambda a: open_url(a["url"]),
+    "play_first_video": lambda a: play_first_video(a["url"]),
+    "manage_browser_windows": lambda a: manage_browser_windows(a.get("close_extra", False)),
+    "navigate_url":       lambda a: navigate_url(a["url"]),
     "get_weather":      lambda a: get_weather(a.get("location", "")),
     "get_time":         lambda _: get_time(),
     # Apps & processes
@@ -68,6 +73,9 @@ TOOL_LABELS = {
     "web_search": "联网搜索",
     "fetch_page": "读取网页",
     "open_url": "打开网址",
+    "play_first_video": "播放第一支视频",
+    "manage_browser_windows": "管理浏览器窗口",
+    "navigate_url": "导航网址",
     "get_weather": "查天气",
     "get_time": "看时间",
     "open_app": "打开应用",
@@ -124,9 +132,32 @@ TOOL_SCHEMAS = [
         "description": "Open a URL in the browser. Use this to reach a web page — not by launching the browser app and typing.",
         "parameters": {"type": "object", "properties": {
             "url": {"type": "string",
-                    "description": "Full URL including https://. To search Bilibili for a song use https://search.bilibili.com/all?keyword=<song title> — after it opens, read the screen and click the first result to play."},
+                    "description": "Full URL including https://."},
             }, "required": ["url"]}}},
 
+    {"type": "function", "function": {
+        "name": "play_first_video",
+        "description": "Reach the first playable item on a results page and verify it: resolve the first result to a direct URL and navigate the window, then check the window title changed. Falls back to vision coordinates and a click only when the URL cannot be resolved. Returns every step with evidence, so a miss is reported as a miss.",
+        "parameters": {"type": "object", "properties": {
+            "url": {"type": "string",
+                    "description": "Page to open. For a Bilibili song use https://search.bilibili.com/all?keyword=<song title>."},
+            }, "required": ["url"]}}},
+
+    {"type": "function", "function": {
+        "name": "manage_browser_windows",
+        "description": "Count browser windows against the limit of 3. Reports the current titles; closes windows only when the user authorised automatic closing.",
+        "parameters": {"type": "object", "properties": {
+            "close_extra": {"type": "boolean",
+                            "description": "true only when the user has authorised closing extra windows. Only instances jarvis started itself are killed; never the user's own browser."}},
+            "required": []}}},
+
+    {"type": "function", "function": {
+        "name": "navigate_url",
+        "description": "Send an existing browser window to a URL by address bar (focus, Ctrl+L, type, Enter), then verify the window title changed. No vision coordinates, no clicks.",
+        "parameters": {"type": "object", "properties": {
+            "url": {"type": "string",
+                    "description": "Full URL including https://. Use the direct video URL when playing a song."},
+            }, "required": ["url"]}}},
     {"type": "function", "function": {
         "name": "get_weather",
         "description": "Get current weather for a location. Leave location empty for auto-detect.",
@@ -173,10 +204,10 @@ TOOL_SCHEMAS = [
 
     {"type": "function", "function": {
         "name": "click_at",
-        "description": "Click at screen coordinates (x, y). Button: left (default), right, double.",
+        "description": "Click at screen coordinates (x, y). Button: left (default), right, double. If the click was meant to open a page, verify with get_open_windows: the window title must change to the page's title — if it is unchanged the point missed the target, so ask describe_screen for the target again and click once more.",
         "parameters": {"type": "object", "properties": {
-            "x": {"type": "integer"},
-            "y": {"type": "integer"},
+            "x": {"type": "integer", "description": "Screen pixel x from describe_screen's 点击坐标"},
+            "y": {"type": "integer", "description": "Screen pixel y from describe_screen's 点击坐标"},
             "button": {"type": "string", "enum": ["left", "right", "double"]}},
             "required": ["x", "y"]}}},
 

@@ -38,34 +38,42 @@ def _coords(ans: str) -> tuple[int, int] | None:
     return None
 
 
+def ask_vision(prompt: str) -> tuple[str, Path, int]:
+    """Capture the whole screen and ask the tower with a custom prompt.
+
+    Returns (answer, screenshot path, byte count); on capture failure the answer
+    says so honestly. Used by `play_first_video`, which needs its own wording
+    ("第 N 支视频的封面中心坐标") rather than the generic describe_screen prompt.
+    """
+    try:
+        img = pyautogui.screenshot()
+    except Exception as e:
+        return f"截图失败（{type(e).__name__}: {e}），看不到屏幕。", None, 0
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    png = buf.getvalue()
+    out_dir = Path(__file__).parent.parent.parent / ".tmp" / "screens"
+    out_dir.mkdir(exist_ok=True)
+    path = out_dir / f"vision_{int(time.time())}.png"
+    path.write_bytes(png)
+    from jarvis.llm import chat_image
+    return chat_image(prompt, png).strip(), path, len(png)
+
+
 def describe_screen(question: str) -> str:
     """Capture the whole screen and ask the vision tower about it.
 
     Evidence discipline: the answer is the model's own words. If the capture
     fails or the tower does not answer, the tool says so — no invented answer.
     """
-    try:
-        img = pyautogui.screenshot()
-    except Exception as e:
-        return f"截图失败（{type(e).__name__}: {e}），看不到屏幕。"
-
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    png = buf.getvalue()
-
-    # Traceable artifact, same convention as screenshot() (.tmp/screens)
-    out_dir = Path(__file__).parent.parent.parent / ".tmp" / "screens"
-    out_dir.mkdir(exist_ok=True)
-    path = out_dir / f"describe_{int(time.time())}.png"
-    path.write_bytes(png)
-
-    from jarvis.llm import chat_image
-    ans = chat_image(_PROMPT.format(q=question), png).strip()
+    ans, path, n = ask_vision(_PROMPT.format(q=question))
+    if path is None:
+        return ans
     if ans.startswith("[LLM"):
         return (f"视觉塔没有回答：{ans}"
                 f"（截图已存 {path}；请确认 llama 带 --mmproj 启动）")
     c = _coords(ans)
     if c:
         return (f"视觉回答：{ans}（点击坐标 x={c[0]} y={c[1]}，配 点击坐标用；"
-                f"截图 {path.name}，{len(png)} 字节）")
-    return f"视觉回答：{ans}（没有给出坐标；截图 {path.name}，{len(png)} 字节）"
+                f"截图 {path.name}，{n} 字节）")
+    return f"视觉回答：{ans}（没有给出坐标；截图 {path.name}，{n} 字节）"
