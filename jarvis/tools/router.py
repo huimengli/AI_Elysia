@@ -13,6 +13,7 @@ from jarvis.tools.desktop import (
     media_control, screenshot,
     click_at, scroll_screen, move_mouse, read_screen, find_on_screen,
 )
+from jarvis.tools.vision import describe_screen
 # `delegate_task` 已从工具面摘掉（2026-11-13 12:59 用户规矩：爱莉希雅不允许启动
 # 子智能体）。jarvis/tools/subagent.py 文件保留，只是不再暴露给模型。
 
@@ -28,6 +29,7 @@ TOOL_MAP = {
     "kill_process":     lambda a: kill_process(a["name"]),
     # Desktop automation — vision & mouse
     "read_screen":      lambda _: read_screen(),
+    "describe_screen":  lambda a: describe_screen(a["question"]),
     "find_on_screen":   lambda a: find_on_screen(a["text"]),
     "click_at":         lambda a: click_at(int(a["x"]), int(a["y"]), a.get("button", "left")),
     "scroll_screen":    lambda a: scroll_screen(a["direction"], int(a.get("amount", 3))),
@@ -71,6 +73,7 @@ TOOL_LABELS = {
     "open_app": "打开应用",
     "kill_process": "结束进程",
     "read_screen": "读取屏幕",
+    "describe_screen": "看屏幕画面",
     "find_on_screen": "屏幕查找",
     "click_at": "点击坐标",
     "scroll_screen": "滚动屏幕",
@@ -153,6 +156,14 @@ TOOL_SCHEMAS = [
         "name": "read_screen",
         "description": "OCR the screen. Returns all visible text with coordinates: 'text | x,y'. Use to see what's on screen before acting.",
         "parameters": {"type": "object", "properties": {}}}},
+
+    {"type": "function", "function": {
+        "name": "describe_screen",
+        "description": "Look at the whole screen with the vision model. Use when OCR text is not enough — finding a control, thumbnail, icon, or layout (e.g. the first video cover on a results page). Returns the model's answer with integer x,y to use with click_at.",
+        "parameters": {"type": "object", "properties": {
+            "question": {"type": "string",
+                         "description": "What to find, in Chinese. Example: 第一个视频的封面位置"}},
+            "required": ["question"]}}},
 
     {"type": "function", "function": {
         "name": "find_on_screen",
