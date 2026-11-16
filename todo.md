@@ -93,3 +93,5 @@ ole=status）；#modelSelect aria-label「当前 LLM 提供方」、#muteBtn ari
 
 - [ ] 2026-11-16-20-09 **Q29 口径落地** → `need_user.md` Q29 已 done：`open_url` 把自起浏览器 pid 写 `.tmp/jarvis_browser_pids.json`（模块加载读回，重启后认得）；**上限只数 jarvis 起的窗口 ≤3**；`close_extra=true` 已授权（只杀记录里的 pid）
 - [ ] 2026-11-16-20-09 **我启 jarvis 实测开 chrome**（你的要求）：你的 jarvis 占 `:7860` → 端口冲突如实报；开 chrome 能力用 `open_url` 当场复现（窗口标题 + 记录 pid）
+
+- [x] 2026-11-16-20-19-08 **落盘 + 关闭所有服务** → `records/2026-11-16-20-19-08.md`：按命令行精确匹配杀 jarvis / api_v2 / llama-server / GPT-SoVITS，不按进程名批量杀 python，不碰 Chrome（Q24），不碰页面文件（Q22）；关完复测 :7860/:8080/:9880
