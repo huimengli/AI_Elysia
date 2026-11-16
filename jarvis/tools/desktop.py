@@ -3,12 +3,36 @@ import time
 import os
 import tempfile
 import json
+import ctypes
+from ctypes import POINTER, wintypes
 from pathlib import Path
 import pyautogui
 
 from jarvis.tools.system import get_clipboard, set_clipboard
 
 pyautogui.FAILSAFE = False
+
+# Window APIs are declared once here so every tool enumerates windows in
+# jarvis' own process. Measured 2026-11-16 15:20: the same script listing
+# MainWindowTitle returns 7 windows when run by the harness shell and **0**
+# when run as a powershell/pwsh child of python, so any window evidence taken
+# through a child process is structurally unavailable to the service — and
+# Add-Type is blocked in the sandbox anyway (HB-033).
+_USER32 = ctypes.windll.user32
+_USER32.IsWindowVisible.argtypes = [ctypes.c_void_p]
+_USER32.IsWindowVisible.restype = ctypes.c_bool
+_USER32.GetWindowTextLengthW.argtypes = [ctypes.c_void_p]
+_USER32.GetWindowTextLengthW.restype = ctypes.c_int
+_USER32.GetWindowTextW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_int]
+_USER32.GetWindowTextW.restype = ctypes.c_int
+_USER32.GetWindowThreadProcessId.argtypes = [ctypes.c_void_p, POINTER(wintypes.DWORD)]
+_USER32.GetWindowThreadProcessId.restype = wintypes.DWORD
+_USER32.ShowWindow.argtypes = [ctypes.c_void_p, ctypes.c_int]
+_USER32.ShowWindow.restype = ctypes.c_bool
+_USER32.SetForegroundWindow.argtypes = [ctypes.c_void_p]
+_USER32.SetForegroundWindow.restype = ctypes.c_bool
+_ENUM_PROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_long)
+
 
 # Single source for the "empty screen" message: read_screen() returns it and
 # find_on_screen() compares against it (records/2026-11-10-17-43-08.md — all
@@ -213,67 +237,47 @@ def find_on_screen(text: str) -> str:
 
 # ──────────────── Window Management ────────────────
 
-def get_open_windows() -> str:
-    """Return titles of all open windows.
+def _visible_windows() -> list[tuple[int, int, str]]:
+    """Visible windows with titles, gathered in-process: (hwnd, pid, title)."""
+    out: list[tuple[int, int, str]] = []
 
-    HB-034 家族延伸（2026-11-13，UI 历史里那条「工具「列出窗口」执行失败：'NoneType'
-    object has no attribute 'strip'」）：老实现用 `text=True`，PowerShell 输出里有
-    **非 GBK 字符**（窗口标题里的 emoji、生僻字、全角符号）时 reader 线程被 GBK 解码崩掉
-    → `result.stdout` 变 `None` → `.strip()` 抛 `'NoneType'`。现在显式让 PowerShell 输出
-    UTF-8，按 UTF-8 解码，并且**读不到就如实报**，不再假成功。
-    """
-    result = subprocess.run(
-        ["powershell", "-NoProfile", "-command",
-         "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
-         "Get-Process | Where-Object {$_.MainWindowTitle} | "
-         "Select-Object -ExpandProperty MainWindowTitle"],
-        capture_output=True, text=False,
-    )
-    out = result.stdout.decode("utf-8", errors="ignore").strip()
-    if result.returncode == 0:
-        # 空输出是合法结果（此刻确实没有带标题的窗口），不能算失败
-        return out if out else "没有可识别的窗口。"
-    err = result.stderr.decode("utf-8", errors="ignore").strip()
-    return f"列窗口失败（returncode {result.returncode}）：{err or '无输出'}"
+    def _cb(hwnd, _lparam):
+        if not _USER32.IsWindowVisible(hwnd):
+            return True
+        length = _USER32.GetWindowTextLengthW(hwnd)
+        if length == 0:
+            return True
+        buf = ctypes.create_unicode_buffer(length + 1)
+        _USER32.GetWindowTextW(hwnd, buf, length + 1)
+        pid = wintypes.DWORD(0)
+        _USER32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        out.append((int(hwnd), int(pid.value), buf.value))
+        return True
+
+    _USER32.EnumWindows(_ENUM_PROC(_cb), 0)
+    return out
+
+
+def get_open_windows() -> str:
+    """Return titles of all open windows, enumerated in jarvis' own process."""
+    wins = _visible_windows()
+    if not wins:
+        return "没有可识别的窗口。"
+    return "\n".join(f"{t}（进程 {pid}）" for _, pid, t in wins)
 
 
 def focus_window(title: str) -> str:
-    """Bring a window to the foreground by partial title match.
-
-    HB-033 延伸（2026-11-13）：这里的 `Add-Type -TypeDefinition` 要把源码写进
-    `%TEMP%`，而服务作为 harness 后台任务启动时 python 子进程的 `%TEMP%` **禁写**
-    （`Access to the path ... denied`）→ 整条聚焦被拒。所以把 `$env:TEMP` 指到工作区
-    `.tmp/pscompile`，并 UTF-8 解码输出（`text=True` 会在 reader 线程被 GBK 崩，见
-    HB-034）。
-    """
-    safe = title.replace("'", "''")
-    ps_temp = os.path.join(os.path.dirname(os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__)))), ".tmp", "pscompile")
-    os.makedirs(ps_temp, exist_ok=True)
-    ps = (
-        f"$env:TEMP='{ps_temp}'; $env:TMP=$env:TEMP; "
-        f"$p = Get-Process | Where-Object {{$_.MainWindowTitle -like '*{safe}*'}} "
-        "| Select-Object -First 1; "
-        "if ($p) { "
-        "Add-Type -TypeDefinition '"
-        "using System; using System.Runtime.InteropServices; "
-        "public class W { "
-        '[DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h); '
-        '[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int n); '
-        "}'; "
-        "[W]::ShowWindow($p.MainWindowHandle, 9); "
-        "[W]::SetForegroundWindow($p.MainWindowHandle) "
-        "} else { Write-Output 'not found' }"
-    )
-    result = subprocess.run(["powershell", "-NoProfile", "-command", ps],
-                            capture_output=True, text=False, timeout=20)
-    out = result.stdout.decode("utf-8", errors="ignore")
-    err = result.stderr.decode("utf-8", errors="ignore").strip()
-    if "not found" in out:
+    """Bring a window to the foreground by partial title match, in-process."""
+    low = title.lower()
+    hit = [(h, p, t) for h, p, t in _visible_windows() if low in t.lower()]
+    if not hit:
         return f"找不到标题包含「{title}」的窗口。"
-    if result.returncode != 0:
-        return f"聚焦窗口「{title}」失败：{err or '无输出'}"
-    return f"已聚焦窗口：{title}"
+    hwnd, pid, t = hit[0]
+    _USER32.ShowWindow(hwnd, 9)  # SW_RESTORE
+    if not _USER32.SetForegroundWindow(hwnd):
+        return (f"已找到窗口「{t}」（进程 {pid}），但系统拒绝把前台交给它"
+                f"（前台锁），请手动点击。")
+    return f"已聚焦窗口：{t}（进程 {pid}）"
 
 
 # ──────────────── Media Control ────────────────

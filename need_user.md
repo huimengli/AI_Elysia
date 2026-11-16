@@ -54,3 +54,40 @@
 
 ## Q20 · 2026-11-13 13:30 · status: wait
 **真锁屏（`lock_screen`）我没做，等你说「锁」。** 我把它拆到批次收尾，因为锁屏会打断当前会话与正在跑的服务/采样器。你已授权真锁屏；`lock_screen` 用 `rundll32 user32.dll,LockWorkStation`，无证据校验，判据只能由你肉眼确认。要我现在做吗？
+
+## Q21 · 2026-11-16-12-44 · status: wait
+
+`python.exe -m src.server`（`F:\2D23D\venv`，**不是 jarvis 的东西**）占 **1,291 MB 提交**，工作集只剩 9 MB（整个被换出）。要把它结束来给唤醒/TTS 腾提交额度吗？现在的 `kill_process` 授权范围只到记事本，所以我不能自行结束它。
+
+## Q22 · 2026-11-16-12-44 · status: wait
+
+提交上限 32,575 MB ≈ 物理 24,383 MB + 约 8 GB 页面文件，`Win32_PageFileSetting` 显示 `InitialSize=16MB`。把页面文件上限提到 24–32 GB 是最直接的解法，但这是**系统级改动、需要管理员权限**，我只提供命令、不自行执行。你愿意执行吗？命令：
+
+```powershell
+# 以管理员运行：设为系统托管（上限随系统）或固定上限
+$cs = Get-CimInstance -ClassName Win32_ComputerSystem
+Set-CimInstance -CimInstance $cs -Property @{AutomaticManagedPagefile=$true}
+# 或固定 32 GB：
+$pf = Get-CimInstance -ClassName Win32_PageFileSetting
+Set-CimInstance -CimInstance $pf -Property @{InitialSize=8192; MaxSize=32768}
+```
+
+## Q23 · 2026-11-16-12-44 · status: wait
+
+用户 Chrome 主进程 **3,453 MB 提交、21 个 chrome.exe 合计 5,575 MB**（12:22 是 5,575，12:35 主进程涨到 3,453）。这是你在用的浏览器，我不会替你关标签页。要不要你手动关掉一些标签/窗口，给唤醒和 TTS 腾提交额度？
+
+
+## Q24 · 2026-11-16-15:25  请确认 pwsh 启动的 B 站窗口
+- **status**: wait
+- **问题**：我用 pwsh 工具 `Start-Process chrome --new-window` 打开了 B 站搜索页「稻香」（窗口进程 8228）。第 6 轮 `open_url` 复读到窗口证据**部分来自这个我造的窗口**。你要我关掉它吗（`kill_process` 授权只到记事本，我不能自行结束 chrome）？
+- **A**:
+
+## Q25 · 2026-11-16-15:25  第 2 条真端到端必须在沙箱外跑 jarvis
+- **status**: wait
+- **问题**：HB-045 定论后，第 2 条（浏览器→B站搜索→播放）在我沙箱里**不可能真验通**（python 起的进程不能产生可见窗口）。请你在沙箱外启动 jarvis（你自己的启动方式）跑一次「播放音乐」，告诉我：① B 站搜索页是否出现；② 是否进入第一支视频播放；③ 助手说的原文。
+- **A**:
+
+## Q26 · 2026-11-16-15:25  视觉塔 1,527 MB 的落地顺序（沿用 Q21/Q22）
+- **status**: wait
+- **问题**：可用提交 2,929 MB（15:20 口径）。接 `--mmproj`（实测增量 1,527 MB）可以接，但接完只剩约 1,400 MB 余量，`api_v2.py` 单进程 5,822 MB 是最大头。请确认顺序：**先 Q21（`F:\2D23D` 的 `python -m src.server`，1,291 MB，非 jarvis，我无权结束）+ Q22（页面文件命令，需 admin，我只给命令）→ 再接视觉塔**，还是先接视觉塔再处理它们？
+- **A**:

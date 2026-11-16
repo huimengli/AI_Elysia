@@ -355,7 +355,7 @@ async def websocket_endpoint(ws: WebSocket):
                     await ws.send_text(json.dumps({"type": "response", "text": "已停止。"}))
                     continue
 
-                from jarvis.main import _process_request, _Aborted
+                from jarvis.main import _process_request, _Aborted, event_log
                 loop = asyncio.get_event_loop()
                 try:
                     response = await loop.run_in_executor(
@@ -368,7 +368,17 @@ async def websocket_endpoint(ws: WebSocket):
                 except _Aborted:
                     await ws.send_text(json.dumps({"type": "response", "text": "已停止。"}))
                 except Exception as e:
-                    await ws.send_text(json.dumps({"type": "response", "text": f"Error: {e}"}))
+                    # The failure must land in the event ledger, not only on this
+                    # socket: /api/events and the 实时 panel are what a second tab,
+                    # the 2 s poller and a page reload read. WS-only meant the run
+                    # was invisible outside the tab that triggered it (HB-043,
+                    # records/2026-11-16-12-33-59.md round 1).
+                    text = f"Error: {e}"
+                    try:
+                        event_log.log("assistant", text, "web")
+                    except Exception:
+                        pass
+                    await ws.send_text(json.dumps({"type": "response", "text": text}))
 
             elif msg.get("type") == "interrupt":
                 from jarvis.main import abort_all

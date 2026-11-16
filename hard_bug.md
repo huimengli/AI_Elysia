@@ -120,3 +120,38 @@
 - **根因**：`pypinyin` 的 `errors="ignore"` **丢弃非中文字符**，纯英文名拼音串为空；中文名里的「- 快捷方式」尾巴被当成索引主体
 - **方案**（已实施）：**没有中文时用名字本身的小写字母当索引**；**算拼音前先剥「- 快捷方式」/「- Shortcut」尾巴**；`_fill_missing_pinyin()` 改为重算全部行。复测：`py` 为空 0 条，`Google Chrome -> googlechrome`、`aida64 -> aida`、`dnSpy -> dnspyexe`、`HaoZip -> haozip`，`open_app('chrome')` → `已打开：Google Chrome（复读确认进程 chrome）`
 - **关联**：`tests/2026-11-13-13-46-12_cc/record_7.md`
+
+## HB-043 · 2026-11-16-12-44 · 状态：未解决（等用户授权补偿项）
+
+- **影响**：提交额度耗尽时 `onnxruntime` 初始化抛 `RUNTIME_EXCEPTION : bad allocation`，唤醒/TTS 的 ONNX 会话直接崩；且这条失败**只在 WS 上出现，事件账本里没有**，「实时」面板与 2 秒轮询都看不见，日志因 `*>` 重定向缓冲也滞后。
+- **现象**（实测 12:41:30，第 2 条第 1 轮）：点「播放音乐」→ 用户气泡是中文命令（`用浏览器打开B站搜索《稻香》并播放第一支视频`，符合第 2 条要求）→ 助手气泡 `Error: [ONNXRuntimeError] : 6 : RUNTIME_EXCEPTION : Exception during initialization: bad allocation in query.`；`/api/events?limit=300` 里 **ONNX 命中 0 条**，最新事件止于 `user | web`，没有 assistant 事件；`jarvis/static/index.html` 的「实时」面板无该次失败。
+- **同期内存实测**（口径 `Win32_OperatingSystem` + `Win32_Process.PageFileUsage`）：12:22 可用提交 1,814 MB → 12:35 **166 MB**；物理可用 4,981 MB。前 5 名提交：GPT-SoVITS `api_v2.py` 6,617 MB、用户 Chrome 主进程 3,453 MB、llama（去 mmproj + `-c 16384`）2,550 MB、`jarvis.main` 1,755 MB、`python -m src.server`（`F:\2D23D\venv`，非 jarvis）**1,291 MB 提交 / 工作集 9 MB**。
+- **尝试**：
+  1. llama 去 `--mmproj` + `-c 65536→16384` → `PF 3866→2339 MB`，系统提交 `32114→30761 MB`，可用提交 `461→1814 MB`，4 灯 online、`v0.9+0.75` 未动，服务级一轮（open_app 画图 + 列出窗口 + prompt 2,936 tokens 无截断）通过；
+  2. 检查 `--mmproj` 是否真被使用：`jarvis/llm.py` 只发文本、屏幕读取走本地 WinRT OCR → 语音链路确实没用视觉塔（用户第 6 条要求把它接上，代价 1,527 MB）。
+- **根因**：提交上限 32,575 MB（物理 24,383 + 约 8 GB 页面文件，`Win32_PageFileSetting InitialSize=16MB`）几乎被占满，`onnxruntime` 申请连续内存失败。页面文件是系统级；`F:\2D23D` 那个 `src.server` 属用户，结束进程授权范围目前只到记事本。
+- **方案**：① Q21 授权结束 `F:\2D23D` 的 `src.server`（−1,291 MB）；② Q22 由你/admin 增大页面文件（系统级，我只给命令不自行执行）；③ TTS `is_half: true` 的省量与速度 3 轮实测；④ 第 6 条接视觉塔前必须先落地补偿，否则可用提交不够 1,527 MB；⑤ `web.py` 的 WS chat 异常要写事件账本（`event_log.log("assistant"/"system", ...)`），让 UI 与「实时」面板都看得见，不能只发 WS。
+- **关联**：records/2026-11-16-12-33-59.md（第 5、6 条）、tests/2026-11-16-11-46-56_cc/（本批 3 轮）。
+
+
+## HB-044 · 2026-11-16-14-40（已修）：`open_url` 不检查返回值就报「已在浏览器打开」= 虚假成功
+- **状态**：已修（未 commit 时先落盘）
+- **影响**：UI/语音上「播放音乐」看起来成功，实际没有任何页面打开；你 14:40 直接指认「爱莉希雅没能真正打开网站」。
+- **现象**：日志 `[Tool: open_url] 已在浏览器打开：https://search.bilibili.com/all?keyword=稻香`；同时窗口枚举与 `get_open_windows` 都说没有窗口，你屏幕上没有 B 站。
+- **尝试**：`webbrowser.open(url)` 在 python 里 **返回 True**（0.52 s），10 秒内 `ctypes.EnumWindows` 看到 9 个窗口，其中**没有** B 站标题；chrome 进程数 6→9（进程起来了）。
+- **根因**：① `webbrowser.open()` 的 True 只表示「URL 交给了系统处理器」，**不表示页面显示**，代码丢掉返回值直接回成功；② 交给现有 Chrome 实例时 URL 进**后台标签**，窗口标题只显示活动标签（当时是 DSH 界面），所以永远读不到页面标题；③ 我沙箱里 python 起的子进程**不能产生可见窗口**（见 HB-045）。
+- **方案（已实现）**：用应用表里浏览器程序真路径（`apps.match('chrome')` → `AppData\Local\Google\Chrome\Application\chrome.exe`）+ `--new-window` + URL 参数启动（`Popen` + `DEVNULL`，不用 `capture_output`：沙箱里管道是 EPERM）；**窗口标题复读**（进程内 ctypes）才算成功，12 秒读不到就如实报「页面可能没有真的打开，请确认」并附当前窗口列表。
+- **验证**：`open_url` 在窗口标题含「稻香」时返回 `已用 chrome.exe 带参数启动 …，并复读到窗口证据：稻香-哔哩哔哩_bilibili - Google Chrome（进程 8228）（匹配关键词 稻香，用了 0.0 秒）`；无窗口时如实报失败（轮 5 实录）。
+- **关联**：records/2026-11-16-12-33-59.md 第 2 条；tests/2026-11-16-11-46-56_cc/record_4..6.md + opinion.md。
+
+## HB-045 · 2026-11-16-15:20（边界定论，不可由我修）：沙箱内 python 起的进程不能产生可见窗口，powershell/pwsh 子进程看不到任何窗口标题
+- **状态**：定论（我这侧无法修，需你在沙箱外验）
+- **影响**：第 2 条（B 站播放）与一切「窗口/屏幕/鼠标」类工具在我这里的端到端验证不可信；`get_open_windows` 以前起 powershell 子进程取标题，**永远返回「没有可识别的窗口」**（假阴性），`focus_window` 的 `Add-Type` 也被沙箱拒。
+- **现象与实测（同口径对照，15:15-15:20）**：
+  - 同一个 `.ps1`（`Get-Process | Where-Object { $_.MainWindowTitle }`）：我的 pwsh 工具里 **7 个窗口**（chrome「实时对话与状态显示修复 — DSH 本地构建」…）；python 子进程里的 `powershell -File` 与 `pwsh -File` 都 **0 个**。
+  - `ctypes.EnumWindows` 在 **python 自己进程里看到 9 个带标题窗口**（小火箭托盘加速、任务管理器、Chrome、dsh-browser electron、Windows PowerShell…）。
+  - pwsh 工具 `Start-Process chrome --new-window <url>` → **窗口标题「稻香-哔哩哔哩_bilibili - Google Chrome」出现**；python `Popen([chrome, "--new-window", url])` → **只有进程，无新窗口**。
+- **尝试**：换 pwsh/powershell、换 `-File`、换 `capture_output`（EPERM）、换 `DEVNULL`（能起进程，仍无窗口）、换 `-NoProfile`，全部同一结论。
+- **根因**：沙箱把 python 子进程放在**隔离的窗口站/桌面**里：子进程既看不到交互桌面的窗口，也不能创建可见窗口。
+- **方案**：① 窗口证据**全部进程内 ctypes 取**（`desktop.py` 已实现 `_visible_windows()` + `get_open_windows` + `focus_window` 用 user32 带 argtypes/restypes，不再起子进程、不再用 Add-Type）；② **第 2 条真端到端必须由你在沙箱外跑 jarvis 验**（Q25）；③ 我在沙箱内的所有「窗口/播放成功」结论都必须标注借用证据（轮 6 已标注）。
+- **关联**：HB-033（`%TEMP%` 禁写 → Add-Type 被拒）、HB-034、tests/2026-11-16-11-46-56_cc/record_5..6.md。

@@ -118,9 +118,11 @@ TOOL_SCHEMAS = [
 
     {"type": "function", "function": {
         "name": "open_url",
-        "description": "Open a URL in the default browser.",
+        "description": "Open a URL in the browser. Use this to reach a web page — not by launching the browser app and typing.",
         "parameters": {"type": "object", "properties": {
-            "url": {"type": "string"}}, "required": ["url"]}}},
+            "url": {"type": "string",
+                    "description": "Full URL including https://. To search Bilibili for a song use https://search.bilibili.com/all?keyword=<song title> — after it opens, read the screen and click the first result to play."},
+            }, "required": ["url"]}}},
 
     {"type": "function", "function": {
         "name": "get_weather",

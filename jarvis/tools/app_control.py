@@ -126,12 +126,97 @@ def open_app(name: str) -> str:
     return f"启动了「{name}」但复读到不了进程 {stem}，不能算成功（{exe}）。"
 
 
+def _url_keys(url: str) -> set[str]:
+    """Title fragments to look for: host, its first subdomain, and any keyword
+    query parameter (a page title usually carries the keyword, not the URL)."""
+    from urllib.parse import urlparse, unquote
+    parsed = urlparse(url)
+    keys = {parsed.netloc.lower()}
+    if "." in parsed.netloc:
+        keys.add(parsed.netloc.split(".")[0].lower())
+    for q in parsed.query.split("&"):
+        if "=" in q:
+            v = unquote(q.split("=", 1)[1])
+            if len(v) >= 2:
+                keys.add(v.lower())
+    return {k for k in keys if k}
+
+
+def _window_evidence(keys: set[str]):
+    """Return ((line, key), window_list) for the first window title carrying one
+    of the URL fragments, or (None, window_list)."""
+    from jarvis.tools.desktop import get_open_windows, NO_TEXT
+    text = get_open_windows()
+    if text == NO_TEXT:
+        return None, text
+    for line in text.splitlines():
+        low = line.lower()
+        for k in keys:
+            if k in low:
+                return (line.strip(), k), text
+    return None, text
+
+
+def _browser_exe() -> str | None:
+    """Browser executable from the local app table (Chrome first, then Edge)."""
+    from jarvis import apps
+    for q in ("chrome", "microsoftedge", "msedge", "edge"):
+        for row in apps.match(q):
+            launch = row.get("launch") or ""
+            if launch.lower().endswith(".exe") and os.path.exists(launch):
+                return launch
+    return None
+
+
 def open_url(url: str) -> str:
-    """Open a URL in the default browser."""
+    """Open a URL in the browser and verify a window carries it.
+
+    webbrowser.open() returning True only means the OS handler accepted the URL
+    — it does not prove a page opened (rounds 4-6, tests/2026-11-16-11-46-56_cc).
+    Launch the browser executable from the app table with the URL as argument,
+    then poll the window list for title evidence. Only a real title counts as
+    success; otherwise report honestly.
+    """
+    import time
+
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
-    webbrowser.open(url)
-    return f"已在浏览器打开：{url}"
+    keys = _url_keys(url)
+
+    exe = _browser_exe()
+    if exe:
+        # --new-window for Chromium browsers: handed to an existing instance it
+        # opens as a background tab, so the window title never shows the page.
+        # No pipes: spawning with captured output fails inside the sandbox
+        # (EPERM on piped stdio), and Chromium exits immediately anyway.
+        args = [exe] + (["--new-window"] if exe.lower().endswith(("chrome.exe", "msedge.exe")) else []) + [url]
+        subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        how = f"已用 {os.path.basename(exe)} 带参数启动 {url}"
+        waited = 0.0
+        last = ""
+        while waited < 12.0:
+            hit, last = _window_evidence(keys)
+            if hit:
+                return f"{how}，并复读到窗口证据：{hit[0]}（匹配关键词 {hit[1]}，用了 {waited:.1f} 秒）"
+            time.sleep(1.0)
+            waited += 1.0
+        return (f"{how}，但 12 秒内没有复读到匹配 {sorted(keys)} 的窗口标题，"
+                f"页面可能没有真的打开，请确认。当前窗口列表：{last[:200]}")
+
+    launched = webbrowser.open(url)
+    if not launched:
+        return f"打开失败：应用表里没有可用的浏览器程序，系统也没有处理器接收这个网址（webbrowser 返回 False）：{url}"
+    waited = 0.0
+    last = ""
+    while waited < 12.0:
+        hit, last = _window_evidence(keys)
+        if hit:
+            return f"已把 {url} 交给系统浏览器处理器（webbrowser 返回 True），并复读到窗口证据：{hit[0]}（匹配关键词 {hit[1]}，用了 {waited:.1f} 秒）"
+        time.sleep(1.0)
+        waited += 1.0
+    return (f"已把 {url} 交给系统浏览器处理器（webbrowser 返回 True），"
+            f"但 12 秒内没有复读到匹配 {sorted(keys)} 的窗口标题，"
+            f"页面可能没有真的打开，请确认。当前窗口列表：{last[:200]}")
 
 
 def kill_process(name: str) -> str:

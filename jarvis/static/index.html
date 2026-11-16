@@ -373,22 +373,35 @@
       </div>
       <div class="tab-panel" id="tab-actions">
         <div class="section-label">快捷指令</div>
+        <!-- Commands are Chinese, matching the page language (lang=zh-CN), the spoken
+             commands and the Chinese tool labels. The English data-cmd made the user's
+             own bubble read English (「时间」→ "What time is it?") on a Chinese page.
+             Targets must exist on this machine: the app table has 0 rows for
+             spotify/音乐/云音乐/网易/QQ, so 播放音乐 goes through the browser + Bilibili
+             search path (records/2026-11-16-12-33-59.md item 2). -->
         <div class="quick-actions">
-          <button class="quick-btn" data-cmd="What's the weather?">天气</button>
-          <button class="quick-btn" data-cmd="What time is it?">时间</button>
-          <button class="quick-btn" data-cmd="Take a screenshot">截图</button>
-          <button class="quick-btn" data-cmd="What apps are open?">打开的应用</button>
-          <button class="quick-btn" data-cmd="Get system info">系统信息</button>
-          <button class="quick-btn" data-cmd="Open Spotify">播放音乐</button>
-          <button class="quick-btn" data-cmd="Search the web for latest tech news">科技新闻</button>
-          <button class="quick-btn" data-cmd="Read my clipboard">剪贴板</button>
+          <button class="quick-btn" data-cmd="今天天气怎么样？">天气</button>
+          <button class="quick-btn" data-cmd="现在几点？">时间</button>
+          <button class="quick-btn" data-cmd="截一张屏">截图</button>
+          <button class="quick-btn" data-cmd="现在开着哪些应用？">打开的应用</button>
+          <button class="quick-btn" data-cmd="看一下系统信息">系统信息</button>
+          <button class="quick-btn" data-cmd="用打开网址工具打开 https://search.bilibili.com/all?keyword=稻香，然后进入第一支视频播放">播放音乐</button>
+          <button class="quick-btn" data-cmd="上网搜一下最新的科技新闻">科技新闻</button>
+          <button class="quick-btn" data-cmd="读一下剪贴板">剪贴板</button>
         </div>
         <div class="section-label">常用</div>
+        <!-- Every app here is in the local app table (verified rows): 记事本 notepad.exe,
+             画图 mspaint.exe, 计算器 calc.exe, 设置 ms-settings:, 截图工具 SnippingTool.exe,
+             终端 wt.exe. -->
         <div class="quick-actions">
-          <button class="quick-btn" data-cmd="Set volume to 50%">音量 50%</button>
-          <button class="quick-btn" data-cmd="What's on my screen?">读屏</button>
-          <button class="quick-btn" data-cmd="Open file manager">文件</button>
-          <button class="quick-btn" data-cmd="Set a timer for 5 minutes">定时 5 分钟</button>
+          <button class="quick-btn" data-cmd="把音量调到 50%">音量 50%</button>
+          <button class="quick-btn" data-cmd="读一下屏幕上有什么">读屏</button>
+          <button class="quick-btn" data-cmd="打开文件资源管理器">文件</button>
+          <button class="quick-btn" data-cmd="定一个 5 分钟的计时器">定时 5 分钟</button>
+          <button class="quick-btn" data-cmd="打开记事本">记事本</button>
+          <button class="quick-btn" data-cmd="打开计算器">计算器</button>
+          <button class="quick-btn" data-cmd="打开设置">设置</button>
+          <button class="quick-btn" data-cmd="打开截图工具">截图工具</button>
         </div>
       </div>
       <div class="tab-panel" id="tab-settings">
