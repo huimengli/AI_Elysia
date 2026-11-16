@@ -155,3 +155,49 @@
 - **根因**：沙箱把 python 子进程放在**隔离的窗口站/桌面**里：子进程既看不到交互桌面的窗口，也不能创建可见窗口。
 - **方案**：① 窗口证据**全部进程内 ctypes 取**（`desktop.py` 已实现 `_visible_windows()` + `get_open_windows` + `focus_window` 用 user32 带 argtypes/restypes，不再起子进程、不再用 Add-Type）；② **第 2 条真端到端必须由你在沙箱外跑 jarvis 验**（Q25）；③ 我在沙箱内的所有「窗口/播放成功」结论都必须标注借用证据（轮 6 已标注）。
 - **关联**：HB-033（`%TEMP%` 禁写 → Add-Type 被拒）、HB-034、tests/2026-11-16-11-46-56_cc/record_5..6.md。
+
+
+## HB-044 续节 · 2026-11-16-17:20：你在沙箱外启的 jarvis 也**没有**出现 B 站页面
+- **状态**：未解决（首要怀疑已有可测方案，等你的读数与清场）
+- **新增事实**：你 17:15:57 用 `start_all.bat` 在**沙箱外**启 jarvis（第 36 行 `start "AiliXiya :7860" cmd /k`，在交互桌面里），17:17 点「播放音乐」后你 17:20 确认 **「没有出现」** —— B 站搜索页没出现。所以 HB-045 的沙箱窗口站隔离**不足以解释你的环境**，`open_url` 在非沙箱里也没产出可见页面。
+- **首要怀疑（可测，未定论）**：**Chrome 单实例接管**。`chrome.exe --new-window <url>` 会连到已存在的 Chrome 实例，把窗口创建在那个实例的桌面里。我 15:10-15:20 在沙箱里 Popen 过 chrome（进程起来了，当时 6→9 个），它们可能被隔离在隐藏窗口站里当"主实例" → 你 jarvis 起的 chrome 把页面开到看不见的桌面。chrome 进程数 17:20 前后为 6（你关掉了我造的 B 站窗口）。
+- **可测方案（已请你执行）**：① 你把**所有 Chrome 窗口彻底关干净**（一个 chrome 进程都不留），② 重启 jarvis（加载新的 `describe_screen` 描述），③ 我再点「播放音乐」跑轮 3。如果页面出现 → 单实例接管是根因，`open_url` 需要在启动前**复读到没有存活的 Chrome 主实例**（或改用非接管方式）；如果仍不出现 → 根因在别处，需要你那三行日志原文定位。
+- **需要你读的文件**：AiliXiya :7860 控制台窗口里 `[Tool: open_url]`、`[Tool: focus_window]`、`[Tool: read_screen]` 三行原文（`start_all.bat` 用 `cmd /k`，日志不落盘，我读不到）。
+- **关联**：`tests/2026-11-16-12-33-59_vision_cc/record_2.md`、`need_user.md` Q25/Q27、HB-045。
+
+
+## HB-044 续节 · 2026-11-16-17:20：你在沙箱外启的 jarvis 也**没有**出现 B 站页面
+- **状态**：未解决（首要怀疑已有可测方案，等你的读数与清场）
+- **新增事实**：你 17:15:57 用 `start_all.bat` 在**沙箱外**启 jarvis（第 36 行 `start "AiliXiya :7860" cmd /k`，在交互桌面里），17:17 点「播放音乐」后你 17:20 确认 **「没有出现」** —— B 站搜索页没出现。所以 HB-045 的沙箱窗口站隔离**不足以解释你的环境**，`open_url` 在非沙箱里也没产出可见页面。
+- **首要怀疑（可测，未定论）**：**Chrome 单实例接管**。`chrome.exe --new-window <url>` 会连到已存在的 Chrome 实例，把窗口创建在那个实例的桌面里。我 15:10-15:20 在沙箱里 Popen 过 chrome（进程起来了，当时 6→9 个），它们可能被隔离在隐藏窗口站里当"主实例" → 你 jarvis 起的 chrome 把页面开到看不见的桌面。chrome 进程数 17:20 前后为 6（你关掉了我造的 B 站窗口）。
+- **可测方案（已请你执行）**：① 你把**所有 Chrome 窗口彻底关干净**（一个 chrome 进程都不留），② 重启 jarvis（加载新的 `describe_screen` 描述），③ 我再点「播放音乐」跑轮 3。如果页面出现 → 单实例接管是根因，`open_url` 需要在启动前**复读到没有存活的 Chrome 主实例**（或改用非接管方式）；如果仍不出现 → 根因在别处，需要你那三行日志原文定位。
+- **需要你读的文件**：AiliXiya :7860 控制台窗口里 `[Tool: open_url]`、`[Tool: focus_window]`、`[Tool: read_screen]` 三行原文（`start_all.bat` 用 `cmd /k`，日志不落盘，我读不到）。
+- **关联**：`tests/2026-11-16-12-33-59_vision_cc/record_2.md`、`need_user.md` Q25/Q27、HB-045。
+
+## 补记 · 2026-11-16-17:25：**独立 user-data-dir 在你环境也没开出窗口**（决定性）
+- 你在沙箱外跑 open_url（已加 --new-window + --user-data-dir=.tmp\chrome_profile），输出仍是「…12 秒内没有复读到匹配窗口标题，页面可能没有真的打开，请确认」，你确认 **「没出现」**。窗口列表含 AiliXiya :7860 - python -u -m jarvis.main（18048）（jarvis 控制台窗口标题）与 Chrome 8228（活动标签是 DSH 页）。
+- **所以根因不在沙箱，也不在后台标签解释**：subprocess.Popen 起的 chrome（CreateProcess）在你机器上**不产生窗口**。已写探针 .tmp/probe_open3.py 顺序测三种启动方式（A Popen+独立profile / B Start-Process(ShellExecute) / C os.startfile），每种 12 秒读窗口标题，由你在沙箱外跑，用「汇总: A=.. B=.. C=..」定出 open_url 该用哪种方式。我的 pwsh 工具用 Start-Process 曾产出标题「稻香-哔哩哔哩_bilibili - Google Chrome」（15:20），是 B 方式可行的线索。
+
+
+## 更正 · 2026-11-16-17:26：HB-044 续节被重复追加（我的操作失误）
+- **状态**：已披露（内容有效，重复条目请勿当两条问题读）
+- **事实**：我把追加脚本重跑了两次，导致「HB-044 续节 · 17:20」在 hard_bug.md 出现两次（166→175→179 行），
+ecord_2.md 的补记同样重复（23→32 行）。按「只追加、不覆盖」的规矩我没有删，只在这里标注：**以时间较新的一条为准**，前一条是重复。
+- **根因**：我用「重跑追加脚本」补新数据，脚本里带着旧块。以后追加新数据必须只写新增块。
+- **关联**：hard_bug.md HB-044 续节、	ests/2026-11-16-12-33-59_vision_cc/record_2.md。
+
+
+## HB-046 · 2026-11-16-17:49：`open_url` 开不出页面的真根因 = chrome 自身 sandbox 断点自杀（已修复）
+- **状态**：已解决（`--no-sandbox` 实测出窗口，`open_url` 已改）
+- **影响**：第 2 条（B 站播音乐）在 17:17-17:39 之间所有尝试都「没有页面」；也解释了 15:10-15:20 沙箱里 chrome「有进程、无窗口」。
+- **现象（决定性对照，全部由你在沙箱外跑 + 我在沙箱内跑）**：
+  - `subprocess.Popen(chrome …)` → **退出码 2147483651 = 0x80000003**（chrome 自身断点，stdout/stderr 全空），无窗口
+  - `ShellExecuteW(chrome + 参数)` 返回 **42（成功）**、`ShellExecuteW(只递 URL)` 返回 42 → 都无窗口
+  - `python→powershell→chrome`、`python→cmd /c start` → 无窗口
+  - `stdio` 继承 vs `DEVNULL` 重定向 → **两者都无窗口**（重定向不是根因）
+  - **你在控制台直接 `& chrome.exe --user-data-dir=… --new-window <url>` → 出现窗口**（你关掉 Chrome 登录后进入 B 站）
+  - **python 起、加 `--no-sandbox` → 出现窗口**（你确认「出窗口了，关掉登录界面后进入 B 站」）；我在沙箱内同参数复现，`open_url` 复读到窗口标题「稻香-哔哩哔哩_bilibili - Google Chrome（进程 18016）」，用了 0.0-2.0 秒
+- **根因**：**chrome 在 python 子进程环境触发自身 sandbox 自检断点（STATUS_BREAKPOINT 0x80000003）直接退出** → 进程存在、窗口从不创建。与 DSH 沙箱窗口站、MOTW/Zone.Identifier（我的文件都没有备用数据流）、`stdio` 重定向、Chrome 单实例接管**都无关**（这些解释逐条被实测否掉）。
+- **方案（已实施）**：`open_url` 对 Chromium 系加 `--no-sandbox` + `--new-window` + 独立 `--user-data-dir=.tmp\chrome_profile`（工作区 profile，不共用你登录的 profile，收窄"关掉渲染沙箱"的暴露面）；成功判据仍是**复读到匹配 URL 关键词的窗口标题**，读不到就如实报。**安全权衡已说明**：`--no-sandbox` 关闭渲染进程沙箱，且该 profile 未登录（你看到的登录页）。
+- **副作用披露（我的）**：我这一轮起了 **2 个 B 站 Chrome 窗口，22 个 chrome 进程，3,139 MB 提交**；可用提交掉到 **237 MB**（上限 32,575 / 已用 32,338）。已请你按 Q24 约定自己关掉这两个窗口。
+- **关联**：HB-044 续节、HB-045、`tests/2026-11-16-12-33-59_vision_cc/record_2.md`、`record_3.md`、`need_user.md` Q24/Q25/Q27。

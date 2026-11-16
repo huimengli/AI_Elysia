@@ -159,10 +159,10 @@ TOOL_SCHEMAS = [
 
     {"type": "function", "function": {
         "name": "describe_screen",
-        "description": "Look at the whole screen with the vision model. Use when OCR text is not enough — finding a control, thumbnail, icon, or layout (e.g. the first video cover on a results page). Returns the model's answer with integer x,y to use with click_at.",
+        "description": "Look at the whole screen with the vision model. Returns the model's answer, including integer x,y to pass to click_at. Use it to find a target that is a picture — video cover, play button, icon, layout — where OCR text cannot identify it.",
         "parameters": {"type": "object", "properties": {
             "question": {"type": "string",
-                         "description": "What to find, in Chinese. Example: 第一个视频的封面位置"}},
+                         "description": "In Chinese, name the picture to find, e.g. 第一个视频的封面位置"}},
             "required": ["question"]}}},
 
     {"type": "function", "function": {

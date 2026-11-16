@@ -8,6 +8,7 @@ covers. The two are complementary, so OCR stays in place.
 """
 import base64
 import io
+import re
 import time
 from pathlib import Path
 
@@ -18,9 +19,23 @@ pyautogui.FAILSAFE = False
 _PROMPT = (
     "你是屏幕助手，这是一张整屏截图（像素坐标与屏幕坐标一致）。"
     "问题：{q}。"
-    "要求：若问题要找可点击的东西，回答它中心的整数像素坐标（x,y）和它是什么；"
-    "找不到就只回答「找不到」。不要编造坐标。"
+    "要求：只回答一行，格式是 (x,y) 它是什么，x y 是它中心的整数像素坐标；"
+    "找不到就只回答「找不到」。不要输出 JSON、代码块或其他格式，不要编造坐标。"
 )
+
+
+def _coords(ans: str) -> tuple[int, int] | None:
+    """First two integers in the answer are the coordinates.
+
+    The model returns formats that vary ( (127,396) , ["center","0","127","396"] ),
+    so take the first integer pair rather than matching one shape.
+    """
+    nums = re.findall(r"\d+", ans)
+    if len(nums) >= 2:
+        x, y = int(nums[0]), int(nums[1])
+        if 0 <= x <= 4000 and 0 <= y <= 4000:
+            return x, y
+    return None
 
 
 def describe_screen(question: str) -> str:
@@ -49,4 +64,8 @@ def describe_screen(question: str) -> str:
     if ans.startswith("[LLM"):
         return (f"视觉塔没有回答：{ans}"
                 f"（截图已存 {path}；请确认 llama 带 --mmproj 启动）")
-    return f"视觉回答：{ans}（截图 {path.name}，{len(png)} 字节，坐标可配 点击坐标）"
+    c = _coords(ans)
+    if c:
+        return (f"视觉回答：{ans}（点击坐标 x={c[0]} y={c[1]}，配 点击坐标用；"
+                f"截图 {path.name}，{len(png)} 字节）")
+    return f"视觉回答：{ans}（没有给出坐标；截图 {path.name}，{len(png)} 字节）"

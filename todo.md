@@ -64,3 +64,16 @@
 - [x] `is_half: true` 实测**无收益** → **不采用**：省 7 MB（6,672→6,026 属噪声）、实时率 1.60-1.68 vs 1.81-1.87 波动无稳定差；`tts_infer.yaml` 保持 `is_half: false`（你已回改，该文件被 gitignore 不入库）
 - [ ] **轮 2 需你启动 jarvis（Q27 已定）**：我 16:59 停掉我的沙箱 7860（`pwsh-39`），你在沙箱外启 jarvis，我在共用浏览器点「播放音乐」，让 jarvis 自己用 `open_url` 打开 B 站搜索页 + `看屏幕画面` 找封面 + `点击坐标` 点进去，你确认页面出现与播放
 - [ ] 轮 3：同口径复测视觉轮的提交量（单 PID 读法，llama 多进程时 `.ps1` 取标量会失败）+ 4 灯 + `v0.9/0.75`
+
+- [ ] **HB-044 续节（未解决）**：你在沙箱外启 jarvis 后 B 站页面**没有出现**（你 17:20 确认）→ 首要怀疑 **Chrome 单实例接管**（`--new-window` 把窗口交给已存在的 Chrome 主实例，我 15:10-15:20 在沙箱 Popen 的 chrome 进程可能占着主实例、窗口落在隐藏桌面）。可测方案：你**把所有 Chrome 窗口彻底关干净**（不留 chrome 进程）+ 重启 jarvis → 我跑轮 3
+- [ ] 轮 2 定稿（`record_2.md` 已补记）：判据 2 达成（`open_url` 被选中），判据 3 未达标；模型未选 `describe_screen`（描述已按 `agent-experience` 改为「目标是图片」，条目 493→498 字符，工具面 8,855 字符，需重启加载）
+- [ ] 需要你读给我：AiliXiya :7860 控制台窗口里 `[Tool: open_url]` / `[Tool: focus_window]` / `[Tool: read_screen]` 三行原文（`start_all.bat` 用 `cmd /k`，日志不落盘）
+
+- [ ] **HB-044 续节（未解决）**：你在沙箱外启 jarvis 后 B 站页面**没有出现**（你 17:20 确认）→ 首要怀疑 **Chrome 单实例接管**（`--new-window` 把窗口交给已存在的 Chrome 主实例，我 15:10-15:20 在沙箱 Popen 的 chrome 进程可能占着主实例、窗口落在隐藏桌面）。可测方案：你**把所有 Chrome 窗口彻底关干净**（不留 chrome 进程）+ 重启 jarvis → 我跑轮 3
+- [ ] 轮 2 定稿（`record_2.md` 已补记）：判据 2 达成（`open_url` 被选中），判据 3 未达标；模型未选 `describe_screen`（描述已按 `agent-experience` 改为「目标是图片」，条目 493→498 字符，工具面 8,855 字符，需重启加载）
+- [ ] 需要你读给我：AiliXiya :7860 控制台窗口里 `[Tool: open_url]` / `[Tool: focus_window]` / `[Tool: read_screen]` 三行原文（`start_all.bat` 用 `cmd /k`，日志不落盘）
+
+- [x] **HB-046 结案**：`open_url` 真根因 = chrome 自身 sandbox 断点（exit 2147483651 = 0x80000003）→ 加 `--no-sandbox` + 独立 `--user-data-dir` 后窗口出现（你 17:49 在沙箱外「出窗口了」，我 18:00 在沙箱内复读到标题）；安全权衡已说明（渲染沙箱关闭 + profile 未登录）
+- [x] 轮 3 落盘（`record_3.md` + 第 6 条 3 轮 `opinion.md`）：`open_url` 达标、视觉坐标 (671,427) + `click_at` 执行；**「进入第一支视频」未达标**（点击后标题未变 + 塔在可用 237 MB 时报 500）
+- [ ] **内存告急（事实）**：可用 **237 MB**（上限 32,575 / 已用 32,338）；chrome 22 进程 3,139 MB（我起的 2 个 B 站窗口，请你按 Q24 关掉）；`api_v2` 6,518 MB；llama `-c 65536` PF 4,522 MB（`start_all.bat` 用 `-c 65536`，比我的 `-c 16384` 更吃提交）
+- [ ] 下一轮要做：窗口最大化 + 视觉一次给「第 N 支封面中心」+ 点击后校验标题变化；内存恢复后复测视觉塔 500

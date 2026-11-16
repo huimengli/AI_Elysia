@@ -185,11 +185,26 @@ def open_url(url: str) -> str:
 
     exe = _browser_exe()
     if exe:
-        # --new-window for Chromium browsers: handed to an existing instance it
-        # opens as a background tab, so the window title never shows the page.
+        # Measured in the user's own environment (outside any sandbox), 2026-11-16
+        # 17:22: `chrome.exe --new-window <url>` spawns processes and **no window**.
+        # An already-running Chrome instance takes the handoff and opens the URL as
+        # a *background tab*, so the window title stays on its active tab. A
+        # separate --user-data-dir forces a new instance, which owns its own window
+        # and titles it with the page.
+        low = exe.lower()
+        flags = []
+        if low.endswith(("chrome.exe", "msedge.exe")):
+            profile = os.path.join(os.path.dirname(os.path.dirname(
+                os.path.dirname(os.path.abspath(__file__)))), ".tmp", "chrome_profile")
+            os.makedirs(profile, exist_ok=True)
+            # Measured 2026-11-16 17:49: chrome launched from python hits its own
+            # sandbox breakpoint and exits with 0x80000003 (2147483651) — no window
+            # at all. --no-sandbox starts it; the dedicated --user-data-dir keeps
+            # the weakened-sandbox browser off the user's signed-in profile.
+            flags = ["--no-sandbox", "--new-window", f"--user-data-dir={profile}"]
+        args = [exe] + flags + [url]
         # No pipes: spawning with captured output fails inside the sandbox
         # (EPERM on piped stdio), and Chromium exits immediately anyway.
-        args = [exe] + (["--new-window"] if exe.lower().endswith(("chrome.exe", "msedge.exe")) else []) + [url]
         subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         how = f"已用 {os.path.basename(exe)} 带参数启动 {url}"
         waited = 0.0
