@@ -289,7 +289,7 @@
         <span class="state-chip" data-state="acting">执行中</span>
         <span class="state-chip" data-state="thinking">思考中</span>
       </div>
-      <span id="statusText">启动中</span>
+      <span id="statusText" aria-live="polite" role="status">启动中</span>
       <!-- 右侧三盏灯：语音识别 / LLM / TTS（/api/health，5 s 轮询） -->
       <div class="svc-lamps" id="svcLamps">
         <div class="svc-lamp off" id="lamp-wake" title="唤醒：openWakeWord 模型是否已加载并在监听"><span class="dot"></span>唤醒</div>
@@ -301,10 +301,10 @@
 
   </div>
   <div class="header-right">
-    <select class="model-select" id="modelSelect" title="当前 LLM 提供方">
+    <select class="model-select" id="modelSelect" aria-label="当前 LLM 提供方" title="当前 LLM 提供方">
       <option value="">加载中…</option>
     </select>
-    <button class="hud-btn" id="muteBtn" title="静音 / 解除静音（INSERT 键）">
+    <button class="hud-btn" id="muteBtn" aria-label="静音 / 解除静音（INSERT 键）" title="静音 / 解除静音（INSERT 键）">
       <span>&#128264;</span>
       <div class="mute-slash"></div>
     </button>
@@ -331,11 +331,11 @@
       </div>
     </div>
 
-    <div class="messages" id="messages"></div>
+    <div class="messages" id="messages" aria-live="polite"></div>
 
     <div class="activity-bar" id="activityBar">
       <div class="activity-spinner"></div>
-      <span class="activity-text" id="activityText">PROCESSING</span>
+      <span class="activity-text" id="activityText">处理中…</span>
       <div class="activity-steps" id="activitySteps"></div>
     </div>
 
@@ -385,7 +385,7 @@
           <button class="quick-btn" data-cmd="截一张屏">截图</button>
           <button class="quick-btn" data-cmd="现在开着哪些应用？">打开的应用</button>
           <button class="quick-btn" data-cmd="看一下系统信息">系统信息</button>
-          <button class="quick-btn" data-cmd="用打开网址工具打开 https://search.bilibili.com/all?keyword=稻香，然后进入第一支视频播放">播放音乐</button>
+          <button class="quick-btn" data-cmd="用打开网址工具打开 https://search.bilibili.com/all?keyword=稻香，然后用看屏幕画面找到第一支视频封面的中心坐标，再用点击坐标点它播放">播放音乐</button>
           <button class="quick-btn" data-cmd="上网搜一下最新的科技新闻">科技新闻</button>
           <button class="quick-btn" data-cmd="读一下剪贴板">剪贴板</button>
         </div>
@@ -598,7 +598,7 @@ function setReactorState(state) {
 }
 
 
-function showActivity(text) { activityBar.classList.add('active'); activityText.textContent = text.toUpperCase(); }
+function showActivity(text) { activityBar.classList.add('active'); activityText.textContent = text; }
 function hideActivity() { activityBar.classList.remove('active'); toolStepCount = 0; activitySteps.innerHTML = ''; }
 function addActivityStep() {
   toolStepCount++;
@@ -795,7 +795,14 @@ function esc(str) { const d = document.createElement('div'); d.textContent = str
 
 function send() {
   const text = inputEl.value.trim();
-  if (!text || !ws) return;
+  if (!text) return;
+  // readyState, not just truthiness: a closed ws accepts ws.send() silently and
+  // the message vanishes (measured 2026-11-16 18:51 — typed text stayed in the
+  // box and no user event was logged). Keep the text so nothing is lost.
+  if (!ws || ws.readyState !== 1) {
+    setStatusText('连接已断开，消息未发送（每 3 秒自动重连）');
+    return;
+  }
   pendingWebText = text;
   addMsg('user', text, 'web');
   ws.send(JSON.stringify({ type: 'chat', text }));
