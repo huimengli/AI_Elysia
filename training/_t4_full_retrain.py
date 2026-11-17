@@ -110,22 +110,47 @@ def step_bg() -> int:
 
 
 def step_train() -> int:
+    """2026-11-17 18:15 fix (self-disclosure): the first version passed only
+    `--training_config`, and `_t2_train_cn.py` defaults `--train_model` to False, so the run
+    did NOTHING and exited 0 with no onnx produced — a false success (train rc=0, 532-byte log
+    containing only matplotlib warnings, no onnx in aili_xiya_v1.2). The flag is now explicit.
+    """
     log = os.path.join(LOGDIR, "v12_train.log")
     os.makedirs(V12, exist_ok=True)
     print(f"[train] 训练前请停 :7860/:8080/:9880（你的既定口径）；日志 {log}", flush=True)
     with open(log, "wb") as fh:
         rc = subprocess.call([PY, "-X", "utf8", "training/_t2_train_cn.py",
-                              "--training_config", "openWakeWord/train_config_v12.yaml"],
+                              "--training_config", "openWakeWord/train_config_v12.yaml",
+                              "--train_model"],
                              cwd=ROOT, env=ENV, stdout=fh, stderr=subprocess.STDOUT)
     print(f"[train] rc={rc}", flush=True)
+    onnx = os.path.join(V12, "aili_xiya_v1.2.onnx")
+    print(f"[train] 产物检查 {'aili_xiya_v1.2.onnx 存在' if os.path.exists(onnx) else 'aili_xiya_v1.2.onnx 缺 —— 不算成功'}",
+          flush=True)
+    if rc == 0 and not os.path.exists(onnx):
+        rc = 1  # 不假装成功
     return rc
 
 
 def step_eval() -> int:
+    """2026-11-17 18:15 fix: `_t2_verify_onnx.py` sets ROOT = its own parent, so running it in
+    place resolved the model to `training/openWakeWord/output/aili_xiya_v1.2/...` (does not
+    exist) and printed a FAIL. The patched copy pins ROOT to the repo root; the original script
+    under training/ is never modified.
+    """
+    src = os.path.join(ROOT, "training", "_t2_verify_onnx.py")
+    dst = os.path.join(LOGDIR, "_t4_verify_onnx_v12.py")
+    text = open(src, encoding="utf-8").read()
+    new = "\n".join(l if not l.startswith("ROOT =") else f"ROOT = Path({ROOT!r})"
+                    for l in text.splitlines())
+    if new == text:
+        print(f"[FAIL] _t2_verify_onnx.py 里没有 ROOT 行，拒绝假装重定向", flush=True)
+        return 1
+    open(dst, "w", encoding="utf-8").write(new + "\n")
     log = os.path.join(LOGDIR, "v12_eval.log")
+    print(f"[eval] patched copy {dst}（ROOT=repo root）-> {log}", flush=True)
     with open(log, "wb") as fh:
-        rc = subprocess.call([PY, "-X", "utf8", "training/_t2_verify_onnx.py", "25",
-                              "aili_xiya_v1.2"], cwd=ROOT, env=ENV,
+        rc = subprocess.call([PY, "-X", "utf8", dst, "25", "aili_xiya_v1.2"], cwd=ROOT, env=ENV,
                              stdout=fh, stderr=subprocess.STDOUT)
     print(f"[eval] rc={rc} 日志 {log}（与 v0.9 逐条比，任一条不如则不改 config）", flush=True)
     return rc
