@@ -1,19 +1,36 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-17-15-52-00（只听歌 CDP 播放链 7 轮 + todo.md 归档）。新增/变化：
-- `jarvis/tools/browser_cdp.py`（CDP 客户端：`targets`/`open_cdp`/`evaluate`/`real_click`/`hover`/`kill_recorded_pid`，端口 9333 只监听 127.0.0.1，只作用于 jarvis 自起窗口与 `.tmp/chrome_profile`）；`jarvis/tools/app_control.py`（`_extract_url`、`_url_identity`、`_cdp_address`、`jarvis_pids()`、`play_music()`，Chrome 启动参数加 `--remote-debugging-port=9333`）；
-- `records/2026-11-17-14-01-00.md`（只听歌三件事 + 判据五项）、`records/2026-11-17-14-08-00.md`（实现路径 = CDP + 边界）、`records/2026-11-17-15-48-00.md`（测试歌曲换成「月声尽,心灯明」）；
-- `tests/2026-11-16-12-18-00_music_cc/record_12.md`..`record_17.md`（轮 5、7 全项 PASS；轮 1 部分 FAIL、轮 2/3/6 FAIL，逐条如实）；
-- `ai_buckup/todo.md_2026-11-17-15-51-09.md`（`todo.md` 157 行全量归档，本文件已压缩到 60 行）。
+更新时间: 2026-11-17-22-20-00（语音 20 轮轮 11 落盘 + 音乐唯一性新规则 + onnx_opinion 移入根目录）。新增/变化：
+- `onnx_opinion.md`（**移入根目录**，你 21:13 定的 6 块规则：规则口径 / 版本表 / 部署 3 轮实测表 / 峰值数据表 / 结论 / 追加内容单行；每次追加前先备份到 `ai_buckup/onnx_opinion.md_<ts>.md`）；
+- `records/2026-11-17-21-13-04.md`（onnx_opinion 规则逐字）、`records/2026-11-17-20-16-55.md`（第 1-4 项顺序）、`records/2026-11-17-22-05-05.md`（**音乐唯一性**新规则 + 收尾交接）；
+- `tests/2026-11-08-20-44-17_cc/record_11.md`（语音轮 11 FAIL：转录吃尾 `[You] 播放到` → LLM 用历史「心灯明」播了之前指定的歌）+ 该批 `opinion.md`；
+- `jarvis/tools/app_control.py`（窗口计数认 jarvis 专属 profile 的 Chrome pid、`forget_pid`、`play_first_video` 改 CDP 判定去视觉点击）、`jarvis/tools/browser_cdp.py`（`kill_recorded_pid` 杀成功后忘掉 pid）；
+- `training/_t2_v11_tts.py`（TEXTS 20→38 + 跳过已合成门）、`training/_t4_full_retrain.py`（`--out`/`--config`）。
 
-结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/` 被忽略；现役唤醒 ONNX（v0.9 / v1.0c，含 `.onnx.data`）入 Git。
+结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/` 被忽略；现役唤醒 ONNX（v0.9 / v1.0c，含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：500
+### 文件数（git ls-files --cached --others --exclude-standard）：502
 ```
-JarvisAi/
-.gitignore
-LICENSE
-README.md
+./
+  .gitignore
+  LICENSE
+  README.md
+  config.yaml
+  design.md
+  hard_bug.md
+  install.bat
+  jarvis_screen.png
+  jieba.cache
+  love_silvia.txt
+  need_audio.md
+  need_user.md
+  onnx_opinion.md
+  progress.md
+  requirements.txt
+  start.bat
+  start_all.bat
+  todo.md
+  tree.md
 ai_buckup/
   design.md_2026-11-17-10-24-25.md
   design.md_2026-11-17-10-44-33.md
@@ -28,7 +45,6 @@ ai_buckup/
   need_user.md_2026-11-12-22-11-29.md
   need_user.md_2026-11-12-22-30-00.md
   need_user.md_2026-11-12-22-51-09.md
-  onnx_opinion.md
   onnx_opinion.md_2026-11-17-21-13-04.md
   onnx_opinion.md_2026-11-17-21-41-17.md
   progress.md_2026-10-15-13-49-00.md
@@ -55,13 +71,9 @@ ai_buckup/
   todo.md_2026-11-17-15-51-09.md
   tree.md_2026-11-11-21-15-00.md
   tree.md_2026-11-12-11-20-31.md
-config.yaml
-design.md
 dsh-my-presets/
   cordis.patch.yml
   package.json
-hard_bug.md
-install.bat
 jarvis/
   __init__.py
   apps.py
@@ -70,48 +82,40 @@ jarvis/
   llm.py
   main.py
   memory.py
-  static/
-    favicon.ico
-    index.html
   stt.py
-  tools/
-    __init__.py
-    app_control.py
-    browser_cdp.py
-    code_exec.py
-    desktop.py
-    file_ops.py
-    router.py
-    subagent.py
-    system.py
-    vision.py
-    web_search.py
   tts.py
   wake.py
   web.py
-jarvis_screen.png
-jieba.cache
+jarvis/static/
+  favicon.ico
+  index.html
+jarvis/tools/
+  __init__.py
+  app_control.py
+  browser_cdp.py
+  code_exec.py
+  desktop.py
+  file_ops.py
+  router.py
+  subagent.py
+  system.py
+  vision.py
+  web_search.py
 llm/
   startLlama.ps1
   startLlamaCpu.ps1
   startLlamaVulkanTest.ps1
-love_silvia.txt
-need_audio.md
-need_user.md
-onnx_opinion.md
 openWakeWord/
   generate_samples.py
-  output/
-    aili_xiya_v0.3/
-      aili_xiya_v0.3.onnx
-      aili_xiya_v0.3.onnx.data
-    aili_xiya_v0.9/
-      aili_xiya_v0.9.onnx
-      aili_xiya_v0.9.onnx.data
-    aili_xiya_v1.0c/
-      aili_xiya_v1.0c.onnx
-      aili_xiya_v1.0c.onnx.data
-progress.md
+openWakeWord/output/aili_xiya_v0.3/
+  aili_xiya_v0.3.onnx
+  aili_xiya_v0.3.onnx.data
+openWakeWord/output/aili_xiya_v0.9/
+  aili_xiya_v0.9.onnx
+  aili_xiya_v0.9.onnx.data
+openWakeWord/output/aili_xiya_v1.0c/
+  aili_xiya_v1.0c.onnx
+  aili_xiya_v1.0c.onnx.data
 records/
   2026-10-12-12-28-30.md
   2026-10-13-11-45.md
@@ -195,271 +199,11 @@ records/
   2026-11-17-18-46-00.md
   2026-11-17-20-16-55.md
   2026-11-17-21-13-04.md
+  2026-11-17-22-05-05.md
   AI_Benchmark.md
   JARVIS_STATE.md
   PROJECT_SUMMARY.txt
-requirements.txt
-start.bat
-start_all.bat
 tests/
-  2026-11-08-14-12-32_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-08-15-16-18_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-    record_4.md
-    record_5.md
-    record_6.md
-  2026-11-08-17-29-39_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-08-17-53-00_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-08-18-16-33_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-08-18-39-40_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-08-18-54-18_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-08-19-25-48_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-08-19-52-59_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-08-20-22-00_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-08-20-44-17_cc/
-    record_1.md
-    record_10.md
-    record_2.md
-    record_3.md
-    record_4.md
-    record_5.md
-    record_6.md
-    record_7.md
-    record_8.md
-    record_9.md
-  2026-11-09-15-37-58_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-09-20-35-43_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-09-21-19-29_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-09-21-55-14_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-    record_4.md
-  2026-11-10-17-31-10_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-10-17-43-08_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-10-21-02-16_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-10-22-17-39_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-11-19-45-46_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-11-20-34-04_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-    record_4.md
-    record_5.md
-    record_6.md
-  2026-11-12-10-35-29_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-12-17-22-40_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-12-20-03-41_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-12-21-40-35_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-12-22-11-29_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-12-22-30-00_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-12-22-51-09_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-12-23-08-34_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-12-23-08-35_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-12-23-58-00_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-13-00-12-17_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-13-12-25-43_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-13-12-59-10_cc/
-    opinion.md
-    record_1.md
-    record_10.md
-    record_11.md
-    record_12.md
-    record_13.md
-    record_14.md
-    record_15.md
-    record_16.md
-    record_17.md
-    record_18.md
-    record_19.md
-    record_2.md
-    record_20.md
-    record_21.md
-    record_3.md
-    record_4.md
-    record_5.md
-    record_6.md
-    record_7.md
-    record_8.md
-    record_9.md
-  2026-11-13-13-46-12_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-    record_4.md
-    record_5.md
-    record_6.md
-    record_7.md
-    record_8.md
-  2026-11-16-11-46-56_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-    record_4.md
-    record_5.md
-    record_6.md
-  2026-11-16-12-18-00_music_cc/
-    opinion.md
-    record_1.md
-    record_10.md
-    record_11.md
-    record_12.md
-    record_13.md
-    record_14.md
-    record_15.md
-    record_16.md
-    record_17.md
-    record_18.md
-    record_19.md
-    record_2.md
-    record_20.md
-    record_3.md
-    record_4.md
-    record_5.md
-    record_6.md
-    record_7.md
-    record_8.md
-    record_9.md
-  2026-11-16-12-33-59_vision_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-  2026-11-17-13-25-00_coerce/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-    record_3_extra_click_at.md
-  2026-11-17-18-46-00_cc/
-    opinion.md
-    record_1.md
-    record_2.md
-    record_3.md
-    record_4.md
   __init__.py
   opinion.md
   test_context.py
@@ -468,7 +212,266 @@ tests/
   test_stt.py
   test_tools.py
   test_tts.py
-todo.md
+tests/2026-11-08-14-12-32_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-15-16-18_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+tests/2026-11-08-17-29-39_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-17-53-00_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-18-16-33_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-18-39-40_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-18-54-18_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-19-25-48_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-19-52-59_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-20-22-00_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-20-44-17_cc/
+  opinion.md
+  record_1.md
+  record_10.md
+  record_11.md
+  record_2.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-09-15-37-58_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-09-20-35-43_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-09-21-19-29_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-09-21-55-14_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_4.md
+tests/2026-11-10-17-31-10_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-10-17-43-08_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-10-21-02-16_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-10-22-17-39_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-11-19-45-46_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-11-20-34-04_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+tests/2026-11-12-10-35-29_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-17-22-40_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-20-03-41_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-21-40-35_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-22-11-29_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-22-30-00_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-22-51-09_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-23-08-34_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-23-08-35_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-23-58-00_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-13-00-12-17_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-13-12-25-43_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-13-12-59-10_cc/
+  opinion.md
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_21.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-13-13-46-12_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+tests/2026-11-16-11-46-56_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+tests/2026-11-16-12-18-00_music_cc/
+  opinion.md
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-16-12-33-59_vision_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-17-13-25-00_coerce/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_3_extra_click_at.md
+tests/2026-11-17-18-46-00_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_4.md
 training/
   _chk_feat_stats.py
   _chk_jieba_fast.py
@@ -564,5 +567,4 @@ training/
   _tts_api_test.py
   _tts_direct_test.py
   _ws_probe.py
-tree.md
 ```
