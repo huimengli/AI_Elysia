@@ -787,21 +787,29 @@ def play_music(url: str, close_at_end: bool = True, max_wait: int = 900) -> str:
         return "\n".join(log) + [f"读不到页面状态，没有动任何设置：{serr}"]
     log.append(f"起始读数：{json.dumps(cur, ensure_ascii=False)}  {serr}")
 
-    # 最低分辨率要几秒才落到 640x360，读到才算数
+    # 最低分辨率要几秒才落下来；**判据是「宽度 640」（最低档 360P 生效）**，高度随源视频比例
+    # ——轮 8 (record_18.md) 的《月声尽，心灯明》是 640x338，写死 640x360 会把合法结果判成 FAIL。
+    def _width(res: str) -> int:
+        try:
+            return int(str(res).split("x")[0])
+        except Exception:
+            return 0
+
     got = ""
     for _ in range(10):
-        if cur.get("分辨率") == "640x360":
-            got = "640x360"
+        if _width(cur.get("分辨率") or "") == 640:
+            got = cur.get("分辨率")
             break
         time.sleep(2.0)
         cur, serr = read()
         if cur is None:
             log.append(f"读数中断：{serr}")
             break
-        if cur.get("分辨率") == "640x360":
-            got = "640x360"
+        if _width(cur.get("分辨率") or "") == 640:
+            got = cur.get("分辨率")
             break
-    log.append(f"最低分辨率判定：{got or '没落到 640x360，实际 ' + str(cur.get('分辨率'))}")
+    log.append(f"最低分辨率判定：{got or '宽度没落到 640，实际 ' + str(cur.get('分辨率'))}"
+               f"（判据 = 点过「360P 流畅」+ 宽度 640，高度随源比例）")
     log.append(f"弹幕 checked={cur.get('弹幕checked')}（false=关闭）  "
                f"autoplay checked={cur.get('autoplay')}（false=关，实测挡不住连播）")
 
@@ -825,9 +833,13 @@ def play_music(url: str, close_at_end: bool = True, max_wait: int = 900) -> str:
         ident = _url_identity(str(cur.get("地址") or ""))
         if target_ident and ident and ident != target_ident:
             switched = ident
-            log.append(f"**连播发生**：地址从 {target_ident} 变成 {ident}"
+            # Round 8 (record_18.md): the BV change happens AT the end of the target song, so it
+            # IS the end-of-playback signal — ct can be 0.7 s short of du when 连播 fires. Treating
+            # 「播的已是别的歌」 as 「未播完」 understates what the user asked for (不听连播).
+            ended = True
+            log.append(f"**连播发生 = 播完信号**：地址从 {target_ident} 变成 {ident}"
                        f"（标题「{str(cur.get('标题'))[:30]}」，t+{int(waited)}s）——"
-                       f"播的已经不是要点开的那支，停止把别的歌的结尾当「播完」")
+                       f"要点开的那支已播完，接下来是连播，按「播完关窗」收尾")
             break
         ct, d = cur.get("ct"), cur.get("du")
         if isinstance(ct, (int, float)) and isinstance(last_ct, (int, float)) and ct > last_ct:
