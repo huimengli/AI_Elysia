@@ -59,11 +59,30 @@ def gsv_ready() -> bool:
 def run(mod, argv, log, override=None) -> int:
     """Run one existing training script as a module, with V11 redirected to v1.2."""
     os.makedirs(LOGDIR, exist_ok=True)
+    if override:
+        # 2026-11-17 13:32 fix (records/2026-11-17-13-20-00.md): the first version did
+        # `import mod` + `mod.V11 = V12` + `runpy.run_module(mod)`, and **runpy re-executes
+        # the source**, so the patch was thrown away: clips/feat rc=0 but wrote into
+        # aili_xiya_v1.1 (overwriting that version's npy and 15xx clips) while
+        # aili_xiya_v1.2 stayed empty. The patched copy goes to .tmp/, so the original
+        # scripts under training/ are never modified.
+        src = os.path.join(ROOT, "training", f"{mod}.py")
+        dst = os.path.join(LOGDIR, f"_t4_{mod}_v12.py")
+        text = open(src, encoding="utf-8").read()
+        new = "\n".join(l if not l.startswith("V11 =") else f"V11 = {V12!r}"
+                        for l in text.splitlines())
+        if new == text:
+            print(f"[FAIL] {mod}.py 里没有 V11 行，拒绝假装重定向", flush=True)
+            return 1
+        open(dst, "w", encoding="utf-8").write(new + "\n")
+        print(f"[run] patched copy {dst} -> {log}", flush=True)
+        with open(log, "wb") as fh:
+            return subprocess.call([PY, "-X", "utf8", dst], cwd=ROOT, env=ENV,
+                                   stdout=fh, stderr=subprocess.STDOUT)
     code = (
         "import sys, runpy\n"
         f"sys.path.insert(0, {os.path.join(ROOT, 'training')!r})\n"
         f"sys.path.insert(0, {ROOT!r})\n"
-        + (f"import {mod}\n{mod}.V11 = {V12!r}\n" if override else "")
         + f"sys.argv = ['{mod}.py'] + {argv!r}\n"
         + f"raise SystemExit(runpy.run_module('{mod}', run_name='__main__'))\n"
     )

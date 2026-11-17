@@ -8,7 +8,7 @@
 
 结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/` 被忽略；现役唤醒 ONNX（v0.9 / v1.0c，含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：467
+### 文件数（git ls-files --cached --others --exclude-standard）：468
 ```
 JarvisAi/
 .gitignore
@@ -82,6 +82,7 @@ jarvis/
   wake.py
   web.py
 jarvis_screen.png
+jieba.cache
 llm/
   startLlama.ps1
   startLlamaCpu.ps1
