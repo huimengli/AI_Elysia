@@ -5,6 +5,7 @@
 ## Git 提交记录（最近 18 条，**全部已本地 commit，未 push**；结论细节在归档与 `records/`、`tests/`）
 
 ```text
+b7e6e57 fix(AI): 播歌走 play_music 的 keyword 直达最播放第一支，并修 fetch_page 中文编码与工具打印截断
 87ca284 docs(AI): 把 20 轮明确测试的逐轮脚本落盘（说什么/期望/判据）
 d2ac66e docs(AI): 实测「和我一起看界面实时更新」——连接器自带浏览器已够，不需要 9222
 98154ea docs(AI): 取消「看屏幕改走浏览器快照」并厘清零截图的边界
