@@ -1,14 +1,14 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-16-15-28-00（UI 确认与优化批：第 2 条 B 站播放 6 轮 + 窗口证据改进程内 ctypes + `open_url` 假成功已修）。新增：
-- `records/2026-11-16-11-46-56.md`（含 12:18 五条约束追加节 + 实测缺陷清单）、`records/2026-11-16-12-33-59.md`（六条需求 1→6 开工 + 视觉塔实测确认）；
-- `tests/2026-11-16-11-46-56_cc/`（`record_1.md`..`record_6.md` + `opinion.md`），`tests/opinion.md` 累积追加（318 行）；
-- `ai_buckup/todo.md_2026-11-16-15-27-00.md`（`todo.md` 102 行全量归档，本文件已压缩）；
-- 代码改动（本轮）：`jarvis/static/index.html`（12 个快捷按钮中文化 + B 站确定性路径）、`jarvis/tools/router.py`（`open_url` 的 description 与 `url` 参数规则按 `agent-experience` 重写）、`jarvis/tools/app_control.py`（`_url_keys`/`_window_evidence`/`_browser_exe` + `open_url` 用应用表浏览器真路径 + `--new-window` + 窗口标题复读，读不到如实报）、`jarvis/tools/desktop.py`（进程内 ctypes 窗口枚举 `_visible_windows()` + `get_open_windows`/`focus_window` 不再起 powershell 子进程、不再用 `Add-Type`）、`jarvis/web.py`（WS 助手回复落事件账本，HB-043 可观测半边）。
+更新时间: 2026-11-17-15-52-00（只听歌 CDP 播放链 7 轮 + todo.md 归档）。新增/变化：
+- `jarvis/tools/browser_cdp.py`（CDP 客户端：`targets`/`open_cdp`/`evaluate`/`real_click`/`hover`/`kill_recorded_pid`，端口 9333 只监听 127.0.0.1，只作用于 jarvis 自起窗口与 `.tmp/chrome_profile`）；`jarvis/tools/app_control.py`（`_extract_url`、`_url_identity`、`_cdp_address`、`jarvis_pids()`、`play_music()`，Chrome 启动参数加 `--remote-debugging-port=9333`）；
+- `records/2026-11-17-14-01-00.md`（只听歌三件事 + 判据五项）、`records/2026-11-17-14-08-00.md`（实现路径 = CDP + 边界）、`records/2026-11-17-15-48-00.md`（测试歌曲换成「月声尽,心灯明」）；
+- `tests/2026-11-16-12-18-00_music_cc/record_12.md`..`record_17.md`（轮 5、7 全项 PASS；轮 1 部分 FAIL、轮 2/3/6 FAIL，逐条如实）；
+- `ai_buckup/todo.md_2026-11-17-15-51-09.md`（`todo.md` 157 行全量归档，本文件已压缩到 60 行）。
 
 结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/` 被忽略；现役唤醒 ONNX（v0.9 / v1.0c，含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：468
+### 文件数（git ls-files --cached --others --exclude-standard）：481
 ```
 JarvisAi/
 .gitignore
@@ -46,6 +46,8 @@ ai_buckup/
   todo.md_2026-11-13-14-22-30.md
   todo.md_2026-11-16-15-27-00.md
   todo.md_2026-11-17-13-11-17.md
+  todo.md_2026-11-17-13-47-31.md
+  todo.md_2026-11-17-15-51-09.md
   tree.md_2026-11-11-21-15-00.md
   tree.md_2026-11-12-11-20-31.md
 config.yaml
@@ -70,6 +72,7 @@ jarvis/
   tools/
     __init__.py
     app_control.py
+    browser_cdp.py
     code_exec.py
     desktop.py
     file_ops.py
@@ -177,6 +180,10 @@ records/
   2026-11-17-13-00-51.md
   2026-11-17-13-20-00.md
   2026-11-17-13-25-00.md
+  2026-11-17-13-56-00.md
+  2026-11-17-14-01-00.md
+  2026-11-17-14-08-00.md
+  2026-11-17-15-48-00.md
   AI_Benchmark.md
   JARVIS_STATE.md
   PROJECT_SUMMARY.txt
@@ -408,6 +415,12 @@ tests/
     record_1.md
     record_10.md
     record_11.md
+    record_12.md
+    record_13.md
+    record_14.md
+    record_15.md
+    record_16.md
+    record_17.md
     record_2.md
     record_3.md
     record_4.md

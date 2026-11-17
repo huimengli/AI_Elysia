@@ -126,6 +126,60 @@ def open_app(name: str) -> str:
     return f"启动了「{name}」但复读到不了进程 {stem}，不能算成功（{exe}）。"
 
 
+def _extract_url(text: str) -> str:
+    """Pull the first URL out of a string that may carry 中文解说.
+
+    Real crash (records/2026-11-17-13-56-00.md): `first_bilibili_video` returns the
+    decorated sentence 「最多播放第一支：<url>（9489044 播放，标题「【私藏馆】…」，共 20 条，
+    数据源 API order=play，29786 字节）」, and the model hands **that whole sentence**
+    back as the `url` argument — the most natural thing for it to do, since that is the
+    fact jarvis told it. `urlparse` then raised
+    `ValueError: netloc '最多播放第一支：https:' contains invalid characters under NFKC
+    normalization` (app_control.py L141), which killed the whole play chain.
+    Returns "" when there is no URL: callers say so plainly instead of guessing.
+
+    2026-11-17 13:59: the first version matched a class that allowed any non-whitespace
+    character, which swallowed the Chinese tail of 「帮我打开 <url>，谢谢」 (unit test 3
+    FAILed). The class is now URL-safe ASCII only, so the match stops at 「，」.
+    """
+    import re
+    m = re.search(r"https?://[A-Za-z0-9._~:/?#\[\]@!$&'()*+,;=%-]+", str(text).strip())
+    if not m:
+        return ""
+    return m.group(0).rstrip(".,;:!?\"'")
+
+
+def _url_identity(url: str) -> str:
+    """The part of a URL that identifies the page: a Bilibili BV id, otherwise host+path.
+
+    Window titles carry no BV id, so a title can never prove which B站 page is open
+    (round 1, record_12.md). This identity is compared against CDP's `location.href`.
+    """
+    import re
+
+    m = re.search(r"/video/(BV[0-9A-Za-z]+)", url)
+    if m:
+        return m.group(1)
+    from urllib.parse import urlsplit
+
+    s = urlsplit(url)
+    return (s.netloc + s.path).rstrip("/")
+
+
+def _cdp_address(kw: str = "") -> tuple[str, str]:
+    """`location.href` of one of jarvis' own pages via CDP. ("", reason) when unreachable."""
+    from jarvis.tools.browser_cdp import open_cdp
+
+    c, err = open_cdp(kw)
+    if c is None:
+        return ("", err)
+    try:
+        v, e = c.ev("(() => location.href)()")
+        return (v, e)
+    finally:
+        c.close()
+
+
 def _url_keys(url: str) -> set[str]:
     """Title fragments to look for: host, its first subdomain, the registrable
     domain label, and any keyword query parameter (a page title usually carries
@@ -136,8 +190,14 @@ def _url_keys(url: str) -> set[str]:
     「_哔哩哔哩_bilibili」, which contains `bilibili` but **not** `www.bilibili.com`,
     so the old key set `{www, www.bilibili.com}` could never match it and
     `open_url` reported a page that had opened as "可能没有真的打开".
+
+    Defense in depth: the input is run through `_extract_url` first, so decorated
+    text cannot reach `urlparse` (records/2026-11-17-13-56-00.md).
     """
     from urllib.parse import urlparse, unquote
+    url = _extract_url(url)
+    if not url:
+        return set()
     parsed = urlparse(url)
     net = parsed.netloc.lower().split(":")[0]  # drop :port
     keys = {net}
@@ -191,6 +251,11 @@ def open_url(url: str) -> str:
     """
     import time
 
+    raw = url
+    url = _extract_url(url)
+    if not url:
+        return (f"输入里没有 URL（要 http:// 或 https:// 打头），没有打开任何页面。"
+                f"收到的是：{raw}")
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
     keys = _url_keys(url)
@@ -206,16 +271,30 @@ def open_url(url: str) -> str:
     # matched the DSH browser window (pid 16732, absent from PID_FILE, counted 0).
     from jarvis.tools.desktop import _visible_windows, focus_window
 
-    for _, _, t in _jarvis_windows():
-        if any(k in t.lower() for k in keys):
-            return (f"复用我自己起的窗口：{t}（匹配关键词 "
-                    f"{sorted(k for k in keys if k in t.lower())[0]}，没有再起新实例）\n"
-                    f"{focus_window(t)}")
+    # Reuse / navigate **only jarvis-started windows** (user authorisation 2026-11-17 12:01,
+    # need_user Q32-1). Round 1 (14:36, tests/2026-11-16-12-18-00_music_cc/record_12.md)
+    # exposed the old reuse rule as a false success: matching on the registered domain
+    # keyword 「bilibili」 reused a window showing 《夜曲》 for a request of 稻香, and the
+    # log claimed 复用 without ever navigating. A window title cannot identify a Bilibili
+    # page at all (titles carry no BV id), so page identity is read through CDP
+    # (`location.href`) — that is the only real evidence.
+    mine = _jarvis_windows()
+    ident = _url_identity(url)
+    if mine:
+        addr, aerr = _cdp_address()
+        if ident and ident in addr:
+            t = mine[0][2]
+            return (f"复用我自己起的窗口：{focus_window(t)}\n"
+                    f"页面地址证据：{addr}（含 {ident}），没有导航")
+        nav = navigate_url(url)
+        addr2, aerr2 = _cdp_address()
+        ok = bool(ident) and ident in addr2
+        return (f"我起过窗口，当前地址 {addr}{'（'+aerr+'）' if aerr else ''} 不含目标 {ident}，"
+                f"已导航：{nav}\n复读地址：{addr2}{'（'+aerr2+'）' if aerr2 else ''}，"
+                f"导航{'成功' if ok else '未证实'}")
 
     # Window limit (user rule 20:09: **只限 jarvis 起的窗口 ≤3** — the user's own
-    # browser windows are not counted): count only windows whose pid jarvis
-    # started, then refuse to start a 4th.
-    mine = _jarvis_windows()
+    # browser windows are not counted): count only windows jarvis started, refuse a 4th.
     if len(mine) >= WINDOW_LIMIT:
         titles = "、".join(t for _, _, t in mine)
         return (f"我自己起的浏览器窗口已有 {len(mine)} 个（上限 {WINDOW_LIMIT}，"
@@ -241,7 +320,14 @@ def open_url(url: str) -> str:
             # sandbox breakpoint and exits with 0x80000003 (2147483651) — no window
             # at all. --no-sandbox starts it; the dedicated --user-data-dir keeps
             # the weakened-sandbox browser off the user's signed-in profile.
-            flags = ["--no-sandbox", "--new-window", f"--user-data-dir={profile}"]
+            # 2026-11-17 14:09 (records/2026-11-17-14-08-00.md): the debug port is added
+            # for jarvis' OWN window/profile so the Bilibili player can be driven through
+            # CDP. Measured there: the `m` keyboard shortcut did not close the danmaku
+            # (two shots), the control bar auto-hides in 2-3 s, and coordinate clicks
+            # switched the video — so DOM-level control is the only reliable route.
+            # 127.0.0.1 only; the user's windows and profile are never touched.
+            flags = ["--no-sandbox", "--new-window", f"--user-data-dir={profile}",
+                     "--remote-debugging-port=9333"]
         args = [exe] + flags + [url]
         # No pipes: spawning with captured output fails inside the sandbox
         # (EPERM on piped stdio), and Chromium exits immediately anyway.
@@ -343,6 +429,12 @@ def _load_pids() -> list[int]:
         return []
 
 
+def jarvis_pids() -> list[int]:
+    """Pids jarvis launched itself — the **only** pids it may close (need_user Q29/Q32/Q34:
+    只关 jarvis 自起窗口). Public so `browser_cdp.kill_recorded_pid` can check against it."""
+    return _load_pids()
+
+
 def _save_pids(pids: list[int]) -> None:
     import json
 
@@ -414,6 +506,11 @@ def navigate_url(url: str) -> str:
     """
     import time
 
+    raw = url
+    url = _extract_url(url)
+    if not url:
+        return (f"输入里没有 URL（要 http:// 或 https:// 打头），没有导航任何窗口。"
+                f"收到的是：{raw}")
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
     keys = _url_keys(url)
@@ -533,6 +630,11 @@ def play_first_video(url: str, tries: int = 3) -> str:
     from jarvis.tools.desktop import _visible_windows, click_at, focus_window
     from jarvis.tools.vision import ask_vision, _coords
 
+    raw = url
+    url = _extract_url(url)
+    if not url:
+        return (f"输入里没有 URL（要 http:// 或 https:// 打头），没有打开任何页面。"
+                f"收到的是：{raw}")
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
     keys = _url_keys(url)
@@ -586,4 +688,196 @@ def play_first_video(url: str, tries: int = 3) -> str:
             return "\n".join(log)
         log.append(f"点击后标题未变（仍是「{base}」），换下一支重试")
     log.append(f"{tries} 次都没有让标题变成视频页，请确认页面上是否真的播放。")
+    return "\n".join(log)
+
+
+def play_music(url: str, close_at_end: bool = True, max_wait: int = 900) -> str:
+    """只听歌模式（用户 2026-11-17 14:01 原话：「进入b站需要关闭弹幕,用最低分辨率」
+    「播放完最好能直接将视频关闭了」）。
+
+    All control goes through CDP on jarvis' own window (records/2026-11-17-14-08-00.md):
+    no vision coordinates, no keyboard shortcuts. Measured facts baked in here:
+    - `m` does not close the danmaku; the real switch is `INPUT.bui-danmaku-switch-input`
+      (`checked=false` = 关闭, verified twice by trusted clicks);
+    - lowest quality is the menu item 「360P 流畅」 and it shows up as `640x360` a few
+      seconds later;
+    - 「自动开播」 can be set unchecked, **yet the page still advanced to the next video at
+      the end** (14:30 test), so closing the window at the end is what stops连播;
+    - only pids jarvis recorded for itself are killed (need_user Q29/Q32/Q34).
+
+    Every step reports its evidence; a missing port, a missing menu item, a page that
+    switched videos is reported as such — never as "看起来播放了".
+    """
+    import json
+    import time
+
+    from jarvis.tools.browser_cdp import (PLAY_RECT_JS, READY_JS, SETUP_JS, STATE_JS,
+                                          evaluate, kill_recorded_pid, open_cdp)
+
+    raw = url
+    url = _extract_url(url)
+    if not url:
+        return (f"输入里没有 URL（要 http:// 或 https:// 打头），没有打开任何页面。"
+                f"收到的是：{raw}")
+
+    log = [open_url(url)]
+    if "拒绝再起新实例" in log[0]:
+        return "\n".join(log)
+
+    # Round 2 (14:46, record_13.md) died with `ConnectionClosedError: no close frame
+    # received or sent`: Bilibili navigates/redirects (`?vd_source=`) while the page loads,
+    # which detaches a long-lived CDP session. So every reading opens its own connection
+    # instead of reusing one.
+    def read() -> tuple[dict | None, str]:
+        s, e = evaluate(STATE_JS)
+        if not s:
+            return (None, e)
+        try:
+            return (json.loads(s), e)
+        except Exception as ex:
+            return (None, f"读数解析失败 {ex}：{s[:80]}")
+
+    # Round 4 (record_15.md): the page was still loading when setup ran, so `video` did not
+    # exist, the quality menu came back empty and no play was issued.
+    # Round 6 (record_16.md): with the control bar hidden, the danmaku input and the quality
+    # menu are absent from the DOM, so setup ran and silently did nothing. Readiness therefore
+    # requires video + duration + danmaku input + menu items, and the pointer is hovered into
+    # the player (page coordinates) to make the control bar appear.
+    def hover_player() -> str:
+        c2, e2 = open_cdp("")
+        if c2 is None:
+            return f"悬停不可用：{e2}"
+        try:
+            v, e = c2.ev("""(() => { const v=document.querySelector('video'); if(!v) return 'NF';
+                 const r=v.getBoundingClientRect();
+                 return JSON.stringify({x:r.x+r.width/2, y:r.y+r.height/2}); })()""")
+            if v == "NF":
+                return "找不到 video 元素，无法悬停"
+            p = json.loads(v)
+            c2.hover(p["x"], p["y"])
+            return f"已悬停播放器 @({round(p['x'])},{round(p['y'])})（页面坐标）"
+        finally:
+            c2.close()
+
+    ready, rerr = None, ""
+    for _ in range(10):
+        h = hover_player()
+        time.sleep(0.6)
+        r, rerr = evaluate(READY_JS)
+        if r:
+            ready = json.loads(r)
+            if ready.get("有video") and ready.get("du") and ready.get("弹幕input") and ready.get("菜单项数"):
+                log.append(f"就绪：{h}")
+                break
+        time.sleep(1.5)
+    log.append(f"就绪检查：{json.dumps(ready, ensure_ascii=False) if ready else '读不到'}  {rerr}")
+
+    setup, serr = "", ""
+    for _ in range(3):
+        setup, serr = evaluate(SETUP_JS)
+        d = json.loads(setup) if setup else {}
+        if d.get("danmakuChecked") is not None and d.get("点过最低档"):
+            break
+        hover_player()
+        time.sleep(0.6)
+    log.append(f"设置：{setup}  {serr}")
+
+    cur, serr = read()
+    if cur is None:
+        return "\n".join(log) + [f"读不到页面状态，没有动任何设置：{serr}"]
+    log.append(f"起始读数：{json.dumps(cur, ensure_ascii=False)}  {serr}")
+
+    # 最低分辨率要几秒才落到 640x360，读到才算数
+    got = ""
+    for _ in range(10):
+        if cur.get("分辨率") == "640x360":
+            got = "640x360"
+            break
+        time.sleep(2.0)
+        cur, serr = read()
+        if cur is None:
+            log.append(f"读数中断：{serr}")
+            break
+        if cur.get("分辨率") == "640x360":
+            got = "640x360"
+            break
+    log.append(f"最低分辨率判定：{got or '没落到 640x360，实际 ' + str(cur.get('分辨率'))}")
+    log.append(f"弹幕 checked={cur.get('弹幕checked')}（false=关闭）  "
+               f"autoplay checked={cur.get('autoplay')}（false=关，实测挡不住连播）")
+
+    start_ct = cur.get("ct")
+    du = cur.get("du")
+    last_ct = start_ct
+    advanced = False
+    ended = False
+    stalled = 0
+    clicked = False
+    target_ident = _url_identity(url)
+    switched = ""
+    waited = 0.0
+    while waited < max_wait:
+        time.sleep(3.0)
+        waited += 3.0
+        cur, serr = read()
+        if cur is None:
+            log.append(f"读数中断：{serr}（t+{int(waited)}s）")
+            break
+        ident = _url_identity(str(cur.get("地址") or ""))
+        if target_ident and ident and ident != target_ident:
+            switched = ident
+            log.append(f"**连播发生**：地址从 {target_ident} 变成 {ident}"
+                       f"（标题「{str(cur.get('标题'))[:30]}」，t+{int(waited)}s）——"
+                       f"播的已经不是要点开的那支，停止把别的歌的结尾当「播完」")
+            break
+        ct, d = cur.get("ct"), cur.get("du")
+        if isinstance(ct, (int, float)) and isinstance(last_ct, (int, float)) and ct > last_ct:
+            advanced = True
+            stalled = 0
+        else:
+            stalled += 1
+            # Round 3 (record_14.md) burned the full 900 s on a page that never played;
+            # 10 reads (30 s) without the clock moving is enough to call it a non-playback.
+            if stalled >= 10:
+                if not clicked:
+                    clicked = True
+                    c2, e2 = open_cdp("")
+                    if c2 is None:
+                        log.append(f"受信点击播放器不可用：{e2}")
+                    else:
+                        try:
+                            v, e = c2.ev(PLAY_RECT_JS)
+                            if v == "NF":
+                                log.append("控制条里找不到带「播放」的 aria-label 按钮，无法兜底点击")
+                            else:
+                                p = json.loads(v)
+                                c2.real_click(p["x"], p["y"])
+                                log.append(f"受信点击 {p['label']} @({round(p['x'])},{round(p['y'])})"
+                                           f"（候选 {p.get('候选')}，页面坐标，非视觉坐标）{e}")
+                        finally:
+                            c2.close()
+                    stalled = 0
+                    continue
+                log.append(f"时间不前进：ct={ct}、paused={cur.get('paused')}，连续 {stalled} 次读数"
+                           f"没有前进（t+{int(waited)}s），判定**没有播放**，停止轮询")
+                break
+        if d and ct is not None and ct >= d - 1.2:
+            ended = True
+            log.append(f"到结尾：ct={ct} / du={d}（t+{int(waited)}s，标题「{str(cur.get('标题'))[:30]}」）")
+            break
+        last_ct = ct if isinstance(ct, (int, float)) else last_ct
+        du = d if d else du
+    log.append(f"进度：起始 ct={start_ct} du={du}，最后 ct={last_ct}，"
+               f"时间前进={advanced}，到达结尾={ended}，等了 {int(waited)}s")
+
+    if close_at_end:
+        wins = _jarvis_windows()
+        mine = [(h, p, t) for h, p, t in wins if "bilibili" in t.lower()]
+        if not mine:
+            log.append("找不到我自己起的 B 站窗口（pid 记录里没有对应标题），没有关闭任何窗口。")
+        else:
+            h, p, t = mine[0]
+            log.append(f"关闭我自己起的窗口 pid {p}（标题「{t[:40]}」，Q29 只关 jarvis 自起窗口）："
+                       f"{kill_recorded_pid(p)}")
+            time.sleep(1.5)
+            log.append(f"关后我起的窗口数：{len(_jarvis_windows())}")
     return "\n".join(log)
