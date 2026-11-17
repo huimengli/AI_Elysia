@@ -8,7 +8,7 @@
 
 结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/` 被忽略；现役唤醒 ONNX（v0.9 / v1.0c，含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：458
+### 文件数（git ls-files --cached --others --exclude-standard）：467
 ```
 JarvisAi/
 .gitignore
@@ -19,6 +19,7 @@ ai_buckup/
   design.md_2026-11-17-10-44-33.md
   hard_bug.md_2026-10-13-17-45.md
   hard_bug.md_2026-11-13-00-12-17.md
+  hard_bug.md_2026-11-17-13-26-51.md
   need_user.md_2026-10-13-09-56-54.md
   need_user.md_2026-10-13-17-45.md
   need_user.md_2026-10-13-21-12-19.md
@@ -44,6 +45,7 @@ ai_buckup/
   todo.md_2026-11-13-00-12-17.md
   todo.md_2026-11-13-14-22-30.md
   todo.md_2026-11-16-15-27-00.md
+  todo.md_2026-11-17-13-11-17.md
   tree.md_2026-11-11-21-15-00.md
   tree.md_2026-11-12-11-20-31.md
 config.yaml
@@ -172,6 +174,8 @@ records/
   2026-11-17-12-01-00.md
   2026-11-17-12-20-00.md
   2026-11-17-13-00-51.md
+  2026-11-17-13-20-00.md
+  2026-11-17-13-25-00.md
   AI_Benchmark.md
   JARVIS_STATE.md
   PROJECT_SUMMARY.txt
@@ -416,6 +420,12 @@ tests/
     record_1.md
     record_2.md
     record_3.md
+  2026-11-17-13-25-00_coerce/
+    opinion.md
+    record_1.md
+    record_2.md
+    record_3.md
+    record_3_extra_click_at.md
   __init__.py
   opinion.md
   test_context.py

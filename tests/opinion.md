@@ -368,3 +368,15 @@ o_speech_seconds）本批未实施，仍挂在 todo。
 - **内存实测（你跑的 `start_all.bat`）**：llama `-c 24576` **3,587 MB**、python **5,892 + 1,836 MB**、chrome 12 进程 **2,165 MB**、
   可用提交 **3,167 MB**（页文件未动，Q22）
 
+
+
+## 2026-11-17-13-26 HB-040 结案（`tests/2026-11-17-13-25-00_coerce`，3 轮全 PASS）
+
+- `_coerce` 对每个 schema 参数写值 → **模型省略的键被注入 `""`/`0`/`False`**，函数中文默认值被架空；
+  受害者实测 `set_timer(seconds, message="定时到了！")` 播报空串
+- 修法 `if key not in out: continue`：缺席键保持缺席（函数默认生效），显式 `null` 仍 coerce（防 `NoneType` 崩，
+  当年 `events.db` 242/245 的崩溃源）
+- 3 轮：省略 → 「…提醒：**定时到了！**」PASS；中文值 → 保住 PASS；显式 null → 空串不崩 PASS
+  （第 3 轮的空串是**模型明说的 null**，与"被架空"是两回事，如实分开记）
+- `hard_bug.md` 的 **HB-040 结案** → 该文件按 §3 归档（备份 + compact + 顶部注记）
+

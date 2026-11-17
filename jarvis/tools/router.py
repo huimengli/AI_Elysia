@@ -375,12 +375,22 @@ def _coerce(tool_name: str, tool_args: dict) -> dict:
     was then fed back to the model as its "fact" (events.db rows 242/245,
     records/2026-11-08-20-44-17.md). Coercing to ""/0 keeps the tool running and
     keeps the hallucination channel shut.
+
+    **HB-040 fix (2026-11-17, records/2026-11-17-13-25-00.md)**: the old loop wrote a
+    value for **every** schema property, so a key the model **omitted** arrived at the
+    function as `""`/`0`/`False` — which overrode the function's own Chinese default.
+    Measured: `set_timer(seconds, message="定时到了！")` (system.py L248) announced an
+    **empty string** when the model left `message` out. A missing key now stays missing
+    so the function default applies; an explicit `null` is still coerced, because
+    feeding `None` into a string tool is the crash that opened the hallucination channel.
     """
     props = _SCHEMA_PARAMS.get(tool_name, {})
     out = dict(tool_args) if isinstance(tool_args, dict) else {}
     for key, spec in props.items():
+        if key not in out:
+            continue  # model omitted it: keep the function's own default, do not inject
         t = spec.get("type")
-        v = out.get(key)
+        v = out[key]
         if t == "string":
             out[key] = "" if v is None else str(v)
         elif t == "integer":
