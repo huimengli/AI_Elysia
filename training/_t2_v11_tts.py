@@ -100,6 +100,28 @@ TEXTS = [
     ("neg_unrel", "unrel_monitor", "小爱同学，打开手机监控"),
     ("neg_unrel", "unrel_hear", "我没听清，请再说一遍"),
     ("neg_unrel", "unrel_love_you", "我爱你"),
+    # 2026-11-17 20:20 扩数据（records/2026-11-17-20-16-55.md，你 18:46 选「扩数据后重训」）。
+    # v1.2 的瓶颈在正样本：9 件里峰值天花板 0.622 < 工作点 0.70-0.75（`ai_buckup/onnx_opinion.md` §9.2），
+    # 所以新件**以「爱莉希雅 + 自然指令句」为主**，让 v0.9 打分管线（判据：检出 >=1 且 3 实例峰值 >=0.70）
+    # 有更多件能达标入库；负样本补近音/竞品，按「3 实例一致 <0.70 才入库」自然筛，不预判。
+    ("pos", "pos_wake_hi", "爱莉希雅，你好"),
+    ("pos", "pos_wake_music", "爱莉希雅，播放音乐"),
+    ("pos", "pos_wake_open", "爱莉希雅，把窗户打开"),
+    ("pos", "pos_wake_weather", "爱莉希雅，今天天气怎么样"),
+    ("pos", "pos_wake_back", "爱莉希雅，我回来了"),
+    ("pos", "pos_wake_time", "爱莉希雅，帮我看一下时间"),
+    ("pos", "pos_wake_call", "爱莉希雅，我在叫你呀"),
+    ("pos", "pos_wake_slow", "爱莉希雅，你在吗"),
+    ("neg_near", "ai_li_shi_ya", "艾丽西亚"),
+    ("neg_near", "ai_li_ya2", "爱丽娅"),
+    ("neg_near", "ai_li_xi_sha", "艾莉西亚"),
+    ("neg_near", "a_li_ya", "阿莉雅"),
+    ("neg_near", "ya_li_xi", "雅莉希"),
+    ("neg_comp", "xiao_yi_xiao_yi", "小艺小艺"),
+    ("neg_comp", "xiao_bu_xiao_bu", "小布小布"),
+    ("neg_unrel", "unrel_song", "我想听歌"),
+    ("neg_unrel", "unrel_ac", "打开空调"),
+    ("neg_unrel", "unrel_happy", "今天真开心"),
 ]
 
 KOKORO_VOICES = ["zf_xiaoxiao", "zf_xiaoni", "zm_yunyang", "zm_yunxi"]
@@ -171,6 +193,14 @@ def save(pcm, name):
     return p
 
 
+def done(name: str) -> bool:
+    """2026-11-17 20:22（records/2026-11-17-20-16-55.md）：扩数据后重跑时**只合成新件**。
+    旧 140 件是上一批逐件打分过的原文件，重合成会改变内容（GSV 非逐位确定），
+    让「两次交集」的口径失效 —— 所以已存在的件直接跳过，不重合成、不覆盖。
+    """
+    return os.path.exists(os.path.join(OUT, name + ".wav"))
+
+
 def kokoro_pipeline():
     from kokoro import KModel, KPipeline
     model = KModel(repo_id="hexgrad/Kokoro-82M").to("cpu").eval()
@@ -215,6 +245,9 @@ def main() -> int:
     # A: GPT-SoVITS 爱莉希雅（同音色基线）
     if gate("elya"):
         for kind, slug, text in jobs:
+            if done(f"elya__{kind}__{slug}"):
+                print(f"[elya] {kind} {slug} 已存在，跳过（不重合成）", flush=True)
+                continue
             try:
                 pcm = gsv(text, REF_ELYA, PROMPT_ELYA)
                 p = save(pcm, f"elya__{kind}__{slug}")
@@ -228,6 +261,9 @@ def main() -> int:
         set_weights("gpt", FL_GPT)
         set_weights("sovits", FL_SOVITS)
         for i, (kind, slug, text) in enumerate(jobs):
+            if done(f"firefly__{kind}__{slug}"):
+                print(f"[firefly] {kind} {slug} 已存在，跳过（不重合成）", flush=True)
+                continue
             ref, prompt = resolve_ref(FL_REF_SPEC[i % len(FL_REF_SPEC)])
             try:
                 pcm = gsv(text, ref, prompt)
@@ -245,6 +281,9 @@ def main() -> int:
         set_weights("sovits", BE_SOVITS)
         refs = be_refs()
         for i, (kind, slug, text) in enumerate(jobs):
+            if done(f"bai_e__{kind}__{slug}"):
+                print(f"[bai_e] {kind} {slug} 已存在，跳过（不重合成）", flush=True)
+                continue
             ref, prompt = refs[i % len(refs)]
             try:
                 pcm = gsv(text, ref, prompt)
@@ -278,6 +317,9 @@ def main() -> int:
         pipe = kokoro_pipeline()
         for v in KOKORO_VOICES:
             for kind, slug, text in jobs:
+                if done(f"k_{v}__{kind}__{slug}"):
+                    print(f"[{v}] {kind} {slug} 已存在，跳过（不重合成）", flush=True)
+                    continue
                 try:
                     pcm = kokoro_synth(pipe, v, text)
                     p = save(pcm, f"k_{v}__{kind}__{slug}")

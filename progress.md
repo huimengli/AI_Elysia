@@ -72,3 +72,12 @@ ce50c7e docs(AI): 把服务重启与 4 灯复核追加到 Q15 批记录（保持
   **新记 P1：`_jarvis_windows()` 按 pid 匹配，Chrome 多进程下窗口 pid != 启动 pid**（轮 2 实测 21200 vs 10848；轮 3 `PID_FILE` 未新增，`n = 22`）。
 - 4 灯这轮全程适用（wake `v0.9 + 0.75` / asr warm / llm `:8080 -c 24576` / tts `:9880`），三服务未停（本轮是端到端，不是训练）。
 - 本地 commit（**未 push**）：hash 见下一条台账。
+## 21:35 第 1 项收口 + 21:13 新规矩（→ records/2026-11-17-20-16-55.md、21-13-04.md）
+
+- **v1.3 全链跑完（20:20–20:52，三服务先停）**：266 wav（期望 266 缺 0）→ 打分 rc=0 正 76/77、负 17/189 → clips rc=0 正 75/负 20 → **两次交集 正 74 / 负 15 / 合计 89**（上界合法性 OK，v1.2 是 32）→ feat 正 train `25,435+2,280=27,715`（新占 8.2%）→ **train rc=0 且产物在**（Acc **0.6737** / Rec **0.5768**）→ **eval VERDICT PASS (best 0.6)**、pos 0.757/0.877、@0.75 逐文件 14/25。
+- **部署轴对照（单探针串行，复用 `.tmp/probe_v09_deploy.py`）**：@0.75 v1.3 = 13 次 **10**（v0.9 12）、5 件新录音 **6**（7）、近音 4（4）、无关 1（2）、定标 0、长噪 **0**（1）、对抗 4 ✓、环境音 **0**（1）；@0.70 = 13 次 **11**（14）、近音 7（11）、无关 3（6）、对抗 **6 BAD**。
+- **判据结论：任一条不如 v0.9 → `config.yaml` 不动，现役保持 `aili_xiya_v0.9.onnx` + `0.75`**。合成/噪声轴改善、真人召回轴劣化 → 合成多音色 TTS 到顶（1.0 之后 6 次全部未采用）。
+- **21:13 新规矩落地**：`onnx_opinion.md` **移入仓库根目录**、只保留 6 块（0 口径 / 1 版本表 / 2 部署 3 轮实测表 / 3 峰值数据表（真人件为列）/ 4 结论 / 5 追加内容单行），**每次追加前先备份到 `ai_buckup/onnx_opinion.md_<时间>.md`**；规矩写进 `todo.md`。旧 168 行原件已备份，新文件 76 行（v1.2/v1.3 拆进表 1/2/3，第 5 块 3 行）。
+- **自曝（计数与两次崩溃的真因）**：①我把正样本 76 **心算成 75** 报「差 1 件」，逐音色重数证明日志无矛盾；②Kokoro 第一次崩 = **commit 耗尽**（可用提交 1,487 MB，`DefaultCPUAllocator` 连 1 MB 都要不到，属 HB-047 同族），第二次崩 = **我直跑没带 `HF_HOME/HF_ENDPOINT/HF_HUB_DISABLE_XET`**（常驻纪律第 10 条）；③合成脚本加「已存在即跳过」门，GSV 非逐位确定，重合成会让「两次交集」失效。
+- **重启三服务时的两次自曝**：①`Start-Process` 的 `WorkingDirectory` 写成 `git\GPT-SoVITS-main`（真路径是仓库内 `JarvisAi\GPT-SoVITS-main`）→ 参数无效，api_v2 没起；②llama 直跑 `llama-server.exe` **没带你的 `PATH=BinDir` + `GGML_Vulkan` 环境**，`ggml-vulkan.dll` 加载不到、进程秒退，且我 `Start-Process -WindowStyle Hidden` **没重定向日志 → 现场无日志可读**。照 `llm/startLlama.ps1 -Ctx 24576` 起后 `/health` ok（`n_ctx_slot = 24576`），4 灯全绿（wake 0.75 / whisper small cpu / llm online / gptsovits）。当前可用提交 2,448 MB、总提交 30,308 MB。
+- **第 2 项代码已改未验**：`_jarvis_windows()` 改为认「记录 pid ∪ **跑 jarvis 专属 profile（`.tmp\chrome_profile`）的 Chrome 进程 pid**」，`jarvis_pids()` 同口径（Q32/Q34 边界：你的窗口用你自己的 profile，永不匹配）；根因是 launch pid 是秒退的 launcher，窗口归已有实例（轮 2 实测 21200 vs 10848）。验证排在下面。

@@ -8,7 +8,7 @@
 
 结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/` 被忽略；现役唤醒 ONNX（v0.9 / v1.0c，含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：494
+### 文件数（git ls-files --cached --others --exclude-standard）：500
 ```
 JarvisAi/
 .gitignore
@@ -29,6 +29,8 @@ ai_buckup/
   need_user.md_2026-11-12-22-30-00.md
   need_user.md_2026-11-12-22-51-09.md
   onnx_opinion.md
+  onnx_opinion.md_2026-11-17-21-13-04.md
+  onnx_opinion.md_2026-11-17-21-41-17.md
   progress.md_2026-10-15-13-49-00.md
   progress.md_2026-11-08-12-40-22.md
   progress.md_2026-11-08-18-48.md
@@ -41,6 +43,7 @@ ai_buckup/
   progress.md_2026-11-17-11-58-00.md
   progress.md_2026-11-17-17-40-11.md
   progress.md_2026-11-17-18-17-41.md
+  progress.md_2026-11-17-19-49-00.md
   todo.md_2026-11-10-21-52-25.md
   todo.md_2026-11-12-16-58-46.md
   todo.md_2026-11-12-19-23-02.md
@@ -95,6 +98,7 @@ llm/
 love_silvia.txt
 need_audio.md
 need_user.md
+onnx_opinion.md
 openWakeWord/
   generate_samples.py
   output/
@@ -189,6 +193,8 @@ records/
   2026-11-17-17-55-00.md
   2026-11-17-18-30-00.md
   2026-11-17-18-46-00.md
+  2026-11-17-20-16-55.md
+  2026-11-17-21-13-04.md
   AI_Benchmark.md
   JARVIS_STATE.md
   PROJECT_SUMMARY.txt

@@ -32,6 +32,9 @@ import urllib.request
 ROOT = r"C:\Users\楼听\Desktop\git\JarvisAi"
 OUT = os.path.join(ROOT, "openWakeWord", "output")
 V12 = os.path.join(OUT, "aili_xiya_v1.2")
+MODEL = "aili_xiya_v1.2"
+CONFIG = "openWakeWord/train_config_v12.yaml"
+TAG = "v12"
 LOGDIR = os.path.join(ROOT, ".tmp", "bats")
 PY = sys.executable
 ENV = dict(os.environ, HF_ENDPOINT="https://hf-mirror.com",
@@ -115,17 +118,17 @@ def step_train() -> int:
     did NOTHING and exited 0 with no onnx produced — a false success (train rc=0, 532-byte log
     containing only matplotlib warnings, no onnx in aili_xiya_v1.2). The flag is now explicit.
     """
-    log = os.path.join(LOGDIR, "v12_train.log")
+    log = os.path.join(LOGDIR, f"{TAG}_train.log")
     os.makedirs(V12, exist_ok=True)
     print(f"[train] 训练前请停 :7860/:8080/:9880（你的既定口径）；日志 {log}", flush=True)
     with open(log, "wb") as fh:
         rc = subprocess.call([PY, "-X", "utf8", "training/_t2_train_cn.py",
-                              "--training_config", "openWakeWord/train_config_v12.yaml",
+                              "--training_config", CONFIG,
                               "--train_model"],
                              cwd=ROOT, env=ENV, stdout=fh, stderr=subprocess.STDOUT)
     print(f"[train] rc={rc}", flush=True)
-    onnx = os.path.join(V12, "aili_xiya_v1.2.onnx")
-    print(f"[train] 产物检查 {'aili_xiya_v1.2.onnx 存在' if os.path.exists(onnx) else 'aili_xiya_v1.2.onnx 缺 —— 不算成功'}",
+    onnx = os.path.join(V12, f"{MODEL}.onnx")
+    print(f"[train] 产物检查 {MODEL + '.onnx 存在' if os.path.exists(onnx) else MODEL + '.onnx 缺 —— 不算成功'}",
           flush=True)
     if rc == 0 and not os.path.exists(onnx):
         rc = 1  # 不假装成功
@@ -147,10 +150,10 @@ def step_eval() -> int:
         print(f"[FAIL] _t2_verify_onnx.py 里没有 ROOT 行，拒绝假装重定向", flush=True)
         return 1
     open(dst, "w", encoding="utf-8").write(new + "\n")
-    log = os.path.join(LOGDIR, "v12_eval.log")
+    log = os.path.join(LOGDIR, f"{TAG}_eval.log")
     print(f"[eval] patched copy {dst}（ROOT=repo root）-> {log}", flush=True)
     with open(log, "wb") as fh:
-        rc = subprocess.call([PY, "-X", "utf8", dst, "25", "aili_xiya_v1.2"], cwd=ROOT, env=ENV,
+        rc = subprocess.call([PY, "-X", "utf8", dst, "25", MODEL], cwd=ROOT, env=ENV,
                              stdout=fh, stderr=subprocess.STDOUT)
     print(f"[eval] rc={rc} 日志 {log}（与 v0.9 逐条比，任一条不如则不改 config）", flush=True)
     return rc
@@ -168,22 +171,32 @@ def counts(tag: str) -> None:
 
 
 def main() -> int:
+    global V12, MODEL, CONFIG, TAG
     ap = argparse.ArgumentParser()
     ap.add_argument("--step", action="append", choices=ORDER, required=True)
-    steps = [s for s in ORDER if s in ap.parse_args().step]
-    print(f"[plan] {steps}  V12 = {V12}", flush=True)
+    # 2026-11-17 20:20 加 --out/--config（records/2026-11-17-20-16-55.md，你定「按顺序走」的第 1 项
+    # 扩数据后重训）。默认仍是 v1.2，所以既往调用行为不变；v1.3 用 --out aili_xiya_v1.3
+    # --config openWakeWord/train_config_v13.yaml 跑，`V11` 覆写、产物检查、eval 参数都跟着走。
+    ap.add_argument("--out", default="aili_xiya_v1.2")
+    ap.add_argument("--config", default="openWakeWord/train_config_v12.yaml")
+    a = ap.parse_args()
+    MODEL, CONFIG = a.out, a.config
+    TAG = MODEL.replace("aili_xiya_", "")
+    V12 = os.path.join(OUT, MODEL)
+    steps = [s for s in ORDER if s in a.step]
+    print(f"[plan] {steps}  V12 = {V12}  config = {CONFIG}", flush=True)
     for s in steps:
         if s == "bg":
             rc = step_bg()
         elif s == "synth":
-            rc = run("_t2_v11_tts", [], os.path.join(LOGDIR, "v12_synth.log"))
+            rc = run("_t2_v11_tts", [], os.path.join(LOGDIR, f"{TAG}_synth.log"))
         elif s == "score":
-            rc = run("_t2_v11_score", [], os.path.join(LOGDIR, "v12_score.log"))
+            rc = run("_t2_v11_score", [], os.path.join(LOGDIR, f"{TAG}_score.log"))
         elif s == "clips":
             os.makedirs(V12, exist_ok=True)
-            rc = run("_t2_v11_clips", [], os.path.join(LOGDIR, "v12_clips.log"), override=True)
+            rc = run("_t2_v11_clips", [], os.path.join(LOGDIR, f"{TAG}_clips.log"), override=True)
         elif s == "feat":
-            rc = run("_t2_v11_features", [], os.path.join(LOGDIR, "v12_feat.log"), override=True)
+            rc = run("_t2_v11_features", [], os.path.join(LOGDIR, f"{TAG}_feat.log"), override=True)
         elif s == "train":
             rc = step_train()
         else:
