@@ -96,3 +96,4 @@ ce50c7e docs(AI): 把服务重启与 4 灯复核追加到 Q15 批记录（保持
 - **训练侧未动**：`v0.9 + 0.75` 现役未改；按交集重算 `aili_xiya_v1.2` clip 集合与 `train`/`eval` 仍等你挑时间停三服务后跑
 - **todo.md 已归档**：全量备份 `ai_buckup/todo.md_2026-11-17-15-51-09.md`（157 行），compact 后 60 行（只留去重未完成项 + 最近小节），顶部注记
 - 只听歌播放链本地 commit：**5af39ad** feat(AI): 只听歌播放链走 CDP —— 关弹幕、最低分辨率、播完关掉我自己起的窗口（17 files：`jarvis/tools/browser_cdp.py` + `jarvis/tools/app_control.py` + record 13-56/14-01/14-08/15-48 + `record_12..17.md` + 批次/累积 opinion + todo 归档备份 + progress + tree）。**全项 PASS 2 轮（轮 5、7），FAIL 4 轮全部当场暴露根因并修**（复用假成功 / 长连接崩溃 / 无播放动作 / 控件不在 DOM + 续播 + 连播换歌）。**自曝**：追加 hash 时把中文长串带反引号塞进 `pwsh -c`，PowerShell 解析后反引号被吞 → `SyntaxError`，追加**没执行**（这条是重犯，规矩重申：先写 `.tmp/*.py` 再跑）。**已本地 commit，未 push**。
+- 落盘补提交本地 commit：**520c9bd** docs(AI): 把 13:52 的三条答复与截图判据口径落盘补提交（`records/2026-11-17-13-20-00.md` 追加 20 行 + progress）。**自曝**：13-56 那批提交时我只 add 了四个 record，把这个 record 的追加节**漏加**了（工作区一直显示 M，直到这次 status 复查才发现）。**已本地 commit，未 push**。
