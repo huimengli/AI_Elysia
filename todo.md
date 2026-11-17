@@ -15,7 +15,7 @@
 - [x] 确认插件：`dsh-builtin-browser` 系列 enabled（共用浏览器**是独立窗口、你看得到**；我 12:12 的「你看不到」推断是错的，已如实更正，启用 `ui-sidebar-browser` 面板取消）
 - [x] `send()` 判 `ws.readyState === 1`、断线提示「消息未发送（每 3 秒自动重连）」并保留输入文本 —— **未做**
 - [x] 12 个快捷按钮换中文指令（应用表真存在的程序；Spotify 路线删掉）→ 已改并 commit
-- [ ] 活动条默认文案改中文「处理中…」+ 去掉 `toUpperCase()`；`#messages`/`#statusText` 加 `aria-live`，`#modelSelect`/`#muteBtn`/`#input` 加 `aria-label` —— **未做**
+- [x] 活动条默认文案改中文「处理中…」+ 去掉 `toUpperCase()`；`#messages`/`#statusText` 加 `aria-live`，`#modelSelect`/`#muteBtn`/`#input` 加 `aria-label` —— **19:08 刷新后属性实测完成（commit `2792acf`）**
 - [x] 窄窗口断点三项**撤掉**（你：窄窗口不用管，默认最低 1080p）；560×520 测量数据保留为已知边界
 - [ ] `WebSocketDisconnected` traceback（15:11 日志）记为观察，未定根因（`ws.accept()` 在 L339 存在）
 
@@ -69,10 +69,6 @@
 - [ ] 轮 2 定稿（`record_2.md` 已补记）：判据 2 达成（`open_url` 被选中），判据 3 未达标；模型未选 `describe_screen`（描述已按 `agent-experience` 改为「目标是图片」，条目 493→498 字符，工具面 8,855 字符，需重启加载）
 - [ ] 需要你读给我：AiliXiya :7860 控制台窗口里 `[Tool: open_url]` / `[Tool: focus_window]` / `[Tool: read_screen]` 三行原文（`start_all.bat` 用 `cmd /k`，日志不落盘）
 
-- [ ] **HB-044 续节（未解决）**：你在沙箱外启 jarvis 后 B 站页面**没有出现**（你 17:20 确认）→ 首要怀疑 **Chrome 单实例接管**（`--new-window` 把窗口交给已存在的 Chrome 主实例，我 15:10-15:20 在沙箱 Popen 的 chrome 进程可能占着主实例、窗口落在隐藏桌面）。可测方案：你**把所有 Chrome 窗口彻底关干净**（不留 chrome 进程）+ 重启 jarvis → 我跑轮 3
-- [ ] 轮 2 定稿（`record_2.md` 已补记）：判据 2 达成（`open_url` 被选中），判据 3 未达标；模型未选 `describe_screen`（描述已按 `agent-experience` 改为「目标是图片」，条目 493→498 字符，工具面 8,855 字符，需重启加载）
-- [ ] 需要你读给我：AiliXiya :7860 控制台窗口里 `[Tool: open_url]` / `[Tool: focus_window]` / `[Tool: read_screen]` 三行原文（`start_all.bat` 用 `cmd /k`，日志不落盘）
-
 - [x] **HB-046 结案**：`open_url` 真根因 = chrome 自身 sandbox 断点（exit 2147483651 = 0x80000003）→ 加 `--no-sandbox` + 独立 `--user-data-dir` 后窗口出现（你 17:49 在沙箱外「出窗口了」，我 18:00 在沙箱内复读到标题）；安全权衡已说明（渲染沙箱关闭 + profile 未登录）
 - [x] 轮 3 落盘（`record_3.md` + 第 6 条 3 轮 `opinion.md`）：`open_url` 达标、视觉坐标 (671,427) + `click_at` 执行；**「进入第一支视频」未达标**（点击后标题未变 + 塔在可用 237 MB 时报 500）
 - [ ] **内存告急（事实）**：可用 **237 MB**（上限 32,575 / 已用 32,338）；chrome 22 进程 3,139 MB（我起的 2 个 B 站窗口，请你按 Q24 关掉）；`api_v2` 6,518 MB；llama `-c 65536` PF 4,522 MB（`start_all.bat` 用 `-c 65536`，比我的 `-c 16384` 更吃提交）
@@ -97,8 +93,20 @@ ole=status）；#modelSelect aria-label「当前 LLM 提供方」、#muteBtn ari
 - [x] 2026-11-16-20-19-08 **落盘 + 关闭所有服务** → `records/2026-11-16-20-19-08.md`：按命令行精确匹配杀 jarvis / api_v2 / llama-server / GPT-SoVITS，不按进程名批量杀 python，不碰 Chrome（Q24），不碰页面文件（Q22）；关完复测 :7860/:8080/:9880
 
 - [ ] 2026-11-17-10-24-25 **UI Monitor 面板 · 只做 design，不开工**（→ `records/2026-11-17-10-24-25.md`）：`design.md` v2.0（旧 v1.0 归档 `ai_buckup/design.md_2026-11-17-10-24-25.md`）；内容候选 A-F + 推荐，决定权交用户（`need_user.md` Q30，status: wait）
-- [ ] 2026-11-17 Q30 答复后再开工实现 Monitor 面板（**未答复不得推进实现**）
+- [ ] 2026-11-17 **Monitor 降 P2，先不开工**（你 10:52 原话）→ 优先级盘点见 `records/2026-11-17-10-52-00.md`；Q31 三条口径已确认（只关 jarvis 自起 pid / 接受无 stdout 接管 / 你跑 start_all 我关窗口复测），**开工授权等 Q31-1**
 
 - [ ] 2026-11-17-10-44 **Q30 答复后 design v3.0（Monitor = 日志中枢 + 单窗口托管 + 指定关闭 + 外部接入）** → `records/2026-11-17-10-44-33.md`；v2.0 归档 `ai_buckup/design.md_2026-11-17-10-44-33.md`；**开工授权 Q31 status: wait**
 - [ ] 2026-11-17-10-44 **可行性边界写进设计**：① stdout 只能在 jarvis 是父进程时抓管道；② start_all 只留一个窗口（jarvis 起子服务，不再各开 `cmd /k`）；③ 关窗口全关**不能靠控制台语义** → jarvis 退出按 pid 杀子进程留证据；④ 外部接入=识别+体检，**无法接管别人的 stdout**
 - [ ] 2026-11-17-10-44 **撤销 v2.0 的「面板不做动作」非目标**（你要求允许关闭指定服务）→ 关闭按钮带 pid 证据 + 点击前确认，禁止静默杀
+
+
+## 2026-11-17-10-52 优先级盘点（→ `records/2026-11-17-10-52-00.md`）
+
+- [ ] **P0 HB-047**：chrome 崩溃（异常 `0x00000008`，你判定内存溢出）→ 复现 + 用量/窗口数控制
+- [ ] **P0 内存优化（12:18 第 5 条）**：`start_all.bat` 的 `-c 65536` → 实测 `-c 16384` 时 llama PF 3,866→2,339 MB
+- [ ] **P1 播放丙方案轮 5-6**（解析第一个 `bvid` → 导航已有窗口 → 校验标题）：需你跑 `start_all.bat`
+- [ ] **P1 语音 20 轮 · 轮 11-20**（需你在麦克风前）
+- [ ] **P1 唤醒复训 v1.0d**（`need_audio.md` §5 缺口；召回短板 = 正样本仅 45 件）
+- [ ] **P1 不需你**：`find_on_screen` 中文匹配方式、**HB-040** `_coerce` 架空默认值
+- [ ] **P2 Monitor 全系列**（design v3.0 已定，等开工授权）
+- [ ] **P3**：`kill_process` 英文进程名、`pyautogui.FAILSAFE` 坐标约束、`WebSocketDisconnected` 根因、Q18/Q19/Q20、Q24（你关 B 站窗口）
