@@ -161,3 +161,18 @@ ole=status）；#modelSelect aria-label「当前 LLM 提供方」、#muteBtn ari
 - [ ] 2026-11-17-12-16 **`<video>` 播放状态未取证**（时间条没截到；OCR `:50015` 未开、WinRT 不可用、llama `:8080` 已杀）
       → 需你跑 `start_all.bat` 后用 jarvis 视觉（`describe_screen`）读时间进度条
 - [ ] 2026-11-17-12-16 **jarvis 起的窗口 pid 9952 仍在桌面**（计数 1，上限 3 未满）→ Q24 你手动关，或授权我 `manage_browser_windows` 关我起的 pid
+
+
+## 2026-11-17-12-20 全量重训（v1.2）方案与驱动（→ `records/2026-11-17-12-20-00.md`）
+
+- [x] 2026-11-17-12-20 **家底实测**：13 版模型特征 npy 齐（v0.1→v1.1）；`background/speech` **30 件旧件**（10-13 22:21-22:25）；
+      `rir` 10 件；`.tmp/v11tts` **141 件 / 7 音色**（`bai_e`、`elya`、`firefly`、4 个 Kokoro、`ref_user`）
+- [x] 2026-11-17-12-20 **`openWakeWord/train_config_v12.yaml`**（照 v11 模板，基线 v0.9 + 15xx 正 ×5 / 负 ×1，`steps 3000`、`max_negative_weight 1`）
+- [x] 2026-11-17-12-20 **驱动 `training/_t4_full_retrain.py`**（`--step bg/synth/score/clips/feat/train/eval`，复用既有 6 脚本，
+      `V11` 覆写指向 `aili_xiya_v1.2`，日志 `.tmp/bats/v12_*.log`，非 0 即停不假装）→ `py_compile` rc=0
+- [x] 2026-11-17-12-28 **`--step bg` 真跑验证**：`make_noise(24)` 成功（noise 目录由缺→24 件），`make_speech` 在 `:9880`
+      拒绝连接处 rc=1 如实停住；**自曝路径错**（我查 `openWakeWord/noise` 而非 `openWakeWord/background/noise`，
+      误报"speech 目录不存在"，实际 30 件旧件在，已在 record 追加更正）
+- [ ] 2026-11-17-12-20 **合成 + 打分 + 特征 + 训练 + 验收需你在会话跑**（`synth`/`make_speech` 需 `:9880`；
+      **训练前停 `:7860/:8080/:9880`**）；验收判据「25 次真呼唤 ≥ v0.9(14)、真人近音 fp ≤1、合成对抗 ≤4、定标纯噪声 0、
+      **环境音期望 0**、边界 ≥3 实例取多数」，**任一条不如 v0.9 就不改 `config.yaml`**（`v0.9 + 0.75` 现役不动）
