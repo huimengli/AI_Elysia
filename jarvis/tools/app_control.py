@@ -188,11 +188,15 @@ def open_url(url: str) -> str:
     # 2 windows (measured 2026-11-16 19:22, chrome processes 22). Reuse first,
     # with the window title as the evidence, and focus it by the real title only
     # (the listing line carries a 「（进程 N）」 suffix that focus_window cannot match).
+    # **Only jarvis-started windows are reusable** (user authorisation 2026-11-17 12:01,
+    # need_user Q32-1): reusing a window jarvis did not launch means focusing and
+    # typing into the user's browser — measured 2026-11-17 11:40 the reuse branch
+    # matched the DSH browser window (pid 16732, absent from PID_FILE, counted 0).
     from jarvis.tools.desktop import _visible_windows, focus_window
 
-    for _, _, t in _visible_windows():
+    for _, _, t in _jarvis_windows():
         if any(k in t.lower() for k in keys):
-            return (f"复用已打开的窗口：{t}（匹配关键词 "
+            return (f"复用我自己起的窗口：{t}（匹配关键词 "
                     f"{sorted(k for k in keys if k in t.lower())[0]}，没有再起新实例）\n"
                     f"{focus_window(t)}")
 
@@ -401,14 +405,21 @@ def navigate_url(url: str) -> str:
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
     keys = _url_keys(url)
-    wins = _browser_windows()
-    if not wins:
-        return f"没有可导航的浏览器窗口（当前 0 个），{url} 未打开。"
+    # **Only windows jarvis launched are navigable** (user authorisation 2026-11-17
+    # 12:01, Q32-1). Measured 2026-11-17 11:40: picking the first visible browser
+    # window focused pid 15416 (the DSH browser window, absent from PID_FILE) and
+    # pressed Ctrl+L + paste + Enter into a window of the user's.
+    mine = _jarvis_windows()
+    total = len(_browser_windows())
+    if not mine:
+        return (f"我自己起的浏览器窗口 0 个（浏览器窗口共 {total} 个）。"
+                f"**你的窗口我不聚焦、不输入**，{url} 未打开；要我自己起窗口请用 open_url"
+                f"（上限 {WINDOW_LIMIT}，只数我的窗口）。")
     from jarvis.tools.desktop import focus_window, press_key, type_text, _visible_windows
 
-    # Prefer the window that already carries this site, so the typed URL lands in
-    # the page the user is looking at, not in a window of their own.
-    hwnd, pid, base = next((w for w in wins if any(k in w[2].lower() for k in keys)), wins[0])
+    # Prefer my window that already carries this site, so the typed URL lands in
+    # the page jarvis is driving, not in a window of the user's.
+    hwnd, pid, base = next((w for w in mine if any(k in w[2].lower() for k in keys)), mine[0])
     step = focus_window(base)
     if "找不到" in step:
         return f"导航失败：{step}"
@@ -443,36 +454,58 @@ def navigate_url(url: str) -> str:
 
 
 def first_bilibili_video(keyword: str) -> str:
-    """Resolve the first Bilibili result for a keyword to a direct video URL.
+    """Resolve the top Bilibili result for a keyword to a direct video URL.
 
-    The page embeds its result JSON; the first `bvid` is what the first card
-    links to, so no vision coordinates and no clicks are needed. If the network
-    is unreachable or the page is blocked by anti-bot, the tool says so.
+    **Sort by most-played** (user rule 2026-11-17 12:01: 「我记得b站有个最多播放,
+    按照最多播放来」), via the search API with `order=play`. Measured 2026-11-17:
+    the API returns `code:0` with `data[0].bvid = BV1Ki4y1y7HC`, `play = 9488880`
+    for keyword 稻香 — the same card the user sees at 948.8 万 in the DOM list.
+    The search-page HTML (266,710 bytes, 126 bvid, relevance order) is NOT used:
+    its order is relevance, not most-played. If the API refuses, blocks, or returns
+    no video, the tool says so plainly.
     """
-    import re
+    import json
     import urllib.parse
     import urllib.request
 
     q = urllib.parse.quote(keyword)
-    url = f"https://search.bilibili.com/all?keyword={q}"
+    url = (f"https://api.bilibili.com/x/web-interface/search/all/v2"
+           f"?keyword={q}&order=play&page=1")
     req = urllib.request.Request(url, headers={
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120",
         "Referer": "https://www.bilibili.com/",
         "Accept-Language": "zh-CN,zh;q=0.9",
     })
     try:
-        html = urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "replace")
+        raw = urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "replace")
     except Exception as e:
-        return (f"取不到 B 站搜索页（{type(e).__name__}: {e}），无法确定第一支视频，"
+        return (f"取不到 B 站搜索 API（{type(e).__name__}: {e}），无法确定第一支视频，"
                 f"请确认 jarvis 侧有外网。搜索地址：{url}")
-    ids = re.findall(r"\"bvid\":\"(BV[0-9A-Za-z]{5,})\"", html)
-    if not ids:
-        bvs = re.findall(r"(BV[0-9A-Za-z]{5,})", html)
-        ids = bvs
-    if not ids:
-        return (f"搜索页拿到了 {len(html)} 字节，里面没有 bvid，可能被反爬挡住，"
-                f"第一支视频无法确定。地址：{url}")
-    return f"第一支视频：https://www.bilibili.com/video/{ids[0]}（搜索页 {len(html)} 字节，共 {len(ids)} 个 bvid）"
+    try:
+        data = json.loads(raw)
+    except Exception as e:
+        return (f"B 站搜索 API 返回不是 JSON（{type(e).__name__}: {e}），{len(raw)} 字节，"
+                f"可能被反爬挡住，第一支视频无法确定。地址：{url}")
+    code = data.get("code")
+    if code != 0:
+        return (f"B 站搜索 API 返回 code={code}（message={data.get('message')}），"
+                f"没有搜索结果，第一支视频无法确定。地址：{url}")
+    vids = []
+    for block in (data.get("data") or {}).get("result") or []:
+        if block.get("result_type") == "video":
+            vids = block.get("data") or []
+            break
+    if not vids:
+        return (f"API 返回 {len(raw)} 字节，`code:0`，但 video 列表为空（关键词「{keyword}」），"
+                f"没有可播放的第一支。地址：{url}")
+    top = vids[0]
+    bvid = top.get("bvid")
+    if not bvid:
+        return (f"API 第一条没有 bvid（{len(raw)} 字节，{len(vids)} 条视频），无法确定第一支。地址：{url}")
+    title = (top.get("title") or "").replace("</em>", "").replace("<em class=\"keyword\">", "")
+    return (f"最多播放第一支：https://www.bilibili.com/video/{bvid}"
+            f"（{top.get('play')} 播放，标题「{title}」，共 {len(vids)} 条，"
+            f"数据源 API order=play，{len(raw)} 字节）")
 
 
 def play_first_video(url: str, tries: int = 3) -> str:

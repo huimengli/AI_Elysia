@@ -16,7 +16,7 @@ rem ---- 1/4 llama.cpp (LLM, :8080) ----
 netstat -ano | findstr ":8080" | findstr "LISTENING" >nul
 if errorlevel 1 (
     if exist "%~dp0llm\llama-b12144-bin-win-vulkan-x64\llama-server.exe" (
-        start "llama.cpp :8080" cmd /k "cd /d %~dp0llm\llama-b12144-bin-win-vulkan-x64 & set GGML_VULKAN=1 & llama-server.exe -m %~dp0llm\models\Qwen3.5-2B-Q4_K_M.gguf --host 127.0.0.1 --port 8080 -c 65536 -ngl 99 -fa 1 --load-mode none -b 1024 -ub 512 --no-cont-batching --parallel 1 --jinja --repeat-penalty 1.05 --reasoning-format deepseek --reasoning-preserve --cache-type-k q4_0 --cache-type-v q4_0 --mmproj %~dp0llm\models\Qwen3.5-2B_mmproj-F16.gguf"
+        start "llama.cpp :8080" cmd /k "cd /d %~dp0llm\llama-b12144-bin-win-vulkan-x64 & set GGML_VULKAN=1 & llama-server.exe -m %~dp0llm\models\Qwen3.5-2B-Q4_K_M.gguf --host 127.0.0.1 --port 8080 -c 24576 -ngl 99 -fa 1 --load-mode none -b 1024 -ub 512 --no-cont-batching --parallel 1 --jinja --repeat-penalty 1.05 --reasoning-format deepseek --reasoning-preserve --cache-type-k q4_0 --cache-type-v q4_0 --mmproj %~dp0llm\models\Qwen3.5-2B_mmproj-F16.gguf"
     ) else (
         echo [Skip] llama-server.exe not found under llm\llama-b12144-bin-win-vulkan-x64
     )
