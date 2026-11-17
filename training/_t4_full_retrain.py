@@ -40,10 +40,18 @@ ORDER = ("bg", "synth", "score", "clips", "feat", "train", "eval")
 
 
 def gsv_ready() -> bool:
-    """True if :9880 answers any HTTP response (any reply = ready, per HB history)."""
+    """True if :9880 answers ANY HTTP response. 2026-11-17 13:22 fix: the root path
+    returns **404**, and `urllib` raises `HTTPError` for it, so the first version
+    reported "service not ready" while the TTS service was live (4-lamp health said
+    tts online). Any reply — 200, 404, 400 — means the server is listening.
+    """
+    import urllib.error
+    import urllib.request
     try:
-        urllib.request.urlopen("http://127.0.0.1:9880/", timeout=3)
-        return True
+        with urllib.request.urlopen("http://127.0.0.1:9880/", timeout=3):
+            return True
+    except urllib.error.HTTPError:
+        return True  # server answered (404/400): listening
     except Exception:
         return False
 
