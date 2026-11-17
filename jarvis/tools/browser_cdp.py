@@ -199,9 +199,14 @@ def evaluate(expr: str, kw: str = "", port: int = CDP_PORT) -> tuple[str, str]:
 def kill_recorded_pid(pid: int) -> str:
     """Close a window by killing a pid jarvis recorded for itself (need_user Q29/Q32/Q34).
     Pids jarvis never recorded are refused."""
-    from jarvis.tools.app_control import jarvis_pids
+    from jarvis.tools.app_control import forget_pid, jarvis_pids
     if pid not in jarvis_pids():
         return f"pid {pid} 不在我起的窗口记录里，拒绝关闭。"
     r = subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"],
                        capture_output=True, text=True)
-    return r.stdout.strip() or r.stderr.strip()
+    out = r.stdout.strip() or r.stderr.strip()
+    if r.returncode == 0:
+        # The pid is gone; keep the record honest so the kill permission never
+        # points at a dead pid (21:47 self-disclosure in records/2026-11-17-20-16-55.md).
+        forget_pid(pid)
+    return out

@@ -313,8 +313,7 @@ def open_url(url: str) -> str:
         low = exe.lower()
         flags = []
         if low.endswith(("chrome.exe", "msedge.exe")):
-            profile = os.path.join(os.path.dirname(os.path.dirname(
-                os.path.dirname(os.path.abspath(__file__)))), ".tmp", "chrome_profile")
+            profile = _profile_dir()
             os.makedirs(profile, exist_ok=True)
             # Measured 2026-11-16 17:49: chrome launched from python hits its own
             # sandbox breakpoint and exits with 0x80000003 (2147483651) — no window
@@ -431,8 +430,45 @@ def _load_pids() -> list[int]:
 
 def jarvis_pids() -> list[int]:
     """Pids jarvis launched itself — the **only** pids it may close (need_user Q29/Q32/Q34:
-    只关 jarvis 自起窗口). Public so `browser_cdp.kill_recorded_pid` can check against it."""
-    return _load_pids()
+    只关 jarvis 自起窗口). Public so `browser_cdp.kill_recorded_pid` can check against it.
+
+    2026-11-17 21:04 (records/2026-11-17-20-16-55.md, todo 第 2 项): the recorded launch pid
+    is a **launcher that exits at once** — an existing Chrome instance takes the handoff and
+    owns the window, so window pid ≠ launch pid (measured round 2: launch 21200, window 10848).
+    The profile flag is the precise identity: jarvis launches with
+    `--user-data-dir=.tmp/chrome_profile`, which the user's own windows never carry.
+    Both sets count as "mine": the recorded pids plus any process running on that profile.
+    """
+    return sorted(set(_load_pids()) | _jarvis_profile_pids())
+
+
+def _profile_dir() -> str:
+    return os.path.join(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__)))), ".tmp", "chrome_profile")
+
+
+def _jarvis_profile_pids() -> set[int]:
+    """Pids of Chrome/Edge processes running on jarvis' dedicated profile.
+
+    `--user-data-dir` appears on the instance's main process and on its children, so the
+    window pid (the instance pid) is found by the flag, not by the launcher pid. The user's
+    windows use his own profile and can never match — this is the Q32/Q34 boundary.
+    """
+    import json
+
+    cmd = ('Get-CimInstance Win32_Process -Filter "Name=\'chrome.exe\' OR Name=\'msedge.exe\'" '
+          "| Select-Object ProcessId,ParentProcessId,CommandLine | ConvertTo-Json -Compress")
+    try:
+        out = subprocess.run(["powershell", "-NoProfile", "-Command", cmd],
+                             capture_output=True, text=True, timeout=15)
+        data = json.loads(out.stdout)
+        if isinstance(data, dict):
+            data = [data]
+        prof = _profile_dir().lower()
+        return {int(d["ProcessId"]) for d in data
+                if prof in (d.get("CommandLine") or "").lower()}
+    except Exception:
+        return set()
 
 
 def _save_pids(pids: list[int]) -> None:
@@ -446,12 +482,22 @@ def _save_pids(pids: list[int]) -> None:
         pass
 
 
+def forget_pid(pid: int) -> None:
+    """Drop a pid from the record once its process is confirmed dead (measured 21:47:
+    after killing window pid 20468, `jarvis_pids()` still listed it — a stale entry gives
+    a kill permission for a pid that no longer exists)."""
+    _save_pids([p for p in _load_pids() if p != pid])
+
+
 _launched_pids: list[int] = _load_pids()
 
 
 def _jarvis_windows() -> list[tuple[int, int, str]]:
-    """Browser windows whose pid is one jarvis started itself."""
-    return [w for w in _browser_windows() if w[1] in _launched_pids]
+    """Browser windows that are mine: pid recorded by jarvis, or pid running on jarvis'
+    dedicated profile (21:04 fix — the launcher pid exits immediately, so pid matching alone
+    under-counted: rounds 2 and 3 reported 「我起的窗口数 0」 while the window existed)."""
+    mine = set(_launched_pids) | _jarvis_profile_pids()
+    return [w for w in _browser_windows() if w[1] in mine]
 
 
 def manage_browser_windows(close_extra: bool = False) -> str:
@@ -487,6 +533,8 @@ def manage_browser_windows(close_extra: bool = False) -> str:
         r = subprocess.run(["taskkill", "/PID", str(p), "/T", "/F"],
                            capture_output=True, text=True)
         (killed if r.returncode == 0 else failed).append(f"{t}（进程 {p}）")
+        if r.returncode == 0:
+            forget_pid(p)
     kept = [p for p in _launched_pids if p not in {p for _, p, _ in killed}]
     _save_pids(kept)
     return (head + f"关掉超出上限的 {len(extras)} 个（只杀记录里的 pid）："
@@ -618,17 +666,22 @@ def first_bilibili_video(keyword: str) -> str:
 
 
 def play_first_video(url: str, tries: int = 3) -> str:
-    """Reach the first playable item, verifying by window title.
+    """Reach the first playable item — **丙方案（你 19:47 定「丙方案不错」）**：直达视频 URL
+    导航 + CDP 证据判定，**全程无视觉坐标、无点击**。
 
-    Route A (preferred, no clicks): resolve the first result to a direct video
-    URL and navigate the existing window's address bar. Route B (fallback):
-    vision locates the Nth result cover, click, then title check. Every step
-    carries evidence; a miss is reported as a miss.
+    21:49 修假阴性（todo 第 3 项，两处根因）：
+    ①`first_bilibili_video` 返回**装饰句**「最多播放第一支：https://…（9488880 播放，标题…）」，
+    旧代码匹配的是「第一支视频：」→ Route A 永不命中，白落回视觉路线；
+    ②直达 BV URL 时旧代码用 URL 关键词匹配窗口标题（标题是视频页标题，不含 `video/BV…`）
+    → `base = None` → 「没有基准，中止」→ 落回视觉点击（19:26 实测三个坐标全落在窗口外，
+    19:47 你否掉视觉路线）。
+    现在：导航后**用 CDP 读 `video` + duration** 判定进入视频页（与 `play_music` 同一验法）。
+    CDP 连不上就直说，不猜、不点击。`tries` 保留以兼容旧调用，不再用于视觉重试。
     """
+    import json
     import time
 
-    from jarvis.tools.desktop import _visible_windows, click_at, focus_window
-    from jarvis.tools.vision import ask_vision, _coords
+    from jarvis.tools.browser_cdp import READY_JS, evaluate
 
     raw = url
     url = _extract_url(url)
@@ -637,58 +690,50 @@ def play_first_video(url: str, tries: int = 3) -> str:
                 f"收到的是：{raw}")
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
-    keys = _url_keys(url)
-    log = [open_url(url)]
 
-    def titles() -> list[str]:
-        return [t for _, _, t in _visible_windows()
-                if any(k in t.lower() for k in keys)]
-
-    # Route A: direct URL, no vision, no clicks (the user picked this route after
-    # 19:28 — three vision coordinates all landed outside the window).
     kw = ""
     if "keyword=" in url:
-        kw = url.split("keyword=", 1)[1].split("&")[0]
-    kw = __import__("urllib.parse", (), (), ["unquote"]).unquote(kw)
-    base = titles()[0] if titles() else None
-    if kw and base:
+        kw = __import__("urllib.parse", (), (), ["unquote"]).unquote(
+            url.split("keyword=", 1)[1].split("&")[0])
+    if kw:
         found = first_bilibili_video(kw)
-        log.append(found)
-        if "第一支视频：" in found:
-            direct = found.split("第一支视频：", 1)[1].split("（")[0]
-            log.append(navigate_url(direct))
-            if "现在「" in log[-1]:
-                return "\n".join(log)
+        # `first_bilibili_video` returns a decorated sentence, so take the URL out of it
+        # (the `startswith("http")` style check was the 2026-11-17 19:25 假阴性 in play_music).
+        direct = _extract_url(found)
+        if not direct:
+            return (f"关键词「{kw}」查不到 B 站最播放第一支（{found}），没有打开任何页面。"
+                    f"输入：{raw}")
+        url = direct
 
-    base = titles()[0] if titles() else None
-    if not base:
-        log.append("没有带这个网址的窗口标题，无法作为基准，中止。")
-        return "\n".join(log)
-    # Bring the page to the front before every capture: screenshots see the whole
-    # screen, and a covered window makes the vision coordinates land on other
-    # windows (measured 2026-11-16 19:26 — (20,189) is the far-left screen edge).
-    log.append(f"聚焦页面：{focus_window(base)}")
-    time.sleep(1)
+    log = [open_url(url)]
+    if "拒绝再起新实例" in log[0]:
+        # My own window limit is 3, so reuse the focused window's address bar.
+        log.append(navigate_url(url))
 
-    for n in range(1, tries + 1):
-        ans, path, nbytes = ask_vision(_VISION_PROMPT.format(n=n))
-        if path is None:
-            log.append(f"第 {n} 支：{ans}")
+    # Verification without vision: a real `video` element with a duration is a video page.
+    # Poll ~12 s — the player mounts after the page finishes loading (record_15.md: setup
+    # ran while the page was loading and did nothing).
+    detail, err = "", ""
+    for _ in range(12):
+        s, e = evaluate(READY_JS)
+        if not s:
+            err = e
             break
-        c = _coords(ans)
-        if not c:
-            log.append(f"第 {n} 支：视觉没有给出坐标（{ans[:60]}，截图 {path.name}）")
-            continue
-        log.append(f"第 {n} 支视觉坐标 {c}（截图 {path.name}，{nbytes} 字节）-> {click_at(c[0], c[1])}")
-        time.sleep(4)
-        now = titles()
-        changed = [t for t in now if t != base]
-        if changed:
-            log.append(f"窗口标题已变：基准「{base}」-> 现在「{changed[0]}」，判定进入视频页")
-            return "\n".join(log)
-        log.append(f"点击后标题未变（仍是「{base}」），换下一支重试")
-    log.append(f"{tries} 次都没有让标题变成视频页，请确认页面上是否真的播放。")
-    return "\n".join(log)
+        detail = s
+        try:
+            d = json.loads(s)
+            if d.get("有video") and d.get("du"):
+                return "\n".join(log) + f"\n判定进入视频页（CDP 证据：{s}）"
+        except Exception:
+            pass
+        time.sleep(1)
+    if not detail:
+        return ("\n".join(log) +
+                f"\n**无法判定是否进入视频页**：CDP 连不上（{err}）。已导航 {url}，"
+                f"我没有做任何点击。请确认页面上是否真的播放。")
+    return ("\n".join(log) +
+            f"\n**没有看到 video 元素**（CDP 读数 {detail}，12 秒轮询），页面不是视频页或"
+            f"仍在加载。已导航 {url}，我没有做任何点击，请确认。")
 
 
 def play_music(url: str, keyword: str = "", close_at_end: bool = True, max_wait: int = 900) -> str:
