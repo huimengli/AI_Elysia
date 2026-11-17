@@ -63,3 +63,19 @@
 - [x] 2026-11-17-13-44 自曝驱动 monkeypatch 失效覆盖 `aili_xiya_v1.1` 产物（不可恢复，无功能影响）
 - [x] 2026-11-17-13-52 你定「取两次交集」+ train 稍后；已登录（cookie 留在 `.tmp\chrome_profile`）
 - [x] 2026-11-17-15:52 **状态落盘 + 停手**（你说要用电脑）：progress 快照 99 行、todo 归档（备份 157 行→60 行）、tree 重建 548 行/481 文件、批次+累积 opinion 追加；本地 commit **5af39ad**（CDP 播放链 17 files）+ **520c9bd**（record 追加节补提交）+ **185b22d**（hash 追加，本条 hash 下次 commit 时补进台账）；挂着的旧 llama 探测作业 `pwsh-37` 已 job_kill 释放内存；我起的窗口数 0
+
+## 18:46 新需求（18:46 答复，→ `records/2026-11-17-18-46-00.md`）
+
+- [ ] 2026-11-17-18-46 `onnx_opinion` 补 v1.0c / v1.2 行（**追加，不覆盖**；数据源只用已落盘证据，本批不重跑探针）
+- [x] 2026-11-17-18-46 **jarvis 端到端 3 轮播放验收**（`tests/2026-11-17-18-46-00_cc/record_1..4.md` + 批次 `opinion.md` + 累积 `tests/opinion.md` 406 行）
+      —— 三服务已重启，**4 灯这轮适用**：wake `v0.9 + 0.75` online+listening / asr whisper warm / llm `:8080` / tts `:9880`
+      判据五项不变（导航 / 关弹幕 / 最低档 = 点过「360P 流畅」+ 宽度 640 / 时间前进 + 播完信号 BV 变化 / 播完关掉我起的窗口）
+      **结果：轮 1 FAIL、轮 2 部分 PASS（4 项）、轮 3 FAIL、轮 4（我加的越界诊断轮）全五项 PASS —— 3 轮口径没有全项 PASS 轮。**
+      轮 1 根因：jarvis 选旧工具 `play_first_video` + `_extract_url` 吞中文关键词（启动 URL 停在 `keyword=`）+ `fetch_page` 中文不编码（`'ascii' codec can't encode`）
+      → 已修：`play_music` 加 `keyword`（走 API `order=play` 直达最播放第一支）+ schema 把「播歌唯一工具」写成 `play_music`（轮 2 起 jarvis 自选它）+ `fetch_page` 先 `quote` 编码
+      **自曝**：`first_bilibili_video` 返回带修饰句子，我第一版用 `startswith("http")` 判会把成功查询误报成查不到（改 `_extract_url` 后判）；轮 3 的失败原因被 `result[:120]`/`result[:200]` 截断，**永久读不到**，轮 3 保持 FAIL
+- [ ] 2026-11-17-19-35 **新记 P1：`_jarvis_windows()` 按 pid 匹配，Chrome 多进程下窗口 pid ≠ 启动 pid**（轮 2 实测启动 21200 vs 窗口 10848；轮 3 `PID_FILE` 未新增本轮 pid，`n = 22`）→ 「我起的窗口数 0」不可作数，需修匹配（父树/窗口标题双认）
+- [x] 2026-11-17-19:35 **`main.py` 工具打印不再截断**（`result[:120]` 把失败原因切掉，WS/UI 保持 200 字上限）—— 轮 4 靠它拿到 jarvis 完整播报，五项全证到
+- [ ] 2026-11-17-18-46 **扩数据后重训**（你选「扩数据后重训（推荐）」）：`:9880` 合成更多 TTS 件 → `score` → `clips` → `feat` → `train` → `eval`
+      —— 训练前必须**停三服务**，所以排在 3 轮端到端验收之后；判据不变，**任一条不如 v0.9 就不改 `config.yaml`**
+- [x] 2026-11-17-18-56 三服务重启 + 4 灯复核（**自曝**：18:57 起服务时 record 未写，违反「先落盘再开工」；`FreePhysicalMemory` 单位 KB 当字节算，报出「可用 12 MB」假危机；`Add-Type -Language CPowerShell` 非法枚举 → 类型没建起来除零；`pwsh -c` 里塞转义引号给 `python -c` → `SyntaxError`，改用读进程命令行核对 `-c 24576`）

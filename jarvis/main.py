@@ -406,7 +406,11 @@ def _call_openai_provider(provider_cfg: dict, temperature: float, full_messages:
                     _speak_if_unmuted("好的，我处理一下。")
                 result = _exec_tool_with_retry(call["function"]["name"], args)
                 executed.append((call["function"]["name"], result))
-                print(f"[Tool: {call['function']['name']}] {result[:120]}")
+                # 2026-11-17 19:35 fix (`tests/2026-11-17-18-46-00_cc/record_3.md` 轮 3):
+                # `result[:120]` cut the report right before the failure reason, so the
+                # end-to-end round could not be root-caused from jarvis' own log. Full text
+                # goes to the log; the WS/UI keeps its 200-char cap.
+                print(f"[Tool: {call['function']['name']}] " + result.replace("\n", " | "))
                 _broadcast({"type": "tool_result", "name": call["function"]["name"], "label": tool_label(call["function"]["name"]), "result": result[:200]})
                 full_messages.append({
                     "role": "tool",
@@ -454,7 +458,8 @@ def _call_ollama_provider(provider_cfg: dict, temperature: float, full_messages:
                 if tool_count == 4:
                     _speak_if_unmuted("好的，我处理一下。")
                 result = _exec_tool_with_retry(tc.function.name, args)
-                print(f"[Tool: {tc.function.name}] {result[:120]}")
+                print(f"[Tool: {tc.function['name'] if isinstance(tc, dict) else tc.function.name}] "
+                      + result.replace("\n", " | "))
                 _broadcast({"type": "tool_result", "name": tc.function.name, "label": tool_label(tc.function.name), "result": result[:200]})
                 full_messages.append({
                     "role": "tool",

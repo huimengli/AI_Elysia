@@ -45,6 +45,14 @@ def get_weather(location: str = "") -> str:
 def fetch_page(url: str, max_chars: int = 3000) -> str:
     """Fetch a URL and return its plain text content."""
     try:
+        # 2026-11-17 19:25 fix (`tests/2026-11-17-18-46-00_cc/record_1.md` 轮 1):
+        # `urllib.request` 对含中文的 URL 直接报 `'ascii' codec can't encode characters`
+        # （jarvis 传 `https://search.bilibili.com/all?keyword=月声尽,心灯明` 时连撞 1 次）。
+        # 路径段按 `quote(safe="/")`、查询串按 `quote(safe="=&/%")` 先编码再请求。
+        parts = urllib.parse.urlsplit(url)
+        path = urllib.parse.quote(parts.path, safe="/%")
+        query = urllib.parse.quote(parts.query, safe="=&%")
+        url = urllib.parse.urlunsplit((parts.scheme, parts.netloc, path, query, parts.fragment))
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=8) as resp:
             raw = resp.read().decode("utf-8", errors="ignore")

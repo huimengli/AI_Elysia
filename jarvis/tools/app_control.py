@@ -691,7 +691,7 @@ def play_first_video(url: str, tries: int = 3) -> str:
     return "\n".join(log)
 
 
-def play_music(url: str, close_at_end: bool = True, max_wait: int = 900) -> str:
+def play_music(url: str, keyword: str = "", close_at_end: bool = True, max_wait: int = 900) -> str:
     """只听歌模式（用户 2026-11-17 14:01 原话：「进入b站需要关闭弹幕,用最低分辨率」
     「播放完最好能直接将视频关闭了」）。
 
@@ -715,12 +715,38 @@ def play_music(url: str, close_at_end: bool = True, max_wait: int = 900) -> str:
                                           evaluate, kill_recorded_pid, open_cdp)
 
     raw = url
-    url = _extract_url(url)
+    # 2026-11-17 19:25 fix（`tests/2026-11-17-18-46-00_cc/record_1.md` 轮 1 暴露）：
+    # jarvis 传的是 **B 站搜索页 URL**，`_extract_url` 只吃 ASCII，把中文关键词尾巴吞掉
+    # → 窗口落在裸搜索页（`.../all?keyword=`），没有视频、没有弹幕/分辨率设置、没有任何播放。
+    # 现在：歌名（`keyword`）或搜索页里的 `keyword=` 都走 B 站 API（`order=play`）取**最播放第一支**
+    # 的直达 BV 链接再导航（丙方案：无视觉坐标、无点击）。
+    kw = (keyword or "").strip()
+    if not kw and "search.bilibili.com" in raw:
+        import urllib.parse
+        vals = urllib.parse.parse_qs(urllib.parse.urlparse(raw).query).get("keyword") or []
+        kw = vals[0].strip() if vals else ""
+    resolved_from = ""
+    if kw:
+        direct = first_bilibili_video(kw)
+        # `first_bilibili_video` returns a **decorated sentence**
+        # (`最多播放第一支：https://…（1768005 播放，标题…）`), so a `startswith("http")` check
+        # would misreport a successful lookup as a failure. Extract the URL, then check.
+        direct_url = _extract_url(direct)
+        if not direct_url:
+            return f"关键词「{kw}」查不到 B 站最播放第一支（{direct}），没有打开任何页面。"
+        url, resolved_from = direct_url, kw
+        log_note = direct
+    else:
+        url = _extract_url(url)
+        log_note = ""
     if not url:
         return (f"输入里没有 URL（要 http:// 或 https:// 打头），没有打开任何页面。"
                 f"收到的是：{raw}")
 
-    log = [open_url(url)]
+    log = []
+    if resolved_from:
+        log.append(f"关键词「{resolved_from}」→ {log_note}")
+    log.append(open_url(url))
     if "拒绝再起新实例" in log[0]:
         return "\n".join(log)
 

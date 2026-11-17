@@ -1,7 +1,7 @@
 """Maps LLM tool call names to Python functions and provides tool schemas."""
 from jarvis.tools.web_search import search, fetch_page, get_weather
 from jarvis.tools.app_control import (open_app, open_url, kill_process,
-                                       play_first_video, manage_browser_windows,
+                                       play_first_video, play_music, manage_browser_windows,
                                        navigate_url)
 from jarvis.tools.file_ops import read_file, write_file, list_files
 from jarvis.tools.code_exec import run_python
@@ -25,6 +25,7 @@ TOOL_MAP = {
     "fetch_page":       lambda a: fetch_page(a["url"]),
     "open_url":         lambda a: open_url(a["url"]),
     "play_first_video": lambda a: play_first_video(a["url"]),
+    "play_music": lambda a: play_music(a.get("url", ""), a.get("keyword", "")),
     "manage_browser_windows": lambda a: manage_browser_windows(a.get("close_extra", False)),
     "navigate_url":       lambda a: navigate_url(a["url"]),
     "get_weather":      lambda a: get_weather(a.get("location", "")),
@@ -74,6 +75,7 @@ TOOL_LABELS = {
     "fetch_page": "读取网页",
     "open_url": "打开网址",
     "play_first_video": "播放第一支视频",
+    "play_music": "播放音乐（关弹幕/最低档/播完关窗）",
     "manage_browser_windows": "管理浏览器窗口",
     "navigate_url": "导航网址",
     "get_weather": "查天气",
@@ -137,11 +139,21 @@ TOOL_SCHEMAS = [
 
     {"type": "function", "function": {
         "name": "play_first_video",
-        "description": "Reach the first playable item on a results page and verify it: resolve the first result to a direct URL and navigate the window, then check the window title changed. Falls back to vision coordinates and a click only when the URL cannot be resolved. Returns every step with evidence, so a miss is reported as a miss.",
+        "description": "Reach the first playable item on a results page and verify it: resolve the first result to a direct URL and navigate the window, then check the window title changed. Falls back to vision coordinates and a click only when the URL cannot be resolved. Returns every step with evidence, so a miss is reported as a miss. Do NOT use this to play a song — songs must go through play_music, which turns off the danmaku, sets the lowest quality, starts playback with a trusted click, and closes jarvis' own window at the end.",
         "parameters": {"type": "object", "properties": {
             "url": {"type": "string",
-                    "description": "Page to open. For a Bilibili song use https://search.bilibili.com/all?keyword=<song title>."},
+                    "description": "Page to open."},
             }, "required": ["url"]}}},
+
+    {"type": "function", "function": {
+        "name": "play_music",
+        "description": "The ONLY tool for playing a song on Bilibili. Pass the song title as keyword (Chinese is fine) and it resolves the most-played (order=play) result through the Bilibili API, navigates jarvis' own window straight to that BV URL (no vision, no clicks), turns OFF the danmaku, sets the lowest quality (item labelled 360P 流畅, width 640, height follows the source aspect), starts playback with a trusted click on 播放/暂停 (video.play() alone is blocked by Chrome autoplay policy), resets to 0:00 because Bilibili resumes at the last watched position, then polls: playback time must advance, and reaching the end is signalled by the BV id in the page URL changing (连播 fires at the end). When the song ends, the window jarvis started is killed (only pids jarvis recorded at launch; the user's own windows are never touched). Returns every step with evidence; a miss is reported as a miss. Pass a direct BV URL as url when you already have one.",
+        "parameters": {"type": "object", "properties": {
+            "keyword": {"type": "string",
+                        "description": "Song title to search, e.g. 月声尽,心灯明. Preferred for song requests."},
+            "url": {"type": "string",
+                    "description": "Optional direct video URL (https://www.bilibili.com/video/BV…) if already resolved."},
+            }, "required": []}}},
 
     {"type": "function", "function": {
         "name": "manage_browser_windows",

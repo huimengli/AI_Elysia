@@ -396,3 +396,11 @@ o_speech_seconds）本批未实施，仍挂在 todo。
 
 **轮 18 部分 FAIL（判据过死），轮 19、20 全项 PASS。** 判据修正两处：**最低分辨率 = 点过「360P 流畅」+ 宽度 640（高度随源比例，这支是 640x338）**；**播完信号 = BV 号变化**（连播发生在结尾那一刻，`ct >= du-1.2` 常差 0.7 秒）。能力事实三轮一致：B 站续播需 `currentTime=0`；`video.play()` 播不动，必须受信点击播放按钮；换歌瞬间 video 元素先换、地址后更新，所以**判播完只认 BV 身份**。
 累计 20 轮：全项 PASS **4 轮**（5、7、19、20），FAIL 6 轮全部当场暴露根因并修。未闭合：4 灯（服务停）、jarvis 端到端需你跑 `start_all.bat`。
+
+
+## 2026-11-17-18-46 jarvis 端到端播放「月声尽,心灯明」（批 `tests/2026-11-17-18-46-00_cc/record_1..4.md`）
+
+**3 轮口径没有全项 PASS 轮：轮 1 FAIL、轮 2 部分 PASS（4 项）、轮 3 FAIL；轮 4（我加的越界诊断轮）全五项 PASS。**
+本批落地：`play_music` 加 `keyword`（歌名/搜索页 `keyword=` → B 站 API `order=play` 取最播放第一支直达 BV 再导航，丙方案无视觉无点击）+ schema 把「播歌唯一工具」写成 `play_music`（轮 2 起 jarvis 自选它）+ `fetch_page` 先 `quote` 编码（轮 1 的 `'ascii' codec can't encode`）+ `main.py` 工具打印不再截断（轮 3 失败原因被 `result[:120]` 切掉，读不到，**永久读不到**）。
+轮 4 五项证据：直达 `BV1RMYF6kEze`（1,768,296 播放）/ `danmakuChecked=false` / 点过「360P 流畅」判定 `640x338`（**起始读数分辨率是 `0x0`，判据不能只看首拍**）/ 受信点击播放 → **连播发生 = 播完信号**（`BV1RMYF6kEze → BV1DepY6BE1G`，t+288 s）/ kill 自起 pid 1552 进程树 9 个全 SUCCESS +「关后我起的窗口数：0」。
+新记 P1：**`_jarvis_windows()` 按 pid 匹配，Chrome 多进程下窗口 pid ≠ 启动 pid**（轮 2 实测启动 21200 vs 窗口 10848）→ 「我起的窗口数 0」不可作数；轮 3 的 `PID_FILE` 也没有新增本轮 pid（`n = 22`）。
