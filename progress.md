@@ -1,101 +1,71 @@
-# Progress — 跨会话进度台账
+# 进度台账
 
-<!-- 已归档于 ai_buckup/progress.md_2026-11-12-12-25-50.md（101 行，含 2026-10-13 至 2026-11-12 全部逐批要点与 hash 台账；本文件为 compact 版） -->
+<!-- 已归档于 ai_buckup/progress.md_2026-11-17-11-58-00.md（101 行全量：逐条 hash + 结论 + 自曝）。本文件为压缩版：hash 索引（最近 45 条，结论见归档与 records/tests）+ 当前未结案状态。 -->
 
-## 当前状态（2026-11-12 12:26）
+## Git 提交记录（最近 45 条，**全部已本地 commit，未 push**；结论细节在归档与 `records/`、`tests/`）
 
-- **服务**：`:9880` GPT-SoVITS、`:8080` llama.cpp（Qwen3.5-2B-Q4_K_M）、`:7860` Jarvis 全部 LISTEN。Jarvis 启动带 3 个 HF 变量（`HF_ENDPOINT=https://hf-mirror.com`、`HF_HOME=<repo>\.hf-cache`、`HF_HUB_DISABLE_XET=1`）。
-- **唤醒**：`config.yaml` = **`aili_xiya_v0.9.onnx` + `threshold: 0.75`**，health 实测生效；`chunk_size` 1280、检出后 reset、冷却 2 s。
-- **ASR**：`stt.engine` = **whisper**（faster-whisper small / cpu / int8 / zh）；sherpa-onnx Paraformer-zh small（`model.int8.onnx` 81.8 MB）已就位、可在网页设置里切换，分发与回退已实测。
-- **TTS**：GPT-SoVITS + 按标点切句的队列（首声 14.08→2.44 s，总时长 −27%）。
-- **结构**：根目录清理完成（Q13 结案），可复用脚本在 **`training/`**（71 个，已入 Git），日志类在 `.tmp/`（49 个 `_*`，忽略）。`tree.md` 275 项。`need_audio.md` 是缺录清单（格式 `"音频内容", "文件路径"`，路径为空 = 需录）。
-- **无未答复问题**：`need_user.md` Q5-Q13 全部 status: done（已归档）。待办见 `todo.md`。
-- **文档（2026-11-12 17:0x）**：9 个自训练唤醒 ONNX（v0.1→v0.9，体积均 13,735 B）的横向对比台账落盘在 **`ai_buckup/onnx_opinion.md`**（表 1 版本谱系 / 表 2 部署管线 3 轮实测 / 表 3 阈值取舍 / 表 4 HB-032 边界复测 / 结论与缺口 / 复现命令）；`todo.md` 103 行 > 100 → 归档 `ai_buckup/todo.md_2026-11-12-16-58-46.md` 并压缩为 60 行；`tree.md` 重建为 **278** 项。本批**未重跑任何探针**，全部数据取自已落盘日志与结论。
-- **新补录批（2026-11-12 17:22，→ `records/2026-11-12-17-22-40.md`）**：你补录 14 件（14 次干净呼唤 / 键盘噪音 4 次 / 轻音乐 3 + 歌声 3 / 爱你老师 / 雅诗兰黛 / 米雅 / 天猫精灵 / 我没听清 / 机械键盘噪音 / 环境音），**数据本身可用**（无过静音件，v0.9 上 14 次件检出 14/14、键盘件 4/4、6 件带噪全命中，真呼唤 13→25 次、带噪正样本 2→12 条）。按现行规则重训 **`aili_xiya_v1.0`**（正 ×5 / 负 ×1，26515 / 58128 行，steps 3000）**Recall 0.3009 → 未采用**，`config.yaml` 保持 `v0.9 + 0.75`，服务未重启。3 轮落 `tests/2026-11-12-17-22-40_cc/`；`need_audio.md` §7 填路径、§5 剩余缺口（竞品唤醒句 ≥4、无关短句 ≥3）。**`need_user.md` Q14（status: wait）= 真人近音件入库规则冲突裁决**，未裁决前不推进重训。
+```text
+197803c docs(AI): 把 07251b4 的上下文修正追加到台账
+07251b4 docs(AI): 实测 -c 24576 = 3,476 MB 后把上下文建议改回 16384（图不进主上下文）
+3929ed9 docs(AI): 把 b9492e4 的上下文区间结论追加到台账
+b9492e4 docs(AI): 上下文合理区间用实测 token 判定 —— 建议 -c 24576（省 ~1,630 MB），单位口径更正
+bd01ebb docs(AI): 把 7d733f8 的播放 3 轮结论追加到台账并开 Q32
+7d733f8 test(AI): 丙方案追加 3 轮 —— 数据侧通了，窗口边界是新的真问题（我两条前置判断作废）
+c7a4bc4 docs(AI): 把 3b153c9 的优先级盘点结论追加到台账
+3b153c9 docs(AI): Q31 答复落盘 + 未完成 todo 优先级盘点（Monitor 降 P2，先不开工）
+adb6514 docs(AI): 把 5a89934 的 Monitor v3.0 结论追加到台账
+5a89934 docs(design): Monitor v3.0 —— 日志中枢 + 单窗口托管 + 指定关闭 + 外部接入的可行性边界
+f5b4a1d docs(AI): 把 f867084 的 Monitor 设计结论追加到台账
+f867084 docs(design): Monitor 面板设计 v2.0（只 design，不开工，内容决定权交回用户）
+ac82b48 docs(AI): 关闭所有服务的执行结果落盘（7860/8080/9880 全部不通，可用 12,408 MB）
+bbc0acc docs(AI): 落盘窗口上限/pid 记录结论与关闭服务的执行口径
+e758788 feat(AI): 记录自起窗口 pid + 上限只数 jarvis 自起窗口，同实例共享 pid 时拒绝杀进程
+dd93752 feat(AI): 播放走直达 URL 导航 + 浏览器窗口上限 3，校验只认被聚焦的窗口
+2792acf fix(UI): send 要求 readyState===1 不再断线吞消息，补 aria-live 与中文活动文案
+72f395e fix(AI): open_url 加 --no-sandbox 让浏览器真开窗口，视觉坐标解析改取前两个整数
+22cde20 feat(AI): 接上视觉塔（describe_screen + 图片消息），OCR 保留作文字读取
+dc803cb docs(AI): 把 4327eea 的 hash 与沙箱窗口站定论追加到台账，todo 归档入备份
+4327eea fix(AI): open_url 假成功改为窗口标题复读，窗口证据改进程内 ctypes
+58ae173 docs(AI): 把 6c7ab8e 的 hash 与应用表 8 轮结论追加到台账
+6c7ab8e feat(tools): 本机应用表入库 + open_app 先匹配列表，拼音索引解决 ASR 名称听不准
+0f4346e docs(AI): 把 f05c9c5 的 hash 与 32 工具 20 轮结论追加到台账
+f05c9c5 fix(tools): 全部 32 个工具 20 轮测完，封掉 4 条新的「跑了就算成功」，并按规矩摘掉子智能体
+e42f03a docs(AI): 把 a671bfa 的 hash 与 20 轮前 10 轮结论追加到台账
+a671bfa fix(tools): 修掉 20 轮暴露的 3 条工具层缺陷（音量虚假成功 / 屏幕读取 GBK 崩 / 天气 ascii 崩）
+87ca284 docs(AI): 把 20 轮明确测试的逐轮脚本落盘（说什么/期望/判据）
+d2ac66e docs(AI): 实测「和我一起看界面实时更新」——连接器自带浏览器已够，不需要 9222
+98154ea docs(AI): 取消「看屏幕改走浏览器快照」并厘清零截图的边界
+6fd7aa6 docs(AI): 把 d30afda 的 hash 追加到进度台账
+d30afda feat(web): 设置里可切换唤醒 ONNX，只列 Git 里的 3 项（v0.3 0.70 / v0.9 0.75 / v1.0c 0.72）
+b84d4a5 docs(AI): 把 dec93db 的台账、开工清单与 tree.md 重建落盘
+dec93db build(AI): 把现役 v0.9 与 v1.0c 唤醒 ONNX（含外部权重 .onnx.data）入 Git，并归档压缩 hard_bug 与 todo
+3e14163 docs(AI): 把 a604481 的 hash 追加到进度台账
+a604481 feat(web): favicon 消除页面唯一的 console 404，并加只读的 hot_phrases CSV 导出
+91c2251 docs(AI): 把 9b13ac5 的 hash 与 4 灯复核追加到进度台账
+9b13ac5 feat(AI): 未完项 1 落地——「我没听清，请再说一遍」预合成进 RAM 具名应答池、只接空转录与低质量转录；hot_phrases 小表 + whisper 热词偏置默认关
+c5a2d04 docs(AI): 把服务重启与 4 灯复核追加到 Q17 批记录（stt.engine 保持 whisper）
+f72d7c1 docs(AI): 把 3cc0ded 的 hash 追加到进度台账
+3cc0ded feat(AI): Q17 裁决 C 落地——sherpa 路径加能量门（span 只掐头尾静音，默认 THR 0.008）+ 3 轮三配置 A/B，已知集 2/6、乱码 0、耗时减半，stt.engine 保持 whisper
+6cc0000 docs(AI): 把服务重启与 4 灯复核追加到 Q16 复测批记录（保持 v0.9+0.75）
+8d99b42 docs(AI): 把 d283fe9 的 hash 追加到进度台账
+d283fe9 test(AI): Q16 只 B 复测 v1.0c 三轮（0.65/0.70/0.72，NINST 3/5/7）——复测可重复、0.65 禁区（环境音双模型 1 次检出违反期望 0）、最佳点 0.72，不换现役保持 v0.9+0.75，补录与换阈值提 Q17 待裁决
+ce50c7e docs(AI): 把服务重启与 4 灯复核追加到 Q15 批记录（保持 v0.9+0.75）
+```
 
-## 关键结论（跨批次，勿再重复踩）
+## 当前未结案（口径与依据见归档、`todo.md`、`need_user.md`）
 
-1. **行重复比只移动灵敏度曲线，不产生近音判别力**：v0.7（近音负 ×5）检出 10→5；v0.8（正 ×5 / 负 ×3）近音 fp 3/3；v0.9（正 ×5 / 真人新负 ×2，15 件入库）检出 **14/14/14** 但真人近音 fp **9-11**。严格判据「真人近音 fp ≤1 且 13 次呼唤 ≥10」在 0.70/0.75/0.80 三个阈值下**均无法同时满足**；采用 `v0.9 + 0.75`（12 / 6 / 2 / 对抗 4 / 长噪音 1 / 环境 0），两轴同时优于 `v0.6 + 0.7`（10 / 6-7 / 4-5 / 4 / 1 / 0）。
-2. **TTS 合成负样本对本项目无效（实测排除）**：GPT-SoVITS 参考音频就是爱莉希雅本人音色，同音色合成近音词在 v0.6 峰值 **0.796-0.839**，高于真人唤醒词整件 0.73-0.75；16 件里 7 件 ≥0.7 剔除、9 件低分件排除。**真人补录是唯一有效负样本来源**；禁 爱丽西亚/艾丽西亚/爱X西亚 类（与唤醒词几乎无区别 = 教模型拒绝唤醒词，v0.4/v0.5 recall 塌陷机制）。
-3. **真人件入库条件是「不含唤醒词 + 文件名即真值」，不按峰值剔除**；峰值只作验收证据。
-4. **HB-032 打分非确定性**：`AudioFeatures` 用 `np.random` 播种缓冲 → 同一音频同一模型跨实例分数漂移 ±0.02-0.07。边界判定必须 **≥3 个独立实例复测取多数**；`Final Model False Positives per Hour` 只统计合成 val_fp，不可采信。
-5. **并发 4 个探针触发 `MemoryError`**（`_streaming_melspectrogram`，与训练 `DefaultCPUAllocator` 同源）；验收必须单探针串行。
-6. **长噪音发现**：62.83 s 长噪音里 rms 18-47 的低响度段在 v0.6 峰值 0.700-0.758（真实低能量噪声可触发）；定标纯噪声（rms<15）三轮全 0。
-7. **sherpa-onnx 2.0.1 实测签名**：`from_paraformer(paraformer=, tokens=, num_threads=)`（无 `paraformer_model`/`language_hints`）；`OfflineStream.accept_waveform(sample_rate, samples)`（无 `accept_audio`）。A/B 3 轮逐条一致：sim ≥0.8 **whisper 3/6 vs sherpa 2/6**，sherpa 快 10-20 倍但**无 VAD，静默处幻觉**（`嗯`/`北京`/`小一瓶`），写不出「爱莉希雅」正字 → 默认保持 whisper；待办给 sherpa 加能量门后重跑 3 轮。
-8. **pip 在本机卡死**（13+ 分钟）→ 下载 wheel 直接 `Expand-Archive` 到 site-packages；curl 需 `--ssl-no-revoke`；hf-mirror 吞吐 ~40 KB/s，DNS 不稳。pwsh 双引号 heredoc 会吃掉 `\n`/`\t`（曾把 `training/` 写成 tab）→ 含 CJK 与反引号的文本用 write 工具，append 用 `Add-Content`。
-9. **规矩**：commit subject 一律中文（type/scope 英文）；**禁止 push**；hash 追加台账；零截图；不用子智能体（未询问）；先落盘再开工；`training/` 内脚本的 `sys.path` 已含 `training` 目录。
-10. **与真唤醒同等强度的真人负样本会压塌 recall（2026-11-12 17:22 批实测）**：`米雅` 峰值 **0.827**、`机械键盘噪音` 0.816-0.844（3 实例稳定），与真呼唤整段峰值（v0.9 上 0.819 / 0.860）同量级 → 入库后 `aili_xiya_v1.0` **Recall 0.3009**（v0.9 = 0.6048），部署管线真呼唤 @0.70 合计 10（14 次件 7、键盘件 0）、@0.75 合计 3（6 件带噪全漏）；fp 归零是靠灵敏度塌陷换来的。与 v0.4 / v0.5 同一机制。第 3 条「不按峰值剔除」与此冲突，已提 **need_user.md Q14** 裁决（推荐：峰值 ≥0.80 的真人近音件移出训练集、只作验收集）。
-
-## Git 提交记录（最近，全部**已本地 commit，未 push**）
-
-- `ac5cb0c` `chore(AI): 根目录清理——71 个可复用脚本移入 training/ 并入 Git、49 个 _* 日志类移入 .tmp、3 份总结移入 records，新增 need_audio.md，Q13 结案`
-- `8f1aa7d` `docs(AI): Q13 结案落盘——need_audio.md 清单、need_user.md 归档与 tree.md 重建 275 项，hash 追加台账`（4 files / 430+）
-- `2846dcc` `docs(AI): Q13 追加进度——真人补录 15 件负样本已入库、ASR 依赖与模型已就位并给出 A/B 对比表，清理目标目录仍等答复`
-- `733bf52` `docs(AI): 重建 tree.md（201 项，新增 tests/2026-11-12-10-35-29_cc，config 切 v0.9+0.75）`
-- `10398c8` `test(AI): 真人补录 15 件负样本训练 v0.9，3 轮矩阵后采用 v0.9+阈值0.75，实测排除 TTS 合成负样本并修正 sherpa API`（8 files / 131+ / 5-）
-- `096f5b9` `docs(AI): ASR 引擎 A/B 三轮结论（whisper 保持默认，sherpa 快 10-20 倍但无 VAD 会幻觉）`（3 files / 65+）
-- `4369989` `docs(AI): 追加第 7 项——明天用 GPT-SoVITS 爱莉希雅音色合成近音词与无关短句作负样本训练`
-- `621308a` `docs(AI): 落盘新需求（我没听清入 ack 池 + sqlite 热词热句表），明天开工，本批停工`
-- `71a6a27` `feat(AI): ASR 引擎可切换（whisper/sherpa-onnx Paraformer），网页设置新增引擎选择，3 轮验收`
-- `4f3e964` `test(AI): 新录音训练 v0.7/v0.8 三轮验收未达标（保持 v0.6+0.7），记录打分非确定性 HB-032 并加 ASR 引擎开关`
-- `a44f0be` `feat(AI): TTS 按标点切句 + 合成队列，首声 14.1 s→2.4 s`
-- `bd46e28` `docs(AI): 落盘第 8 项要求（剔除爱丽西亚/艾丽西亚、允许 TTS 合成无关短句、真人补录清点），开工`
-- 更早（commit 标题改写链、v0.3→v0.6 切换、阈值 0.7、barge-in、无人说话提前结束录音等）的逐批要点与旧→新 hash 对照见归档 `ai_buckup/progress.md_2026-11-12-12-25-50.md`；改写前历史保留在分支 `backup-before-reword`。
-
-## 未完待办（详见 `todo.md` 与 `need_audio.md`）
-
-1. **真人补录缺口**（`need_audio.md` 第 5 节，路径留空项）：干净呼唤补 ≥10 次、带噪呼唤补 ≥8 条、真人近音补 ≥3 件、无关短句补 ≥3 句、竞品唤醒词真人句 ≥5 条、安静房间 10 s 干净环境音。这是「近音 fp ≤1」无法达标的直接原因。
-2. **`我没听清，请再说一遍` 入 ack 池 + sqlite `hot_phrases` 表**（records/2026-11-11-21-36-30.md，已落盘未开工）。
-3. **给 sherpa 加能量门（VAD/静音跳过）**，门生效后重跑 A/B 3 轮，再决定 `stt.engine` 默认。
-4. **20 轮明确测试**（records/2026-11-08-20-44-17，1 轮已跑）、2026-11-09-19-45-46 的 3 轮验证补齐、barge-in 第 4 轮结论补写 `tests/opinion.md`。
-5. 浏览器共享插件阻塞于 Chrome `--remote-debugging-port=9222` + Playwright MCP 授权。
-6. 25 条更早的英文 commit 标题按你的选择保持原样，不动。
-- 最新一条：`45b0ce4` `fix(AI): 修复 pwsh 双引号转义吃字符造成的文档损伤（training/api_/asr_ab/vad_filter/threshold/tests 等），并记录落盘规矩`（7 files / 87+ / 132-；**已本地 commit，未 push**）。
-- 最新两条：`45b0ce4` `fix(AI): 修复 pwsh 双引号转义吃字符造成的文档损伤…`（7 files / 87+ / 132-）与 `f67e121` `docs(AI): tree.md 重生成（275 项，_chat_template.jinja 已随清理出树）`（1 file / 312+）。均**已本地 commit，未 push**。
-- 最新三条：`c19988c` `docs(AI): 把 45b0ce4 / f67e121 的 hash 追加到进度台账`（1 file）与 `f68a766` `docs(AI): 9 个唤醒 ONNX 全版本对比落盘 ai_buckup/onnx_opinion.md（谱系+3 轮部署矩阵+阈值取舍+HB-032 复测），todo.md 103 行归档压缩、tree.md 278 项`（6 files / 314+ / 96-）。均**已本地 commit，未 push**。
-- 最新四条：`e4599e9` `docs(AI): 把 c19988c / f68a766 的 hash 追加到进度台账`（1 file）与 `ed7e504` `docs(AI): tree.md 头部修正 todo 压缩版行数（81 行 / 非空 60 行）`（1 file / 1+ / 1-）。均**已本地 commit，未 push**；`e4599e9` / `ed7e504` 这两条 hash 追加 commit 的自身 hash 按惯例不再单独入账。
-- 最新五条：`77750e1` `docs(AI): 把 e4599e9 / ed7e504 的 hash 追加到进度台账`（1 file）与 `95722b9` `docs(AI): 补入上批 progress.md 归档件（tree.md 已列，此前未跟踪）`（1 file / 102+）。均**已本地 commit，未 push**。
-- 最新六条：`54c797c` `docs(AI): 把 77750e1 / 95722b9 的 hash 追加到进度台账`（1 file）与 `498ee45` `docs(AI): tree.md 重生成（278 项，progress.md 归档件已跟踪，计数不变）`（1 file / 4+ / 4-；本条由 `aa3d23c` 本地 `--amend` 改写主题而来，未 push）。本批 `tree.md` 278 项、`todo.md` 81 行、`progress.md` 56 行。
-- 新补录批：**`6e0c0ac`** `test(AI): 新补录 14 件真人音频 3 轮验收——数据可用（14 次件检出 14/14）、按现行规则重训 v1.0 recall 0.3009 塌陷未采用，规则冲突提 Q14，脚本入 training/`（14 files / 766+ / 7-；`tree.md` 286 项）。**已本地 commit，未 push**。
-- 多音色批（2026-11-12 18:49 需求 + 19:23 流萤 + 20:03 白厄 + 20:47 环境音期望更正）：**7 音色 × 20 文本 = 140 件**全部生成（`elya`/`firefly`/`bai_e` + Kokoro 4 个中文音色；真人音色克隆定案不可用，爱莉希雅权重 + 真人参考音频产出 60 s 失控）。白厄的 v2ProPlus 说法由权重内容证实（首 2 字节 `b"06"` = `process_ckpt.model_version2byte`），唯一障碍是本机缺 v2ProPlus 所需 `pretrained_models/sv/pretrained_eres2netv2w24s4ep4.ckpt`，hf-mirror 补 107.5 MB 后通。打分 @0.70：**正样本 21/21 入库、负样本仅 13/119 合格**（Kokoro 4 音色 0/17、白厄 6/17、流萤 2/17、同音色 5/17）。15xx clip 34 件并入 **v0.9 基线**（正 ×5 / 合格负 ×1）→ **v1.1 Recall 0.6179 / FP/hour 0.0**，3 轮矩阵：**@0.75 14 次件 12 < 14 直接 BAD、合成对抗 5 vs 4、近音 fp 6 vs 5 → 不采用 v1.1，保持 v0.9 + 阈值 0.75，`config.yaml` 未改**（v1.1 仅留盘）。**关键结论第 11 条：多音色是召回轴不是判别轴 —— 近音词在任意音色下峰值都 >=0.70（与真唤醒 0.82 同量级），换音色不能产生近音判别力；环境音期望必须为 0（该件无呼唤，用户更正，判据第 5 条改为「定标纯噪声与环境音检出 0」）。** Q14 仍 `status: wait` 未推进。
-- 多音色批本地 commit：**`1cc99ca`** `test(AI): 多音色 TTS 训练集 3 轮验收——流萤/白厄（v2ProPlus 由首字节 06 证实）接入可用、真人音色克隆定案不可用，正样本 21/21 入库、负样本仅 13/119 合格，v1.1 Recall 0.6179 但 0.75 下 14 次件 12 未达标不采用，保持 v0.9+0.75，环境音期望更正为 0`（18 files；`tree.md` 299 项；**已本地 commit，未 push**）。
-- 最新八条：`1cc99ca` `test(AI): 多音色 TTS 训练集 3 轮验收——流萤/白厄（v2ProPlus 由首字节 06 证实）接入可用、真人音色克隆定案不可用，正样本 21/21 入库、负样本仅 13/119 合格，v1.1 Recall 0.6179 但 0.75 下 14 次件 12 未达标不采用，保持 v0.9+0.75，环境音期望更正为 0`（18 files / `tree.md` 299 项）与 `09136d9` `docs(AI): 把 1cc99ca 的 hash 追加到进度台账`（1 file）。均**已本地 commit，未 push**。
-- 最新九条：`c8b03ec` `docs(AI): 把服务重启与 4 灯复核（保持 v0.9+0.75）追加到环境音更正记录`（1 file）。**已本地 commit，未 push**；期间 `git` 与 `pwsh` 各出现一次 OOM（内存吃紧），已腾内存后重试成功——服务 `:9880/:7860/:8080` 全部按 `start_all.bat` 口径重启，`/api/health` 4 灯 online。
-- Q14 批（2026-11-12 21:40 裁决 + v1.0b，3 轮）：用户选 **选项 1**（峰值 >=0.80 的真人近音件只作验收集）并质疑「米雅 和 爱莉希雅 差别很大才对」。**诊断证实用户直觉**：逐 1280 chunk 分数曲线 + RMS 音节对齐显示**高分不在音节上，而在说完之后的衰减/静音窗**（`米雅` 有声段内最高 0.604，峰值 0.827 落在 rms=12.8 的静音 chunk；`14次件` 峰值 0.869 落在 rms=15.6；`雅诗兰黛` 峰值在说话前静音）→ **模型判别面被「尾音衰减+静音」主导**。Q14 定案并归档（`ai_buckup/need_user.md_2026-11-12-21-40-35.md`），剔除 `雅诗兰黛`0.822/`米雅`0.827 → **v1.0b Recall 0.6106 / FP/hour 0.0 / Accuracy 0.7208**（v1.0 是 0.3009，塌陷已避免），但 3 轮矩阵 @0.70（新正 24 vs 28、定标噪声 1 BAD）与 @0.75（14 次件 11、基线 8 低于区间、新正 17 vs 24）**无一轴更好 → 不采用 v1.0b，保持 v0.9 + 0.75**。新阻塞 **need_user.md Q15（status: wait）**：要利用音节差异必须改窗口约定（正样本窗锚定有声段、尾音压短；负样本剔除纯静音窗；真人近音只在音节窗作验收集）→ 裁决前不推进 v1.0c。
-- Q14 批本地 commit：**`bc5b0e9`** `test(AI): Q14 裁决落地 + v1.0b 三轮验收——诊断证实高分在尾音静音窗…保持 v0.9+0.75，窗口规则改法提 Q15 待裁决`（11 files；`tree.md` 307 项）。**已本地 commit，未 push**。
-- Q15 批（2026-11-12 22:11 裁决「改窗口约定」→ v1.0c，3 轮）：**判别轴首次达标**（@0.75 真人近音 fp 1 件次 ≤1、`米雅`/`雅诗兰黛`/`天猫精灵`/`希雅老师`/键盘噪音/长噪音全 0 检出、合成对抗 3 ≤4、定标与环境音 0；音节窗分数上移 14 次件 max 0.806、基线 max 0.824），**但召回轴塌到不可用**（@0.75 14 次件 11 < 14、基线 13 件 8 低于 11-14、带歌声 3 件全漏、新正样本 16 vs 24；Recall 0.5865）→ **不采用 v1.0c，保持 v0.9 + 0.75**。Q15 三条规则落地：正样本窗 `[检出-0.5, 检出+0.3]`（45 件 clip 截前 0.8 s）、负样本剔除 24 帧 RMS<120 纯静音窗（环境音 3 窗全剔）、真人近音件只作音节窗验收集。根因是音节窗正样本数量不足（45 件），`need_audio.md` 缺口未补；新阻塞 **need_user.md Q16（status: wait）**：A 补录正样本重训 v1.0d / B 用 0.70 复测 v1.0c（推荐 A+B 并行）。
-- Q15 批本地 commit：**`935430e`** `test(AI): Q15 改窗口约定落地 + v1.0c 三轮验收——判别轴首次达标…保持 v0.9+0.75，补录与 0.70 复测提 Q16 待裁决`（11 files；`tree.md` 314 项）。**已本地 commit，未 push**。
-- Q16 批（2026-11-12 22:29 裁决「只 B：用 0.70 复测 v1.0c」，3 轮 @0.65/0.70/0.72，NINST 3/5/7）：**复测可重复**（逐件差异仅 ±1 件次，判据结论不变）；**0.65 禁区**（两模型环境音均 1 次检出，违反 20:47 更正）；**最佳点 0.72**（v1.0c 14 次件 14 ✓、基线 12 ✓、定标/环境音/长噪音全 0 ✓、合成对抗 3 ✓、汇总 fp 1 ✓；未达 = 带歌声 2 漏检、键盘 4 次 3 检出、真人近音含基线 3 件次）→ **不换现役，保持 v0.9 + 0.75**，v1.0c 可用区间 0.70-0.72 记录在案。召回轴短板确认 = 音节窗正样本数量（45 件）；新阻塞 **need_user.md Q17（status: wait）**：A 补录重训 v1.0d / B 换 v1.0c+0.72 现役（需批准）/ C 保持不动做未完项。
-- Q16 批本地 commit：**`d283fe9`** `test(AI): Q16 只 B 复测 v1.0c 三轮（0.65/0.70/0.72，NINST 3/5/7）…保持 v0.9+0.75，补录与换阈值提 Q17 待裁决`（8 files，tree.md 320 项）。**已本地 commit，未 push**。
-- Q17 批（2026-11-12 22:51 裁决「C 保持 v0.9+0.75，做别的未完项」→ sherpa 能量门 + 3 轮 A/B）：`jarvis/stt.py` 新增 `_energy_gate`（`span` 只掐头尾静音 / `concat` 逐窗拼接已否决），config 键 `stt.sherpa.energy_gate/energy_mode/energy_threshold`（最终默认 span / 0.008）。**逐窗拼接 = 音节切碎**（concat 0.015 已知集 2/6→1/6）；**门限必须低**（span 0.015 切轻声音节，0.008 复原，已知集 2/6、乱码 0 件、耗时 5308 ms 减半）；**sherpa 天花板不在静音**（Paraformer 近音判别弱）→ **`stt.engine` 保持 whisper，config.yaml 未改**。探针 `training/_t2_asr_ab_gate.py` 入 Git。
-- Q17 批本地 commit：**`3cc0ded`** `feat(AI): Q17 裁决 C 落地——sherpa 路径加能量门（span 只掐头尾静音，默认 THR 0.008）+ 3 轮三配置 A/B…stt.engine 保持 whisper`（10 files，tree.md 327 项）。**已本地 commit，未 push**。
-- 未完项 1（2026-11-12 23:06 用户选定）：「我没听清，请再说一遍」预合成进 RAM 应答池 + `hot_phrases` 小表，3 轮验证完成。**预合成** `jarvis/data/ack/ack_no_heard.wav`（3.32 s @32 kHz）；`jarvis/tts.py` 统一采样率 + 具名缓存 + `play_ack_phrase()`（`play_ack_wav` 轮播不变）；`jarvis/main.py` 的 `_ask_repeat_if_unmuted()` 只在空转录与低质量转录播该句，barge-in 不变（打断清队列 1219 ms、`is_speaking=False`）。`jarvis/memory.py` 加 `hot_phrases`（写入/累加/上限 200 淘汰，`kind` user/hot/near_miss）；**whisper 热词偏置默认关**（`config.yaml` `stt.hot_bias: false`）——实测开 = 长句升 2 件、**短句被吸附** 3 件变差（爱丽丝→「爱莉希。」）且 3.5 倍耗时。表留作数据源（`near_miss` 可导出成训练/验收负样本）。探针 3 个入 Git。
-- 未完项 4（2026-11-12 23:06 用户选定）：浏览器共享插件 3 轮验证完成 —— **原「Chrome 需带 9222」的阻塞判断被推翻**：真正原因是浏览器类连接器从未安装。货架有 `[playwright]`（none 鉴权，另有 `chrome-devtools`/`firefox-devtools`），`mcp_connector_connect` 直连成功并注册 25 个工具；`browser_navigate` 到 Jarvis `:7860` + `browser_snapshot` + `browser_find` **零截图**读到 4 盏灯（与 `/api/health` 一致），页面唯一 console 错误 = favicon 404。若要共享你正在用的 Chrome，仍需你以 `--remote-debugging-port=9222` 启动 Chrome（我不擅自拉起）。落 `tests/2026-11-12-23-08-35_cc/`。
-- 未完项 1 + 4 本地 commit：**`9b13ac5`** `feat(AI): 未完项 1 落地——「我没听清，请再说一遍」预合成进 RAM 具名应答池…hot_phrases 小表 + whisper 热词偏置默认关`（16 files，tree.md 340 项）。服务 23:52 重启并 4 灯复核（wake `aili_xiya_v0.9.onnx`/0.75、asr whisper small cpu zh warm=True、llm `:8080`、tts `:9880`）。**已本地 commit，未 push**。
-- 小收尾（2026-11-12 23:57 用户选定「4 小收尾」）：favicon + near_miss 导出 3 轮完成。`jarvis/static/favicon.ico`（788 B，主题色四档）+ `jarvis/web.py` `/favicon.ico` 路由 + `index.html` `<link rel="icon">` → `curl` 200/哈希一致、浏览器 console **0 error**（原 1 条 404 消除）。`training/_t2_hot_export.py` 只读导出 `hot_phrases` CSV（列 5、按 count 降序、`DB=`/`KIND=`），判据全过且现役 `memory.db` 未被污染。落 `tests/2026-11-12-23-58-00_cc/`。
-- 小收尾本地 commit：**`a604481`** `feat(web): favicon 消除页面唯一的 console 404，并加只读的 hot_phrases CSV 导出`（10 files，tree.md 347 项）。**已本地 commit，未 push**。
-- 收尾 5 项（2026-11-13 00:12 用户指定，今晚完成 1/2/3/5，第 4 项 9:00 开工）：① **ONNX 入 Git** `aili_xiya_v0.9.onnx` + `aili_xiya_v1.0c.onnx`，并补齐三个模型的 `.onnx.data`（1,310,720 B 外部权重——onnxruntime 导出把权重写在外部文件，只提交 `.onnx` 的克隆无法加载；v0.3 此前只提交 `.onnx` 属既有缺口）；② `hard_bug.md` 321 行全量归档后压缩为「已解决一行摘要 + HB-003/HB-032 全文」；③ `ai_buckup/onnx_opinion.md` 追加 v1.0（Recall 0.3009 塌陷）/v1.0b（0.6106）/v1.0c（0.5865，判别轴首次达标 fp 1、可用区间 0.70-0.72）/v1.1（0.6179，多音色=召回轴）+ 结论 8-11；④ 第 4 项「设置里切换唤醒模型（只列 Git 里的 v0.3 0.70 / v0.9 0.75 / v1.0c 0.72）」今晚只落盘设计，9:00 后开工；⑤ `todo.md` 顶部 2026-11-13 09:00 开工清单 + `schedule_create`（`schedule-3cb5b5da`）。`todo.md`（122 行 >100）从 git HEAD 取全量归档后压缩。
-- **第 4 项完成（10:30 开工，11:05 收）**：设置里可切换唤醒 ONNX，只列 Git 里的 3 项（v0.3 0.70 / v0.9 0.75 / v1.0c 0.72）——`config.yaml` 数据驱动 `model_options`、`wake.py` 循环内热重载（重建 Model、mic 流复用、失败保留旧模型、重载后 2 s 冷却）、`web.py` GET 带 `wake_model_options` / PUT 成对写 model+threshold 后触发重载、`index.html` 模型下拉 + 阈值预填 + 成对提交。3 轮全 PASS（`tests/2026-11-13-00-12-17_cc/`）：GET 3 项、PUT 切 v1.0c+0.72 即刻生效且 4 灯 online、浏览器零截图切回 v0.9+0.75 且重启后一致、console 0 error。**现役 v0.9 + 0.75**。
-- **规则边界厘清（11:20，用户纠正）**：「零截图」是**我这条 Agent 会话**的约束（截图走隧道会压垮会话）；爱莉希雅是**全本地的**，`read_screen` 走 `pyautogui.screenshot()` + 本机 Windows OCR，产物只落本机 temp，不进网络、不进会话上下文。因此「看屏幕改走浏览器快照」**取消**：无收益，还要多装 playwright、要你启 Chrome 带 9222、坐标域变两套（`click_at` 屏幕坐标 vs `click_on_page` 页面坐标）。`read_screen` / `find_on_screen` 保持原 OCR 路径。真正需要 9222 的是**浏览器共用插件**（让爱莉希雅操作页面，2026-11-09-15-37-58，仍等授权）。
-- **实时看界面（11:24 实测）**：用户澄清「浏览器共用插件是给你用的，让你和我一起看爱莉希雅界面的实时更新」。实测：界面状态由 `:7860` WebSocket 广播，Playwright 连接器**自带浏览器**开同一页面就能实时读（零截图，只用 `browser_navigate`/`browser_find`）—— `PUT threshold 0.78` 后灯文本变为 `threshold 0.78 / peak 0.33`（不刷新页面，灯 ref 逐次变化 = 推送后重渲染），随后恢复 **0.75**。**不需要 9222、不需要共享你的 Chrome**。「共享你正在看的页面」是可选增强（需你自己启动带 CDP 的 Chrome + 连接器改配，且我的操作会落在你的真实窗口上抢前台）。
-- **20 轮跑到第 10 轮 + 3 条工具层缺陷修完（12:35）**：轮 1-4 唤醒 PASS；轮 5 部分（6 次触发里 1 件次归因未定）；轮 6 指令整句丢失；轮 7 转录正字 0.67；轮 8 尾部截断 + 答非所问；轮 9 **音量虚假成功**（回复「已调至最大 100%」，设备 20%）；轮 10 **屏幕读取 GBK 崩**。三条根因全在工具层并已修（`set_volume` 复读音量作证据 + C# COM 激活 + `$env:TEMP` 指工作区；`_ocr_image` UTF-8 解码；`get_weather` quote + `format=j1`），3 轮全 PASS（`tests/2026-11-13-12-25-43_cc/`）。新增规矩：**工具必须自带证据**（复读/复测），虚假成功比编造更危险；**PowerShell 里 COM coclass 不能用 `-as` 激活**；**`Add-Type -TypeDefinition` 需把 `$env:TEMP` 指到工作区**；**对 PowerShell 输出不要用 `text=True`**。音量已还原 20%，现役 v0.9 + 0.75。
-- **全部 32 个工具的 20 轮测完（13:38）**：逐轮 PASS 1、2、4、5、6、7（判据修正后）、8（修后）、9（修后）、10、11、12、13、14、15、16（修后，工具级+服务级）、17（部分）、18、19（拒绝分支+修后）、20 的 media、21（`delegate_task` 已摘除）；FAIL：轮 3（**外网不可达**，yahoo/DuckDuckGo/Wikipedia/example.com 全超时，只有 `wttr.in` 通）、`screenshot` 修前（桌面禁写）。抓出同一族**四条新「跑了就算成功」**并封住：`type_text`（中文静默跳过，HB-036 → 剪贴板粘贴 + 先存后还）、`show_notification`（UWP toast 无包标识 `0x80073D54` 永远弹不出，HB-037 → NotifyIcon 气泡 + `balloon shown` 证据）、`press_key`（`not_a_key` 也报「已按下」，HB-038 → 键名校验）、`set_brightness`（带真原因）。环境边界写进代码：`$env:TEMP` → `.tmp/pscompile`、`run_python` → `.tmp/pyrun`、`screenshot` → `.tmp/screens`。**新规矩：爱莉希雅不允许启动子智能体** → `delegate_task` 三处摘除，工具数 32/32，`dispatch` 返回「未知工具」。一处更正：`_coerce` 早已落地，20 轮轮 6 的 `'NoneType' ... strip'` 是 GBK reader 线程崩（HB-034 家族），不是「dispatch 没强制参数类型」；新暴露 HB-040（未解决）：`_coerce` 把可选参数默认值架空（`set_timer` 中文默认文案被空串覆盖）。副作用：剪贴板里的 JWT 被 `ctrl+c` 覆盖无法恢复（Q18）、`next` 让播放器跳下一首、真锁屏拆到收尾未做（Q20）。音量 20%、剪贴板已还原，亮度未改动，现役 v0.9 + 0.75。
-- **本机应用表入库 + `open_app` 先匹配 + 拼音索引（14:36）**：`jarvis/apps.py` 扫开始菜单灌入 `events.db` 的 `apps` 表 **227 条**（58 条中文名，5 条无 target 跳过），`main.py` 启动时幂等 `populate()`。`open_app` 三段写死：① 先匹配表（拼音直达 → 精确 norm/别名 → 唯一子串 → 音近打分）；② 不匹配才走其它路径（`APP_MAP`/补 `.exe`/`PATH`）；③ **复读到进程出现才算成功**。音近阈值写死（高置信 ≥0.66 且 gap ≥0.12 → 打开 + 登记别名；0.45-0.66 或候选接近 → **不打开、返回候选**；<0.45 → 其它路径），`app_queries` 记原话，别名自学习只需确认一次（「计时本」→ 记事本）。**拼音索引（用户的主意）两个真实坑（HB-041）**：`pypinyin` 的 `errors="ignore"` 丢弃非中文字符 → **158/227 条纯英文名 `py` 是空串**（修：无中文用名字字母本身）；「`dnSpy.exe - 快捷方式`」被索引成 `kuaijiefangshi` 与 `HaoZip` 撞车（修：算拼音前剥尾巴）。**同程序判据必须按 exe 文件名**（`Notepad`/`记事本` 都是 `notepad.exe`，14:17 服务级曾让用户做不存在的选择题）。**第二条「描述不可发现」家族**：`open_app` 的 description 是 32 个英文硬编码名单、没提拼音也没说传原话 → 14:30 模型对「打开jishiben」压根不调 `open_app`；`focus_window.title` 没说标题中文本地化 → 模型传 `notepad` 报找不到。按 agent-experience 把参数规则写在参数上、只说一次，14:32 复测模型传原词成功。顺带修 `get_open_windows` 残留 `text=True`。8 轮零截图全 PASS（`tests/2026-11-13-13-46-12_cc/`，含 2 处判据修正）。副作用：真打开了记事本（清场）、画图（清场）、**Chrome（未关）**；`wei`/`cha`/`控置` 未启动进程。`todo.md` 108 行归档 `ai_buckup/todo.md_2026-11-13-14-22-30.md`。4 灯 online，现役 v0.9 + 0.75 未动。
-
-- **UI 确认与优化 · 第 2 条 6 轮 + 假成功修复（15:31）**：共用浏览器（`dsh-builtin-browser`，独立窗口、你看得到）驱动 `:7860` 点「播放音乐」6 轮。判据 1、2 达成（中文 `data-cmd`；模型选中 `open_url` 且 URL 为 `https://search.bilibili.com/all?keyword=稻香` —— 修法按 `agent-experience`，规则写在参数上、只说一次：前 3 轮 0 次选中 → 轮 4 起 3 次）。**你 14:40 指认「爱莉希雅没能真正打开网站」成立**：`open_url` 丢掉 `webbrowser.open()` 返回值直接回「已在浏览器打开」= 虚假成功（HB-044，已修：应用表浏览器真路径 + `--new-window` + **进程内 ctypes 复读到窗口标题**才算成功，读不到如实报）。播放仍未达成：`find_on_screen` 中文分词 overlap 不可靠（OCR「稻 杳 一 哔 哩」→ 只给 Hi•Res）。
-- **沙箱边界定论（HB-045，本批最重要新事实）**：同一个 `.ps1` 枚举 `MainWindowTitle` —— pwsh 工具里 **7 个窗口**、python 子进程里的 powershell/pwsh **0 个**；`ctypes.EnumWindows` 在 python 自己进程里 **9 个**；pwsh `Start-Process chrome --new-window` → **窗口标题「稻香-哔哩哔哩_bilibili」出现**，python `Popen` 同一命令 → **只有进程、无可见窗口**。定论：**沙箱内 python 起的进程不能产生可见窗口**；窗口证据必须进程内 ctypes 取（子进程看不见窗口、`Add-Type` 被沙箱拒）→ 第 2 条真端到端必须由你在沙箱外跑 jarvis 验（**Q25**）。轮 6 的「复读到窗口证据」部分来自我用 pwsh 造的窗口，已在 `record_6.md` 标注。
-- 提交量同口径全程量：上限 32,575→25,134（你把页面文件改小）→28,261→29,684→**29,812 MB**；可用 461→521→3,451→3,405→**2,929 MB**；`api_v2.py` 5,822 MB 是最大头，llama 带 `--mmproj` + `-c 16384` 为 3,432 MB。4 灯全程 online，现役 `aili_xiya_v0.9.onnx` + `thr 0.75`、`stt.engine: whisper`、`stt.hot_bias: false` 未动。副作用：共用浏览器 B 站页未关、pwsh 启动的 B 站窗口（进程 8228）未关；`todo.md` 102 行归档 `ai_buckup/todo.md_2026-11-16-15-27-00.md` 并压缩；`tree.md` 重建（426 文件）。
-- 本地 commit：**`4327eea`** `fix(AI): open_url 假成功改为窗口标题复读，窗口证据改进程内 ctypes`（13 files：records 2、tests 批 7、`tests/opinion.md`、`todo.md`、`tree.md`、`hard_bug.md`、`need_user.md`、`index.html`、`router.py`、`app_control.py`、`desktop.py`、`web.py`）。**已本地 commit，未 push**。不 commit：`llm/startLlama*.ps1`（你手改）、`jarvis_screen.png`、`love_silvia.txt`。
-- 台账 commit：**`dc803cb`** `docs(AI): 把 4327eea 的 hash 与沙箱窗口站定论追加到台账，todo 归档入备份`。**已本地 commit，未 push**。
-- 视觉塔接入本地 commit：**`22cde20`** `feat(AI): 接上视觉塔（describe_screen + 图片消息），OCR 保留作文字读取`（8 files：`llm.py` 的 `chat_image`、新增 `jarvis/tools/vision.py`、`router.py` 注册 33 工具、`record_1.md`、`todo.md`、`tree.md`、`records/2026-11-16-12-33-59.md` 追加节、`need_user.md` Q24-Q28）。轮 1 达标：**同一屏 OCR 把「QuietLink 远程控制」读成 `远 程扌 空 制 台`，视觉认对程序名并给出控件坐标**（刷新 (200,400)、退出登录 (200,700)）→ 互补性硬证据，OCR 保留。`is_half: true` 实测**无收益**（省 7 MB 属噪声、实时率波动无稳定差）→ 不采用，`tts_infer.yaml` 保持 false（gitignore，不入库）。**Q22 结案**（你定不动页面文件，8G 分页，只能往下减占用）；**Q21 结案**（授权已给，16:47 复读 `src.server` 已不在进程，我未执行结束）。我的沙箱 7860（`pwsh-39`）已停（状态码 000），第 2 条真端到端 = 轮 2 由你在沙箱外启 jarvis 验。可用提交 2,918→2,569 MB，4 灯 online，现役 v0.9 + 0.75 未动。**已本地 commit，未 push**。
-- open_url 真开窗口 + 视觉坐标解析 本地 commit：**72f395e** ix(AI): open_url 加 --no-sandbox 让浏览器真开窗口，视觉坐标解析改取前两个整数（10 files）。根因定案：**chrome 由 python 起时触发自身 sandbox 断点，退出码 2147483651 = 0x80000003 → 进程存在、窗口从不创建**；stdio 重定向、ShellExecuteW(42)、python→powershell、cmd /c start、单实例接管、MOTW 逐条实测否掉；加 --no-sandbox + 独立 --user-data-dir 后：你 17:49 沙箱外「出窗口了，关掉登录界面后进入 B 站」，我 18:00 沙箱内复读到「稻香-哔哩哔哩_bilibili - Google Chrome（进程 18016）」（0.0 秒）。describe_screen 修解析后一次给出 (671,427) 并执行 click_at；**「进入第一支视频」未达标**（点击后标题未变 + 塔在可用 237 MB 时报 500 mtmd）。副作用：2 个 B 站窗口 / 22 chrome 进程 / 3,139 MB，可用 784→582→237 MB，已请你按 Q24 关。未动页面文件、v0.9+0.75 未动。**已本地 commit，未 push**。
-- UI 修复 + 第 2 条 3 轮落盘 本地 commit：**2792acf** `fix(UI): send 要求 readyState===1 不再断线吞消息，补 aria-live 与中文活动文案`（9 files）。第 2 条真验通 3 轮（`tests/2026-11-16-12-18-00_music_cc/`）：**达标** = `open_url` 真开页面（窗口标题「稻香-哔哩哔哩_bilibili - Google Chrome」我这侧复读 + 你 17:49 亲眼「出窗口了」）、视觉塔被选中给出 (470,481)、`点击坐标` 真执行、修好的 `send()` 真发消息（轮 2 被吞 / 轮 3 发出，行为对照成立）；**未达标** = 「进入第一支视频播放」没验到（点击后窗口标题未变，模型点完只看 OCR 不校验标题）。UI 修：`send()` 要求 `ws.readyState===1`（断线提示「连接已断开，消息未发送（每 3 秒自动重连）」+ 保留输入文字）、`PROCESSING`→「处理中…」去 `toUpperCase()`、`#messages`/`#statusText` 加 `aria-live`（`role=status`）、`#modelSelect`/`#muteBtn` 加 aria-label；19:08 刷新后属性实测。下一轮前置：你关掉多余 B 站窗口并把留下的最大化（chrome 21-22 进程 / ~3.1 GB 提交 / 可用 625 MB）。v0.9+0.75 未动。**已本地 commit，未 push**。
-- 播放直达 URL + 窗口上限 3 + 校验只认被聚焦窗口 本地 commit：**dd93752** `feat(AI): 播放走直达 URL 导航 + 浏览器窗口上限 3，校验只认被聚焦的窗口`（10 files：app_control / vision / router / index.html / record_4 / record 19-47 / hard_bug / need_user / todo / tree）。**轮 4 判据**：进入视频页达标（真值坐标 (284,592) → 标题变「"回到最初的美好吧~"—《稻香》_哔哩哔哩_bilibili」）+ **你 19:47 确认「前面播放了」** → 播放达标；随后 chrome 崩溃（异常 0x00000008 / 0x00007FF940D2AF29，你判定内存溢出）→ **HB-047 open**。**自曝虚假成功**：`navigate_url` 第一版把「列表里任何标题≠基准」当变化 → 报了已导航而我起的窗口标题没变；改为按 hwnd 跟踪被聚焦窗口后诚实报失败；焦点被拒（前台锁）时中止且不敲键。**沙箱边界（量过）**：键盘注入落在沙箱窗口站 → `navigate_url` 与 `first_bilibili_video`（需外网）**只能在 jarvis（你的 start_all）侧实测**。窗口上限 3 已实施（`open_url` 先查后开、拒绝起第 4 个实例；`manage_browser_windows` 只杀 jarvis 自起 pid），**关闭授权未给 → Q29 status: wait**。工具数 33→**36**，工具面 9,210→**10,573 字符**。本轮副作用：1 个新 B 站窗口、chrome 21 进程、可用提交 2,262-2,399 MB、3 张局部截图。v0.9+0.75 未动。**已本地 commit，未 push**。
-- 窗口上限 3 与 pid 记录 本地 commit：**e758788** `feat(AI): 记录自起窗口 pid + 上限只数 jarvis 自起窗口，同实例共享 pid 时拒绝杀进程`（4 files）。**测量出的结构事实**：`Popen` 返回的是启动器 pid、立刻退出（20256/21016/22356），**窗口全属于已存在实例 pid 18400**（Chrome 单实例接管）→ 按启动 pid 计数永远数不到，上限当时没生效（第 4 个窗口照样开了）。改成**记录复读到窗口后的真实窗口 pid**。实测：计数「我起的浏览器窗口 5 个（上限 3，你的窗口不计）、浏览器窗口共 6 个」；第 4 次开新页**被拒**；`manage_browser_windows(close_extra=True)` 因**同实例共享 pid****拒绝杀进程并如实报**（杀 pid 会连整实例一起关，做不到只杀超出 2 个）。授权按你的话收窄：只杀记录里的 pid，你登录的浏览器（实例 pid 8228）永不动。副作用：我开了 5 个 B 站窗口 / chrome 25 进程 / 可用 2,724 MB，**请你手动关掉超出上限的窗口**。v0.9+0.75 未动。**已本地 commit，未 push**。
-- **关闭所有服务（你 20:19 的话，`records/2026-11-16-20-19-08.md`）已执行并复测**：按命令行精确匹配杀 `llama-server pid=15600`、`.venv-gsv python pid=13756`（GPT-SoVITS api_v2）、`Python312 python pid=11188`（api_v2）→ **7860/8080/9880 全部 False**、残留 python/llama-server/ffmpeg = 0。**关前** jarvis 已不在（`:7860` 无响应，jarvis.main 进程不在列表）。**没杀**的 cmd/powershell 是 DSH 自身（`dsh --profile web2`）、playwright-mcp、pixtext-mcp、AMD —— 本会话宿主。**不碰 Chrome**（Q24，我起的实例共享 pid 也无法只关 2 个）、**不碰页面文件**（Q22）。内存：上限 28,990 / 已用 16,581 / **可用 12,408 MB**。重启服务仍由你跑 `start_all.bat`。**已本地 commit，未 push**。
-- Monitor 面板设计 v2.0 本地 commit：**f867084** `docs(design): Monitor 面板设计 v2.0（只 design，不开工，内容决定权交回用户）`（6 files：design.md v2.0 + 旧版归档 `ai_buckup/design.md_2026-11-17-10-24-25.md` + record 10-24-25 + todo + need_user Q30 + tree）。**未改 index.html、未加端点**（你明确「先做design,不开工」）。落点实测量：`index.html` 1001 行、`.side-panel` **380px**、现 4 tab、四灯三态、WS 12 类；加第 5 tab 每 tab ≈ **66.4 px**。**内容候选 A-F，推荐 A+B+C**（A 资源仪表 / B 四灯 / C 进程与窗口清单），D 与「实时」重叠、E 需累计器、F 需新增埋点成本最高。**非目标写死**：不做窄窗口（12:18 第 1 条）、**面板不执行任何动作**（看到数字自动杀进程 = 虚假成功温床）、不引图表库。颜色安全线取实测（可用一度 237 MB）：≥2,000 粉 / 300–2,000 gold / <300 新增 `--danger`。数据流：采样在 jarvis 侧，`GET /api/monitor` + WS `monitor` 5 s 推送，`document.hidden` 节流；曲线环形 120 样本 ≈ 1 KB。验收 3 轮（数字与手动 WMI ±1%、窗口数与 `manage_browser_windows()` 一致、节流、jarvis 提交 30 min <50 MB 增长、无动作按钮）。**Q30 status: wait（4 个决定点）→ 未答复不写实现**。「继续」阻塞如实记：服务全关（7860/8080/9880 不通），丙方案实测、轮 5-6、语音轮 11-20 都等你跑 `start_all.bat`。`v0.9 + 0.75` 未动。**已本地 commit，未 push**。
-- Monitor 设计 v3.0 本地 commit：**5a89934** `docs(design): Monitor v3.0 —— 日志中枢 + 单窗口托管 + 指定关闭 + 外部接入的可行性边界`（6 files：design.md v3.0 + 归档 v2.0 + record 10-44-33 + todo + need_user Q31 + tree）。你 10:44 答复把 Monitor 变成**日志中枢**（Q30-1 选 A+B+C+E+F，「f 最重要，将启动的所有 cmd stdout 全显示」+ 「start_all 后一个窗口，关窗口全关」+「允许关闭指定服务」+「外部接入」）。**可行性逐条写清**：① stdout 只在 jarvis 是父进程时抓得到（现 `start_all.bat` 给每服务开 `cmd /k`，jarvis 抓不到）；② 现 4 窗口→只留 1；③ **关窗口全关不能靠控制台语义**（管道子进程不挂控制台）→ jarvis 退出按 pid 杀子进程（关控制台只给约 5 s 清理）；④ **Windows 无法事后接管别人进程的 stdout** → 接入 = 识别 + 体检，面板写「外部起 · 无日志接管」，不给假日志；⑤ **撤销我 v2.0 的「面板不做动作」非目标**（你明确要控制）→ 关闭按钮带 pid 证据 + 点击前确认，`POST /api/service/stop` 只接受 jarvis 自起 pid。**日志区每服务环形 2,000 行、WS ≤20 行/轮、按 `\r` 断行**（llama 进度行是回车覆盖式）。F 块**需新增埋点**（wake/ASR/LLM tok/s/TTS 耗时）。验收 8 条写进设计。**Q31 status: wait（开工授权 + 关闭口径 + 无 stdout 接管边界 + 关窗口实测）→ 未答复不写实现**。**自曝**：第一次提交我引用了不存在的 `.tmp\design3_msg.txt` → HEAD 当时未动，补写消息后提交。`v0.9+0.75` 未动；未动页面文件（Q22）。**已本地 commit，未 push**。
-- 优先级盘点 本地 commit：**3b153c9** `docs(AI): Q31 答复落盘 + 未完成 todo 优先级盘点（Monitor 降 P2，先不开工）`（4 files：record 10-52-00 + todo + need_user Q31 done + tree）。你 10:52 原话「先不开工…monitor 的优先级为p2」。**P0**：HB-047 chrome 崩溃 + `start_all.bat` 的 `-c 65536`（实测 `-c 16384` 时 llama PF 3,866→2,339 MB）。**P1**：播放丙方案轮 5-6（丙路径未在 jarvis 侧跑过）、语音 20 轮轮 11-20、唤醒复训 v1.0d（正样本仅 45 件）、不需我的两项：`find_on_screen` 中文匹配、HB-040 `_coerce`。P3：`kill_process` 英文进程名、`pyautogui.FAILSAFE`、`WebSocketDisconnected`、Q18/Q19/Q20、Q24。**todo 清理发现**：第 18 行标「未做」的 UI 项实际 19:08 已实测完成（commit `2792acf`）→ 改 `[x]`；68-70 与 72-74 **重复条目**已合并。Q31 三条口径确认（只关 jarvis 自起 pid / 接受无 stdout 接管 / 你跑 start_all 我关窗口复测）。**自曝**：本轮第一次提交引用了不存在的消息文件（HEAD 未动），补写后提交 —— **同一个毛病第二次，下次先写消息文件再提交**。`v0.9+0.75` 未动。**已本地 commit，未 push**。
-- 播放 3 轮（丙方案追加）本地 commit：**7d733f8** `test(AI): 丙方案追加 3 轮 —— 数据侧通了，窗口边界是新的真问题（我两条前置判断作废）`（9 files：record 11-01-00 + todo + hard_bug（HB-047 结案 + 11-06 笔误更正）+ `record_5..7.md` + 批次 opinion + 累积 opinion + tree）。**轮 5 PASS**：沙箱直调 `first_bilibili_video('稻香')` → 「266710 字节，共 **126** 个 bvid，第一条 `BV1Ki4y1y7HC`」→ **作废我自己两条判断**：沙箱 python **有外网**（此前依据只有 web_search 的 ConnectError）；「jarvis 只会拿到验证码页」是**证据域搞错**（我量的 0 命中是渲染后 DOM，jarvis 读的是服务端 HTML 内嵌 JSON）。**轮 6 FAIL（安全边界）**：`open_url` 复用与 `navigate_url` 选窗口都遍历**全部可见浏览器窗口**（`L171/L195`、`L404`），实测打进**我的 DSH 浏览器窗口**（pid 16732/15416，记录文件无 pid，计数 0）→ 违反 Q29「只限 jarvis 起的窗口 ≤3」；工具**没有假成功**（「12 秒内被聚焦的窗口标题没变…请确认」）；**正面确认**剪贴板先存后还（`desktop.py L61-67`）。**轮 7 PASS 三源对照**：DOM 1,048,951 字节 **0** 命中 / 服务端 HTML 266,710 **126** / API 31,355 **20**（`code:0` 无 cookie 也通）。**修法未写代码**（等 Q32 授权）：复用与选窗口只认 `_jarvis_windows()`，只有你的窗口时如实报「你的窗口我不聚焦、不输入」。`v0.9+0.75` 未动；`hard_bug.md` 不归档（HB-040 仍 open）。**已本地 commit，未 push**。
-- 上下文区间判定 本地 commit：**b9492e4** `docs(AI): 上下文合理区间用实测 token 判定 —— 建议 -c 24576（省 ~1,630 MB），单位口径更正`（4 files：record 11-48-00 + todo + need_user Q33 + tree）。固定开销实测 **3,243**（system 437 + 36 工具面 2,806）、历史 **620**、**单图净 3,622**、输出 2,500 → `16384` 容纳 2 图（13,407）、**3 图溢出（17,053）** → **建议 `-c 24576`**（16384 实测 PF 2,339 MB、65536 实测 4,522 MB、**KV 每 1,024 token ≈ 70 MB**）。**单位口径更正（我的错）**：`PageFileUsage`/`FreeVirtualMemory` 是 KB，我把 KB 当 MB 报「可用提交 11 MB」→ 真实 **11,382 MB**；页面文件现**分配仅 16 MB**（当前 0/峰值 0）→ 提交上限 ≈ 16 GB，全栈峰值 ≈14.5 GB 几乎顶限（Q22：不碰页面文件）。**llama 官方警告入档**：Qwen-VL grounding 至少 1024 image tokens，实测单图 3,622 > 1024 → **现状达标**，19:26 坐标偏不是图片 token 不足。`Start-Process` 在沙箱起不了 llama（两次 job 无输出）→ 改直接跑 exe + `*>`。**Q33 status: wait（`-c` 取 16384 还是 24576、是否授权改 `start_all.bat` 这一处）**。`v0.9+0.75` 未动。**已本地 commit，未 push**。
-- 上下文建议修正 本地 commit：**07251b4** `docs(AI): 实测 -c 24576 = 3,476 MB 后把上下文建议改回 16384（图不进主上下文）`。三点实测曲线 **16384=2,339 / 24576=3,476 / 65536=4,522 MB**（24576 比我线性预测高 586 MB，**预测作废**）。**决定性事实**：`main.py`/`context.py` 无 image，图只走 `chat_image`（`llm.py L62-84` 自建 messages，不进主上下文）；llama 日志实测视觉请求 `n_tokens = 4082`（437+prompt+单图 3,622 对得上）→ 主上下文需求 ≈ **7,863 tokens**，**`-c 16384` 绰绰有余**，24576 多付 **1,137 MB 买不到东西** → **建议改回 16384（省 2,183 MB）**。llama 24576 已杀（job pwsh-40），释放 3,476 MB。Q33 status: wait（只改 `start_all.bat` 的 `-c` 这一处）。**已本地 commit，未 push**。
+- **P0**：`-c` 取值（实测 16384=2,339 / 24576=3,476 / 65536=4,522 MB；图不进主上下文 → 主上下文需求 ≈7,863 tokens，建议 `-c 16384` 省 2,183 MB）→ **等 Q33 授权**
+- **P1 播放链**：数据侧通（服务端 HTML 266,710 字节 / 126 bvid / `BV1Ki4y1y7HC`）；**窗口边界是真阻塞**
+  （`open_url L171/L195` 与 `navigate_url L404` 遍历全部可见窗口，实测打进我的 DSH 浏览器窗口 pid 16732/15416）→ **等 Q32 授权**
+  （只认 `_jarvis_windows()`，你的窗口不聚焦不输入）；`navigate_url` **沙箱不可能验通**（键盘注入落沙箱窗口站），真验通需你跑 `start_all.bat`
+- **P1**：语音 20 轮 **轮 11-20**（轮 1-10：1-4 PASS、5 部分、6-10 FAIL）→ 需你在麦克风前
+- **新需求（你 11:00 第 4 条）**：**全量重训练**（现有多音色 TTS + 你的部分音频 + 噪音）出一个版本，与 `v0.9` 同口径比，**不如 0.9 就不改**；`v1.0d` **跳过**（第 5 条）
+- **P2**：**Monitor 全系列**（design v3.0 已定，Q31 三条口径确认：只关 jarvis 自起 pid / 接受无 stdout 接管 / 你跑 start_all 我关窗口复测）→ **先不开工**
+- **P3 全部挂起**（你 11:00 第 6 条「p2 级以下先不管」）：`kill_process` 英文进程名、`pyautogui.FAILSAFE`、`WebSocketDisconnected`
+- **open bug**：**HB-040** `_coerce` 架空可选参数中文默认值（`set_timer` 默认文案被空串覆盖）→ `hard_bug.md` **不归档**（未全解决）
+  ；**HB-047 closed/wontfix**（你裁决：chrome 崩溃属内存溢出，"不需要修，需要用户注意"）
+- **等你确认（status: wait）**：**Q18**（剪贴板 JWT 193 字符被覆盖善后）、**Q19**（通知气泡肉眼确认）、**Q20**（「锁」才真锁屏）、
+  **Q32**（窗口边界修法 + "第一支"三种口径）、**Q33**（`-c` 取值 + 改 `start_all.bat` 授权）
+- **禁区/边界（长期）**：`v0.9 + 阈值 0.75`、`stt.engine: whisper`、`stt.hot_bias: false`、`is_half: false` 不动；
+  **页面文件不碰（Q22 结案，你只设 8 GB 分页，现分配 16 MB）**；不最大化窗口、点击需在任意窗口尺寸准确；剪贴板先存后还；
+  `kill_process` 授权只到记事本；**禁止 git push**
