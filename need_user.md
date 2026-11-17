@@ -126,3 +126,16 @@ Set-CimInstance -CimInstance $pf -Property @{InitialSize=8192; MaxSize=32768}
 - **追加要求**：「**jarvis 你来启动看看能不能打开 chrome？**」→ 我自己启 jarvis 并实测开 chrome；
   现状你的 jarvis 占着 `:7860`（19:21 重启），我启的话端口冲突，如实报，不假装启起来
 
+
+
+## Q30 · 2026-11-17-10-24 · Monitor 面板内容 · status: wait
+
+`design.md` v2.0 给出 6 块候选内容（A 资源仪表 / B 服务健康 / C 进程与窗口清单 / D 事件时间线 /
+E 工具调用统计 / F 语音链路指标）与 4 个决定点，**推荐 A+B+C 首屏**。请答复（不答复不写实现）：
+
+1. **内容选哪些**？（推荐 A+B+C；F 需新增埋点，成本最高）
+2. **放置**：side-panel 新 tab「监控」/ 独立页 `/monitor` / 右侧常驻？（推荐新 tab）
+3. **刷新方式**：服务端 WS 推送（5 s）/ 前端轮询 `/api/monitor`？（推荐 WS 推送，省请求与重复采样）
+4. **要不要历史曲线（sparkline）**？要的话采样频率与保留时长（决定内存占用；现状 jarvis 提交 2,004 MB、
+   chrome 13 进程、可用 12,408 MB）
+

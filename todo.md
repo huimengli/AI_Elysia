@@ -95,3 +95,6 @@ ole=status）；#modelSelect aria-label「当前 LLM 提供方」、#muteBtn ari
 - [ ] 2026-11-16-20-09 **我启 jarvis 实测开 chrome**（你的要求）：你的 jarvis 占 `:7860` → 端口冲突如实报；开 chrome 能力用 `open_url` 当场复现（窗口标题 + 记录 pid）
 
 - [x] 2026-11-16-20-19-08 **落盘 + 关闭所有服务** → `records/2026-11-16-20-19-08.md`：按命令行精确匹配杀 jarvis / api_v2 / llama-server / GPT-SoVITS，不按进程名批量杀 python，不碰 Chrome（Q24），不碰页面文件（Q22）；关完复测 :7860/:8080/:9880
+
+- [ ] 2026-11-17-10-24-25 **UI Monitor 面板 · 只做 design，不开工**（→ `records/2026-11-17-10-24-25.md`）：`design.md` v2.0（旧 v1.0 归档 `ai_buckup/design.md_2026-11-17-10-24-25.md`）；内容候选 A-F + 推荐，决定权交用户（`need_user.md` Q30，status: wait）
+- [ ] 2026-11-17 Q30 答复后再开工实现 Monitor 面板（**未答复不得推进实现**）
