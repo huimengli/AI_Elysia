@@ -8,7 +8,7 @@
 
 结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/` 被忽略；现役唤醒 ONNX（v0.9 / v1.0c，含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：448
+### 文件数（git ls-files --cached --others --exclude-standard）：449
 ```
 JarvisAi/
 .gitignore
@@ -167,6 +167,7 @@ records/
   2026-11-17-10-44-33.md
   2026-11-17-10-52-00.md
   2026-11-17-11-01-00.md
+  2026-11-17-11-48-00.md
   AI_Benchmark.md
   JARVIS_STATE.md
   PROJECT_SUMMARY.txt
