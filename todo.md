@@ -98,3 +98,7 @@ ole=status）；#modelSelect aria-label「当前 LLM 提供方」、#muteBtn ari
 
 - [ ] 2026-11-17-10-24-25 **UI Monitor 面板 · 只做 design，不开工**（→ `records/2026-11-17-10-24-25.md`）：`design.md` v2.0（旧 v1.0 归档 `ai_buckup/design.md_2026-11-17-10-24-25.md`）；内容候选 A-F + 推荐，决定权交用户（`need_user.md` Q30，status: wait）
 - [ ] 2026-11-17 Q30 答复后再开工实现 Monitor 面板（**未答复不得推进实现**）
+
+- [ ] 2026-11-17-10-44 **Q30 答复后 design v3.0（Monitor = 日志中枢 + 单窗口托管 + 指定关闭 + 外部接入）** → `records/2026-11-17-10-44-33.md`；v2.0 归档 `ai_buckup/design.md_2026-11-17-10-44-33.md`；**开工授权 Q31 status: wait**
+- [ ] 2026-11-17-10-44 **可行性边界写进设计**：① stdout 只能在 jarvis 是父进程时抓管道；② start_all 只留一个窗口（jarvis 起子服务，不再各开 `cmd /k`）；③ 关窗口全关**不能靠控制台语义** → jarvis 退出按 pid 杀子进程留证据；④ 外部接入=识别+体检，**无法接管别人的 stdout**
+- [ ] 2026-11-17-10-44 **撤销 v2.0 的「面板不做动作」非目标**（你要求允许关闭指定服务）→ 关闭按钮带 pid 证据 + 点击前确认，禁止静默杀

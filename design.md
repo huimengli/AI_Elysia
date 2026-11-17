@@ -1,114 +1,110 @@
 # 总设计
 
-- **版本**：v2.0（v1.0 已归档到 `ai_buckup/design.md_2026-11-17-10-24-25.md`）
-- **更新时间**：2026-11-17-10-24
-- **关联需求**：`records/2026-11-17-10-24-25.md`（「在 UI 中制作一个 moniter 界面」「内容我还没做好决定，先做 design，**不开工**」）
-- **决定权在用户**：内容候选与 4 个决定点见 `need_user.md` **Q30（status: wait）**。**Q30 未答复前不写实现代码。**
+- **版本**：v3.0（v2.0 已归档到 `ai_buckup/design.md_2026-11-17-10-44-33.md`；v1.0 在 `ai_buckup/design.md_2026-11-17-10-24-25.md`）
+- **更新时间**：2026-11-17-10-44
+- **关联需求**：`records/2026-11-17-10-24-25.md`（「在 UI 中制作一个 moniter 界面」「先做 design，不开工」）
+  + `records/2026-11-17-10-44-33.md`（Q30 答复：**Monitor = 日志中枢 + 单窗口托管 + 指定关闭 + 外部接入**）
+- **状态**：**只 design，未开工**。开工授权与关闭授权见 `need_user.md` **Q31（status: wait）**。
 
-> 本版只做设计。`jarvis/static/index.html` 与后端**未改动**；下方所有落点都是实测量，不是推测。
+## 1. 你 10:44 的原话与逐条可行性（不假装都能做）
 
-## 1. 目标与非目标
+> 「f 这个其实是最重要的, Monitor 我希望的是将启动的所有 cmd stdout 全显示在这个界面上,
+> start_all.bat 启动后就一个窗口, 关闭窗口直接全部关闭, monitor 中允许关闭指定的服务, 从别的地方启并接入」
 
-**目标**：在爱莉希雅 UI 里加一个 **只读的 Monitor 面板**，把"这台机器现在扛不扛得住"摆在眼前。
-动机是实测过的两次事故：`hard_bug.md` **HB-047**（进 B 站视频页后 chrome 抛异常 `0x00000008`，你判定内存溢出）
-与 12:18 第 5 条（「内存可用还有 6g，但已提交内容却满了」——上限 30,283→32,575 MB、可用一度 **237 MB**）。
+| 需求 | 可行性（依据） | 设计结论 |
+| --- | --- | --- |
+| **显示所有启动 cmd 的 stdout** | **只有 jarvis 是父进程时抓得到管道**。现在 `start_all.bat` 用 `start ... cmd /k` 给每个服务开自己的控制台，stdout 归那个控制台，**jarvis 抓不到** | jarvis 必须成为 llama-server / api_v2 的**父进程**（`stdout=PIPE, stderr=STDOUT`）；`start_all.bat` 不再为服务开窗口 |
+| **start_all 后只有一个窗口** | 现 `start_all.bat` 开 **4 个窗口**（llama / GPT-SoVITS / jarvis / status panel，实测文件内容） | 只留 jarvis 一个窗口；status panel 的 powershell 循环被 `/monitor` 页面取代 |
+| **关闭窗口直接全部关闭** | **不能靠控制台语义**：用管道起的子进程**不挂在控制台上**，关父窗口它们会活着。`taskkill /T` 杀进程树可行（`manage_browser_windows` 已用） | jarvis **退出时按记录的 pid 主动杀子进程**（`atexit` + `SIGBREAK` 处理，Windows 关控制台后只给约 5 s 清理窗口）；每次起子进程把 pid 落盘 `.tmp/jarvis_child_pids.json`（复用 Q29 的 pid 记录模式） |
+| **从别的地方启并接入** | Windows 下**无法事后接管别人进程的 stdout**（无 ptrace 这类机制） | 接入 = **识别 + 体检**：按命令行匹配找 pid、读 `PageFileUsage`、探 `:8080/:9880` 健康；面板必须写明「外部进程：无日志接管」——**不显示假日志** |
+| **面板允许关闭指定服务** | 可行（`kill_process` 已有，`taskkill /PID /T /F` 已实测） | **撤销我 v2.0 立的「面板不做动作」非目标**（那是我防虚假成功的规矩，你明确要控制）。关闭按钮必须带 **pid 证据 + 点击前确认**，禁止静默杀 |
 
-**非目标（明确不做）**：
-- **不做窄窗口适配**（12:18 第 1 条：默认最低 1080p，窄窗口 UI 不用管）
-- **面板不执行任何动作**：关窗口、杀进程只走已有工具（`manage_browser_windows` / `kill_process`），Monitor 只展示——**"看到数字就自动杀进程"是虚假成功的温床，禁止**
-- 不引第三方图表库（canvas 手绘 sparkline 足够）；不加新依赖
-- 不改 `aili_xiya_v0.9.onnx` + `thr 0.75`、`stt.engine: whisper`、`stt.hot_bias: false`
+## 2. 已定内容（Q30-1 多选：A + B + C + E + F，F 最重要）
 
-## 2. 落点（实测量，2026-11-17）
+| 块 | 内容 | 数据来源 | 备注 |
+| --- | --- | --- | --- |
+| **G 日志中枢（新，最核心）** | 每个服务的 stdout/stderr 逐行，带服务标签与时间戳 | jarvis 子进程管道 + 自身日志 | 每服务环形缓冲 **2,000 行**（防内存涨）；WS 每轮最多 20 行批量 |
+| **F 语音链路指标（你说最重要）** | wake 置信度 / ASR 耗时 / LLM tokens 每秒 / TTS 耗时 | **需新增埋点**：`main.py` 唤醒（`L548` 附近）、转写（`L627` 附近）、回复（`L668` 附近）、`tts.py` 合成前后打点 | 无埋点则这块只能是空壳，如实标注 |
+| **A 资源仪表** | 提交 上限/已用/可用 MB、物理%、CPU% | `Win32_OperatingSystem` + CPU 采样 | 颜色安全线取实测（可用一度 237 MB）：≥2,000 粉 / 300–2,000 gold / <300 新增 `--danger` |
+| **B 服务健康四灯** | wake / asr / llm / tts | 现有 `/api/health` 的 `_tcp_probe`（`web.py`） | 复用 `.svc-lamp` 三态 |
+| **C 进程与窗口清单** | 各服务 pid + 提交 MB；我起的浏览器窗口数（上限 3） | `Win32_Process` 命令行匹配 + `_browser_windows()`（`app_control.py`） | 与 Chrome 管理器 ≤3 联动 |
+| **E 工具调用统计** | 每工具调用次数、耗时、失败率 | `main.py L404/410/453/458` 的 tool/tool_result 广播侧写 | 对"点不进/没跳转"这类诚实失败最有用 |
 
-`jarvis/static/index.html` **1001 行**；`.side-panel{width:380px}`（`L186`），`.side-tabs{gap:6px;padding:10px 12px}`（`L191`），
-`.side-tab{flex:1;font-size:12.5px;padding:8px 6px}`（`L192`）。现 4 个 tab（`L359-363`）：
-`data-tab="tools|live|actions|settings"`。**加第 5 个 tab「监控」**后每 tab 宽约
-`(380 − 2×12 − 4×6) / 5 = 66.4 px`，两字中文标签放得下。
+## 3. 独立页 `/monitor`（Q30-2 选定，1080p 起）
 
-复用现成的视觉语言，不新造样式体系：
-- 四灯 `.svc-lamp`（`L294-298`，`#svcLamps`）已有 `off / warm / on` 三态与 `.dot` 发光（`L88-95`）→ Monitor 里的服务健康直接用同一组件
-- `.tool-log-entry`（`L209`，`padding:8px 10px; border-radius:12px`）→ 列表行的样式基线
-- 配色令牌（`:root`，`L10-13`）：`--pink:#F8A9C4`、`--pink-2:#FFD8E8`、`--gold:#F2C9A8`、`--lilac:#C9B7E0`、
-  `--text:#F6ECF2`、`--text-dim:#CDBCC8`。**需新增 1 个令牌** `--danger:#E57878`（低于安全线时用，现无危险色）
-
-WS 消息 12 类（前端 `L592-664`：connected/status/user/wake/tool/tool_result/response/mute/provider_changed + reactor 状态），
-服务端广播在 `main.py L404/410/453/458`（`tool` / `tool_result`，result 截 200 字节）。
-
-## 3. 内容候选（A-F，决定权在 Q30）
-
-| 块 | 内容 | 数据来源 | 成本 | 备注 |
-| --- | --- | --- | --- | --- |
-| **A 资源仪表** | 提交 上限/已用/**可用 MB**、物理内存占用%、CPU% | `Win32_OperatingSystem` + CPU 采样 | 低（1 次 WMI/轮） | **HB-047 与 12:18 第 5 条的直接动机，推荐必选** |
-| **B 服务健康** | wake / asr / llm / tts 四灯（已有语义） | 现有 `/api/health` 逻辑（`web.py` `_tcp_probe`） | 低 | 复用 `.svc-lamp`，零新语义 |
-| **C 进程与窗口清单** | jarvis / api_v2 / llama-server / GPT-SoVITS / chrome 的 pid + **提交 MB**；我起的浏览器窗口数（上限 3） | `Win32_Process` 按命令行匹配 + `_browser_windows()`（`app_control.py`） | 中（枚举 13-25 进程） | 与 Chrome 管理器 ≤3 联动；**只展示，不在此关** |
-| D 事件时间线 | wake/user/assistant/tool 流水 + 时间戳 | 已有 `events.db` + WS | 低 | 与「实时」tab 重叠，价值边际低 |
-| E 工具调用统计 | 各工具调用次数、耗时、失败率 | `main.py` tool/tool_result 广播侧写 | 中（需累计器） | 对"点不进/没跳转"这类诚实失败最有用 |
-| F 语音链路指标 | wake 置信度、ASR 耗时、LLM tokens/s、TTS 耗时 | **需新增埋点** | 高 | 成本最高，建议 Q30 之后再说 |
-
-**推荐首屏：A + B + C**（三块都能用现成数据，无需新埋点，直接对准内存溢出与窗口上限两条已发生的事）。
-
-## 4. 布局（380 px 宽，最低 1080p）
+`index.html` 现 1001 行、`body{overflow:hidden}`（`L25` 区域）、side-panel 380 px（`L186`）。
+独立页沿用同一配色令牌（`--pink/--pink-2/--gold/--lilac/--text/--text-dim`，`L10-13`）与 `.svc-lamp` 三态。
 
 ```
-┌ side-panel (380px) ─────────────────────────────┐
-│ [工具][实时][快捷][设置][监控]   ← 第 5 个 tab    │
-├─────────────────────────────────────────────────┤
-│ 提交 28,990 · 已用 16,581 · 可用 12,408 MB       │  ← A：一行大数字
-│ ▓▓▓▓▓▓▓▓░░░░░░░  57%        （提交占用条）       │
-│ 物理内存 57%   CPU 12%                            │
-│ ● 唤醒  ● 语音识别  ● LLM  ● TTS                 │  ← B：复用 .svc-lamp
-├─────────────────────────────────────────────────┤
-│ 我起的浏览器窗口 1 / 3                            │  ← C：上限联动
-│ jarvis 2,004 · api_v2 6,518 · llama 4,522 ·      │
-│ chrome 13 进程 3,139 MB                          │
-└─────────────────────────────────────────────────┘
+1920×1080（最低 1080p，不做窄窗口）
+┌ /monitor ──────────────────────────────────────────────┐
+│ 提交 28,990 · 已用 16,581 · 可用 12,408 MB   ▓▓▓▓▓░ 57% │  ← A
+│ ● 唤醒 ● 语音识别 ● LLM ● TTS      我起窗口 1/3          │  ← B + C
+├ 服务（pid / 提交 MB / 来源 / [关闭]）───────────────────┤
+│ llama-server  15600  4,522 MB  jarvis 起   [关闭]        │  ← C + 控制
+│ api_v2        13756  6,518 MB  jarvis 起   [关闭]        │
+│ jarvis        11222  2,004 MB  本进程      ——            │
+│ chrome 13 进程 3,139 MB  我起窗口 1/3                    │
+│ 外部接入：ffmpeg 4412  120 MB  外部起 · 无日志接管        │  ← 接入=识别
+├ 语音链路 ── LLM 18 tok/s · ASR 1.2 s · TTS 1.9 s ·      │  ← F（埋点后）
+│ wake 0.81  曲线 5s×10min ▁▂▃▂▅▆                          │
+├ 工具统计 ── 播放第一支视频 3 次 · 失败 1 · 均 11.4 s      │  ← E
+├ 日志区（每服务可折叠，最新在上，2,000 行环形）───────────┤
+│ [llama] slot prompt 712/16384 ...                        │
+│ [tts]  合成 1.9 s → 24kHz mp3 42 KB                      │
+│ [jarvis] 已在被聚焦的窗口导航：基准「…」-> 现在「…」      │
+└ 推送间隔 [1s ▾]  ← 前端可调（Q30-3，最低 1 s）───────────┘
 ```
 
-- 数字用等宽感（tabular）呈现，避免跳动时行宽变化；单位统一 MB，**≥1024 MB 显示 GB 保留 1 位小数**
-- 颜色语义复用三态：`可用 ≥2,000 MB` → `on`（粉），`300–2,000 MB` → `warm`（gold），`<300 MB` → `--danger`
-  （**这条线来自实测**：可用 237 MB 那次就是出事的那次）
-- 空态文案与现有一致（`等待工具调用` / `记录待机` 风格），Monitor 空态：`等待第一次采样`
+- **推送间隔前端可调**（Q30-3 原话「推送间隔允许前端修改，最低可以设置成 1s」）：UI 下拉 `1/2/5/10/30 s`，
+  存 localStorage，通过 WS 首条 `{"type":"monitor_config","interval":5}` 告知服务端；服务端采样与推送同一节拍
+- **节流**：`document.hidden` 时服务端降到 30 s（省 CPU），前端停渲染
+- **曲线**：环形 120 样本（5 s × 10 min）≈ 1 KB，canvas 手绘，无图表库
 
-## 5. 数据流与 payload（设计级 schema）
+## 4. 架构改动（开工后的实现拆分，Q31 未答复前不写）
 
-**采样在 jarvis 侧**（你的会话里跑，`start_all.bat`），不是前端拉 WMI。
+1. **`jarvis/services.py`（新）**：`launch(name) -> pid`（`Popen(..., stdout=PIPE, stderr=STDOUT)`）+ 每服务读线程 →
+   `RingBuffer(2000)`；pid 落盘 `.tmp/jarvis_child_pids.json`（复用 Q29 模式）；`shutdown()` 按 pid `taskkill /PID /T /F`，
+   每个 kill 记录成败文本（`manage_browser_windows` 的现成口径）
+2. **`jarvis/main.py`**：启动时 `launch("llama")` / `launch("tts")`（若端口未被占用；`start_all.bat` 的
+   `netstat` 检查逻辑移到 jarvis 侧，**外部已起的服务走接入识别，不重复起、不杀**）；`atexit` + `SIGBREAK` 挂 `shutdown()`
+3. **`jarvis/web.py`**：`GET /monitor`（页面）+ `GET /api/monitor`（快照）+ WS 类型
+   `monitor`（指标）/ `log_batch`（≤20 行）/ `monitor_config`（间隔）+ `POST /api/service/stop`（body `{"name","pid"}`，
+   **只接受 jarvis 自起 pid**，外部 pid 返回"拒绝：不是本进程起的"）
+4. **`start_all.bat`**（现 4 窗口）：改成只开 1 个窗口 `start "AiliXiya :7860" cmd /k ...jarvis.main`，
+   浏览器开 `/monitor`；旧版留在 git 历史，不新建别名脚本（不自行发明命名）
+5. **`jarvis/static/monitor.html`（新页面）**：布局如上；日志区每服务折叠，最新在上；
+   每行 `[服务] 原文`；控制按钮带 pid 与确认
+6. **埋点**：`main.py` 唤醒/转写/回复、`tts.py` 合成耗时 → 同一环形缓冲（各 200 样本）供 F 块
 
-- 新端点 `GET /api/monitor` → 单次采样，返回同一 payload（供 curl 验收与前端首轮渲染）
-- **推荐 WS 推送**：服务端后台线程每 **5 s** 采样一次，广播新类型
-  `{"type":"monitor", "ts":"2026-11-17 10:24:25", "commit":{"total":28990,"used":16581,"free":12408}, "phys_pct":57, "cpu_pct":12, "lamps":{"wake":true,"asr":true,"llm":true,"tts":true}, "windows":{"mine":1,"limit":3,"titles":[...]}, "procs":[{"name":"jarvis","pid":1234,"commit_mb":2004}]}`
-  （payload 约 1–2 KB，5 s 一轮 ≈ 12 KB/min，可忽略）
-- **节流**：`document.hidden` 时前端不渲染、服务端可降频到 30 s；页面不可见时不停止采样会导致无谓开销
-- **历史曲线（可选，Q30 第 4 点）**：环形缓冲 120 样本（5 s × 10 min）≈ 1 KB，canvas 手绘 2px 高 sparkline；
-  要更长历史（1 h @5 s = 720 样本）仍是 KB 级，**不是内存瓶颈**；瓶颈在 jarvis 自身 2,004 MB 提交，与曲线无关
+## 5. 控制授权（撤销「面板不做动作」后的新规矩）
 
-**采样成本与边界（实测口径）**：一次 `Win32_OperatingSystem` 查询数十毫秒；`Win32_Process` 全枚举在 13-25 个 chrome 进程时约 100–300 ms，
-放后台线程、**不阻塞 WS 与语音链路**（语音 20 轮判据不能被采样拖慢）。沙箱里我的 pwsh 用 PowerShell 自带 pipeline 测过同样查询，可用。
+- **关闭按钮只对 jarvis 自起的 pid 生效**（`POST /api/service/stop` 校验 pid 在 `jarvis_child_pids.json` 里）；
+  外部起的进程**面板不给关闭按钮**，只给"识别 + 体检"（Q24/Q29 的边界：你的浏览器与你的进程我不动）
+- **点击前确认**：弹一层「要关 llama-server（pid 15600，4,522 MB，jarvis 起的）？确认/取消」，
+  **不静默杀**；结果行必须回显 `taskkill` 真实输出（成功/失败），失败时保留行，不显示"已关闭"
+- jarvis 退出关全部：**只杀记录里的 pid**，退出时把每条 kill 结果写入日志区并落盘 `.tmp/jarvis_shutdown.log`
 
-## 6. 无障碍与文案（延续 2792acf 的口径）
+## 6. 验收（验证 3 轮，`tests/<ts>_cc/record_1..3.md` + `opinion.md`）
 
-- 数字面板 `aria-live="off"`（每 5 s 变动的数字会让读屏器刷屏）；**只有一条摘要行** `aria-live="polite"`
-  （`可用 12,408 MB · 我起窗口 1/3 · 四灯全亮`）
-- tab 标签中文，和页面 `lang=zh-CN` 一致（2792acf 的教训：英文 `data-cmd` 让中文页里的用户气泡变成英文）
-- 每个数字块有中文标签与 `title` 提示（沿用 `.svc-lamp` 的 title 语义写法）
+1. **单窗口**：`start_all.bat` 后**只有 1 个窗口**；`Get-Process` 里 llama-server/api_v2 的父进程是 jarvis
+2. **关窗口全关**：关闭该窗口后 `7860/8080/9880` 全部不通（现口径），`.tmp/jarvis_shutdown.log` 有每条 kill 证据
+3. **日志真可见**：日志区出现 llama 的 `slot prompt ...` 行与 TTS 合成行，内容与各自控制台原文一致
+4. **接入诚实**：外部起的进程显示"外部起 · 无日志接管"，**没有假日志**
+5. **控制边界**：外部 pid 的关闭请求被拒（返回"不是本进程起的"）；jarvis 自起 pid 关闭后端口不通
+6. **间隔可调 1 s**：UI 选 1 s 后 WS 推送间隔实测 ≈1 s；隐藏页面后降频
+7. **内存**：日志环形 2,000 行/服务下，jarvis 提交 30 min 增长 <50 MB
+8. 语音 20 轮判据不被采样/日志拖慢（轮 11-20 仍等你在麦克风前）
 
-## 7. 验收（验证 3 轮，`tests/<ts>_cc/`）
+## 7. 风险与边界（如实）
 
-1. **数字对得上**：面板显示与同时刻手动 `Get-CimInstance Win32_OperatingSystem` 读数一致（±1%）
-2. **上限联动**：我起的窗口数与 `manage_browser_windows()` 报的数量一致（现测 1/3）
-3. **节流生效**：页面隐藏时不再推送/渲染（记录时间戳间隔）
-4. **无副作用**：jarvis 提交内存连续 30 min 增长 < 50 MB；语音链路不被采样拖慢
-5. 面板**没有任何动作按钮**（设计约束，代码审查确认）
-
-## 8. 实现拆分（Q30 答复后才做，本轮不写）
-
-- `jarvis/monitor.py`（新模块，采样 + 缓存最近 payload；风格跟 `events.py` 的短事务模式）
-- `jarvis/web.py`：`GET /api/monitor` + 后台采样线程 + WS `monitor` 广播
-- `jarvis/static/index.html`：第 5 个 tab `data-tab="monitor"` + `#tab-monitor` + 渲染函数 + `--danger` 令牌
-- 前端事件类型在 `L592-664` 的 `switch` 里加 `monitor` case（与 `tool`/`tool_result` 同层）
-
-## 9. 风险
-
-- WMI 全枚举在你的会话里可用（我沙箱的 pwsh 也测过），但**在沙箱里跑 jarvis 时键盘注入落在沙箱窗口站**（已量过）→ Monitor 的验收必须在你的会话里做
-- 采样线程若异常（WMI 抖动）必须**如实显示"采样失败 + 原因"**，不能显示上一次的数字装作正常（虚假成功预防）
-- `chrome` 进程数与窗口数不是一对一（13-25 进程 / 1-6 窗口）→ 面板必须写"进程数"与"窗口数"两件事，不能混说
+- **CTRL_CLOSE_EVENT 只有约 5 s 清理窗口**：`shutdown()` 必须轻（只杀 pid，不做长 I/O）；**这条必须在你会话实测**，
+  我沙箱里量不了关控制台的行为
+- **管道在沙箱里不可用**（我的子进程无 piped stdio，EPERM）→ 日志接管只能在你的会话验证；沙箱里我可以验
+  环形缓冲、WS 推送节奏、pid 记录与 kill 证据文本
+- **stdout 缓冲**：llama 的进度行是 `\r` 回车覆盖式，管道读到的是一串连续块 → 日志区必须按 `\r` 断行处理，
+  否则一行刷屏
+- **GPT-SoVITS api_v2 由 jarvis 起时工作目录与 env 要照 `start_all.bat` 现内容设**（`cd /d GPT-SoVITS-main`、
+  `MPLCONFIGDIR`、`HF_ENDPOINT=https://hf-mirror.com` 带 scheme，HB-029）
+- **语音/播放判据不能被架构改动破坏**：`aili_xiya_v0.9.onnx` + `thr 0.75`、`stt.engine: whisper`、
+  `stt.hot_bias: false`、`is_half: false` 不动；**丙方案与轮 5-6 的实测仍等你跑 `start_all.bat`**

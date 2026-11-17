@@ -139,3 +139,19 @@ E 工具调用统计 / F 语音链路指标）与 4 个决定点，**推荐 A+B+
 4. **要不要历史曲线（sparkline）**？要的话采样频率与保留时长（决定内存占用；现状 jarvis 提交 2,004 MB、
    chrome 13 进程、可用 12,408 MB）
 
+
+
+## Q31 · 2026-11-17-10-44 · Monitor 开工与关闭授权 · status: wait
+
+`design.md` v3.0 已写（v2.0 归档 `ai_buckup/design.md_2026-11-17-10-44-33.md`）。你 10:44 的需求要改
+`start_all.bat` 架构（jarvis 当父进程起 llama/api_v2、只留 1 窗口、退出按 pid 杀子进程）+ 新增独立页 `/monitor`。
+**未答复不写实现**（10:24 你明确「先做design,不开工」）。请答复：
+
+1. **开工授权**：允许我改 `start_all.bat` + `jarvis/main.py` + `jarvis/web.py` + 新页 `monitor.html` + 新模块
+   `jarvis/services.py`？（改现文件，不新建别名脚本）
+2. **关闭授权口径**：`POST /api/service/stop` **只接受 jarvis 自起的 pid**，外部起的进程面板不给关闭按钮
+   （只识别+体检）——这样对吗？还是你也要能关外部进程？
+3. **外部进程 stdout 接管**：实测结论是 Windows 下**做不到**（无法事后接管别人进程的 stdout）。
+   接受"接入 = 识别 + 体检 + 无日志"这个边界吗？
+4. **关窗口全关的实测**：CTRL_CLOSE_EVENT 只有约 5 s 清理窗口，我沙箱量不了关控制台行为，
+   **需要在你的会话实测**。轮 1 我关窗口后复测 7860/8080/9880 + `.tmp/jarvis_shutdown.log`，可以吗？
