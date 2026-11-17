@@ -127,13 +127,25 @@ def open_app(name: str) -> str:
 
 
 def _url_keys(url: str) -> set[str]:
-    """Title fragments to look for: host, its first subdomain, and any keyword
-    query parameter (a page title usually carries the keyword, not the URL)."""
+    """Title fragments to look for: host, its first subdomain, the registrable
+    domain label, and any keyword query parameter (a page title usually carries
+    the keyword, not the URL).
+
+    The registrable label is what fixes the false-negative found 2026-11-17
+    (records/2026-11-17-13-00-51.md): a Bilibili video page title ends with
+    「_哔哩哔哩_bilibili」, which contains `bilibili` but **not** `www.bilibili.com`,
+    so the old key set `{www, www.bilibili.com}` could never match it and
+    `open_url` reported a page that had opened as "可能没有真的打开".
+    """
     from urllib.parse import urlparse, unquote
     parsed = urlparse(url)
-    keys = {parsed.netloc.lower()}
-    if "." in parsed.netloc:
-        keys.add(parsed.netloc.split(".")[0].lower())
+    net = parsed.netloc.lower().split(":")[0]  # drop :port
+    keys = {net}
+    parts = net.split(".")
+    if len(parts) >= 3:
+        keys.add(parts[0])      # subdomain, e.g. www / search
+    if len(parts) >= 2:
+        keys.add(parts[-2])     # registrable label, e.g. bilibili
     for q in parsed.query.split("&"):
         if "=" in q:
             v = unquote(q.split("=", 1)[1])

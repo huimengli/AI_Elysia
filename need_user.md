@@ -232,3 +232,22 @@ E 工具调用统计 / F 语音链路指标）与 4 个决定点，**推荐 A+B+
 - **窗口处理**：「**为了减少内存,我自己关了**」→ Q24 口径不变：**你手动关**（包括我起的 pid 9952 窗口），
   我不关任何 pid（Q29 授权保留，只在我起且你授权时用）
 
+
+
+## Q35 · 2026-11-17-13-10 · 播放被 B 站登录墙挡住 · status: wait
+
+**现象**（13:06 整窗截图，决定性证据）：jarvis 起的窗口打开 `bilibili.com/video/BV1Ki4y1y7HC` 后，
+页面弹 **「扫描二维码登录」**（「二维码已过期 点击刷新」+ 账号/密码 + 微信/微博/QQ），播放器在弹窗后是暗的
+→ 播放没开始。3 轮导航 PASS（地址栏都是 BV 页）、播放 3/3 FAIL。
+
+**定因**：`app_control.py` L237-244 起 Chrome 用独立 profile `.tmp\chrome_profile`（注释「off the user's
+signed-in profile」）→ **jarvis 的 profile 没有 B 站登录 cookie**。
+
+**请选择（我不自行决定，也不动你的登录态）**：
+
+1. **你在 jarvis 起的窗口里登录一次**（扫手机/手机号）→ cookie 存进 `.tmp\chrome_profile`，之后 jarvis 播放可用，
+   **你的日常 Chrome profile 不受影响**（推荐：隔离、持久）
+2. **授权 jarvis 复用你已登录的 Chrome profile**（`--user-data-dir` 指向你的 User Data）→ 省一次登录，
+   **代价**：jarvis 会在你登录账号里操作 B 站，风险与隐私归你判断
+3. **播放功能降级**：只做到「打开 BV 页 + 报告被登录墙挡住」，播放由你手动完成
+
