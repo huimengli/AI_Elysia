@@ -83,3 +83,4 @@ ce50c7e docs(AI): 把服务重启与 4 灯复核追加到 Q15 批记录（保持
 - **第 2 项代码已改未验**：`_jarvis_windows()` 改为认「记录 pid ∪ **跑 jarvis 专属 profile（`.tmp\chrome_profile`）的 Chrome 进程 pid**」，`jarvis_pids()` 同口径（Q32/Q34 边界：你的窗口用你自己的 profile，永不匹配）；根因是 launch pid 是秒退的 launcher，窗口归已有实例（轮 2 实测 21200 vs 10848）。验证排在下面。
 - 4dda29 docs(AI): onnx_opinion 按 21:13 新规矩重排进根目录，收口 v1.3 扩数据重训 —— **已本地 commit，未 push**
 - **第 2、3 项改码 + 实测通过（21:44-21:49）**：窗口计数认 jarvis profile 的 Chrome 进程 pid（实测你窗口不计、我起 1、杀自己成功、杀你的被拒、杀后忘掉 pid）；play_first_video 改 CDP 判定（关键词「稻香」→ BV1oj411G7sR → 有video:true du:405；直达 URL 复用窗口判定；播完关掉我起的窗口，全程无视觉无点击）。jarvis 已用新码重启（pid 16716），4 灯全绿。
+-  221012 fix(AI): 窗口计数认 jarvis profile 的 Chrome 进程，播歌判定改 CDP 证据（去视觉点击）—— **已本地 commit，未 push**
