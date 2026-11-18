@@ -71,3 +71,4 @@ d283fe9 test(AI): Q16 只 B 复测 v1.0c 三轮（0.65/0.70/0.72）—— 0.65 �
   jarvis20 + llama `:8080` + api_v2 仍在跑（是否停来腾内存由你定）。本地 commit hash 见下一条台账。
 
 - 383ea5e docs(AI): 修复 here-string 反引号转义吃掉的字母，归档压缩 progress.md —— **已本地 commit，未 push**（rev-list = 220）
+- d6f53e0 feat(AI): 中文读取改走 CDP 读 DOM（我起窗口），加页面找字/点击闸门 —— **已本地 commit，未 push**（rev-list = 221）
