@@ -389,6 +389,12 @@ def launch(row: dict, timeout_s: float = 6.0) -> tuple[bool, str]:
     except Exception as e:
         return False, f"打不开「{row['name']}」：{e}"
     stem = os.path.splitext(os.path.basename(exe))[0].lower()
+    # 启动器存根不算应用进程（轮 1 实测：Sandboxie `Start.exe default_browser` 回读到
+    # 进程 `Start` 被报成「已打开」，页面没有任何证据）。存根只说明命令被交给壳，
+    # 应用有没有起来必须另行复读，这里如实说不算成功。
+    if stem in {"start", "launcher", "runcommand", "rundll32"}:
+        return False, (f"启动了启动器存根 {stem}.exe，**没有复读到应用本身的进程**，"
+                       f"不能算成功（{target}）。请说清楚要打开哪个程序。")
     waited = 0.0
     while waited < timeout_s:
         proc = _running(exe)

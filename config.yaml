@@ -100,3 +100,7 @@ tools:
   - ~/Documents
   - ~/Desktop
   code_timeout: 10
+sites:
+  github: https://github.com
+  "b站": https://www.bilibili.com
+  "我的播歌页": https://www.bilibili.com/video/BV1RMYF6kEze

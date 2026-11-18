@@ -2,7 +2,7 @@
 from jarvis.tools.web_search import search, fetch_page, get_weather
 from jarvis.tools.app_control import (open_app, open_url, kill_process,
                                        play_first_video, play_music, manage_browser_windows,
-                                       navigate_url)
+                                       navigate_url, open_site, music_control)
 from jarvis.tools.file_ops import read_file, write_file, list_files
 from jarvis.tools.code_exec import run_python
 from jarvis.tools.system import (
@@ -24,6 +24,8 @@ TOOL_MAP = {
     "web_search":       lambda a: search(a["query"]),
     "fetch_page":       lambda a: fetch_page(a["url"]),
     "open_url":         lambda a: open_url(a["url"]),
+    "open_site":        lambda a: open_site(a["site"]),
+    "music_control":    lambda a: music_control(a["action"]),
     "play_first_video": lambda a: play_first_video(a["url"]),
     "play_music": lambda a: play_music(a.get("url", ""), a.get("keyword", "")),
     "manage_browser_windows": lambda a: manage_browser_windows(a.get("close_extra", False)),
@@ -71,7 +73,9 @@ TOOL_MAP = {
 # Chinese display names for spoken / on-screen reports (records/2026-11-09-21-55-14.md).
 # The English name stays the schema/protocol identity; this map is only for 播报与 UI.
 TOOL_LABELS = {
-    "web_search": "联网搜索",
+    "web_search": "联网搜索（打开浏览器，baidu 首选 bing 兜底）",
+    "open_site": "打开指定对象（浏览器/b站/github/自定义）",
+    "music_control": "播放控制（暂停/恢复/关闭音乐）",
     "fetch_page": "读取网页",
     "open_url": "打开网址",
     "play_first_video": "播放第一支视频",
@@ -119,9 +123,26 @@ TOOL_SCHEMAS = [
     # --- Web ---
     {"type": "function", "function": {
         "name": "web_search",
-        "description": "Search the web. Returns top result snippets.",
+        "description": "Search = **open a browser search page**. baidu first; if baidu blocks or lands off the results page, bing is used as fallback. jarvis opens its own browser window (profile-verified); results are read afterwards with read_screen / find_on_screen. Returns the engine, URL, page title and address as evidence; a miss is reported as a miss.",
         "parameters": {"type": "object", "properties": {
             "query": {"type": "string"}}, "required": ["query"]}}},
+
+    {"type": "function", "function": {
+        "name": "open_site",
+        "description": "Open a named object in jarvis' own browser window: 浏览器/browser, b站/bilibili/bili, github, 百度/baidu, bing, or a user-defined name from config.yaml `sites:` (the user's custom objects). Chinese, English and pinyin names all match; user names take priority. If the name is not in the map it says so plainly and opens nothing — do not invent a URL. Desktop apps (e.g. 微信) go through open_app, not this.",
+        "parameters": {"type": "object", "properties": {
+            "site": {"type": "string",
+                     "description": "The name exactly as heard (浏览器, b站, github, 我的服务器…). Do not translate."}},
+            "required": ["site"]}}},
+
+    {"type": "function", "function": {
+        "name": "music_control",
+        "description": "Playback control on jarvis' own window only. action=pause → 暂停当前播放的视频 (verified by reading `video.paused` back through CDP), action=resume → 恢复播放, action=close → 关闭音乐 by closing the browser window jarvis started. Only pids jarvis recorded for itself are ever killed; the user's windows are never touched. Reports the readback, not a guess.",
+        "parameters": {"type": "object", "properties": {
+            "action": {"type": "string",
+                       "enum": ["pause", "resume", "close"],
+                       "description": "pause 暂停播放 / resume 恢复播放 / close 关闭音乐"}},
+            "required": ["action"]}}},
 
     {"type": "function", "function": {
         "name": "fetch_page",
@@ -147,7 +168,7 @@ TOOL_SCHEMAS = [
 
     {"type": "function", "function": {
         "name": "play_music",
-        "description": "The ONLY tool for playing a song on Bilibili. Pass the song title as keyword (Chinese is fine) and it resolves the most-played (order=play) result through the Bilibili API, navigates jarvis' own window straight to that BV URL (no vision, no clicks), turns OFF the danmaku, sets the lowest quality (item labelled 360P 流畅, width 640, height follows the source aspect), starts playback with a trusted click on 播放/暂停 (video.play() alone is blocked by Chrome autoplay policy), resets to 0:00 because Bilibili resumes at the last watched position, then polls: playback time must advance, and reaching the end is signalled by the BV id in the page URL changing (连播 fires at the end). When the song ends, the window jarvis started is killed (only pids jarvis recorded at launch; the user's own windows are never touched). Returns every step with evidence; a miss is reported as a miss. Pass a direct BV URL as url when you already have one.",
+        "description": "The ONLY tool for playing a song on Bilibili. Pass the song title as keyword (Chinese is fine) and it resolves the most-played (order=play) result through the Bilibili API, navigates jarvis' own window straight to that BV URL (no vision, no clicks), turns OFF the danmaku, sets the lowest quality (item labelled 360P 流畅, width 640, height follows the source aspect), starts playback with a trusted click on 播放/暂停 (video.play() alone is blocked by Chrome autoplay policy), resets to 0:00 because Bilibili resumes at the last watched position, then polls: playback time must advance, and reaching the end is signalled by the BV id in the page URL changing (连播 fires at the end). When the song ends, the window jarvis started is killed (only pids jarvis recorded at launch; the user's own windows are never touched). Returns every step with evidence; a miss is reported as a miss. Pass a direct BV URL as url when you already have one. **Call it ONCE per request** — the returned text already covers 解析/导航/关弹幕/最低分辨率/时间前进/播完/关窗; calling it a second time replays the song from 0:00 (measured 11:12: the model called play_music twice in one request, keyword then url, and played the same song twice).",
         "parameters": {"type": "object", "properties": {
             "keyword": {"type": "string",
                         "description": "Song title to search, e.g. 月声尽,心灯明. Preferred for song requests."},
@@ -180,7 +201,7 @@ TOOL_SCHEMAS = [
     # --- Apps & processes ---
     {"type": "function", "function": {
         "name": "open_app",
-        "description": "Open an installed app on this machine. Matches a local app table of ~227 entries (scanned from the Start Menu plus system apps), so Chinese names, English process names and pinyin all work. When several entries are close, it reports the candidates instead of picking one — ask the user which one.",
+        "description": "Open an installed **desktop program** on this machine (微信, 记事本, notepad, chrome.exe). Matches a local app table of ~227 entries (Start Menu + system apps), so Chinese, English and pinyin names work; several close matches are reported as candidates instead of being picked silently. **Do not use it for web pages**: 打开浏览器 / 打开b站 / 打开github / 打开自定义站点 go through `open_site`; never improvise a page by typing text into whatever window is focused.",
         "parameters": {"type": "object", "properties": {
             "name": {"type": "string",
                      "description": "Pass the name exactly as heard: Chinese (记事本), English (notepad, chrome) or pinyin (jishiben). Do not translate or substitute a name the user did not say."},

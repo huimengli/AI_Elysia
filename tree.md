@@ -9,7 +9,7 @@
 
 结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/` 被忽略；现役唤醒 ONNX（v0.9 / v1.0c，含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：502
+### 文件数（git ls-files --cached --others --exclude-standard）：513
 ```
 ./
   .gitignore
@@ -200,6 +200,7 @@ records/
   2026-11-17-20-16-55.md
   2026-11-17-21-13-04.md
   2026-11-17-22-05-05.md
+  2026-11-18-10-17-23.md
   AI_Benchmark.md
   JARVIS_STATE.md
   PROJECT_SUMMARY.txt
@@ -472,6 +473,17 @@ tests/2026-11-17-18-46-00_cc/
   record_2.md
   record_3.md
   record_4.md
+tests/2026-11-18-10-17-23_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
 training/
   _chk_feat_stats.py
   _chk_jieba_fast.py

@@ -226,6 +226,26 @@ def _system_prompt() -> str:
         "- For typing in fields: click_at the field first, then type_text\n"
         "- Use press_key for keyboard shortcuts (ctrl+t, alt+f4, etc)\n"
         "- If a tool fails, try once more before giving up\n\n"
+        "Routing for 打开 X (records/2026-11-18-10-17-23.md):\n"
+        "- 打开浏览器 / 打开github / 打开b站 / 打开百度 / 打开任何站点名（含用户自定义对象名）"
+        "→ **open_site**; never open_app for a web page (open_app for a web name matches the "
+        "app table and lands on nonsense like a Sandboxie launcher, measured 10:41 round 1).\n"
+        "- 打开微信/记事本/notepad 这类**桌面程序** → open_app; if it reports a launcher stub "
+        "or several candidates, report that plainly, do not pick one yourself.\n"
+        "- 搜索 → web_search (it opens baidu, bing fallback); 暂停播放/恢复播放/关闭音乐 → music_control.\n"
+        "- 暂停播放 / 恢复播放 / 关闭音乐 = **only `music_control`** (pause/resume/close). The tool "
+        "refuses `media_control`, `click_at`, `press_key`, `scroll_screen`, `type_text`, `run_python` "
+        "under these words (measured 11:44: after a refusal the model clicked (0,0) and pressed "
+        "ctrl+c; the video was never paused). If `music_control` is refused, report the refusal — "
+        "do not improvise an action.\n"
+        "- 搜索/查询类请求**只调用 web_search**：不要顺手播歌。`play_music` 只在用户明确说"
+        "播放/听歌/放歌/来一首时才调用（11:07 实测：用户说「搜索 爱莉希雅 歌曲」，模型自作主张"
+        "调 play_music(keyword='爱莉希雅') 把搜索页换成视频播放，这是越界）。\n"
+        "- 要看搜索结果用 `read_screen` / `find_on_screen`（我起的浏览器窗口读得到）。"
+        "**不要 `run_python` 抓网页**（11:14 实测模型写 bs4，`ModuleNotFoundError`，"
+        "结果一个没拿到）。需要时间/日期才调 get_time，没被问不要调。\n"
+        "- Stop after the tool gives evidence; do not pad with get_open_windows / press_key / "
+        "run_python once the result is in hand.\n\n"
         "Always reply in Simplified Chinese (简体中文) unless the user explicitly asks for another language. "
         "Answer in 1-3 sentences unless more is clearly needed. "
         "For 现在几点 / 今天几号 / 日期 questions call get_time, never get_weather. "
@@ -489,8 +509,75 @@ def _call_llm(full_messages: list[dict]) -> str:
         return _call_ollama_provider(provider, temperature, full_messages)
 
 
+_PLAY_VERBS = ("播放", "播", "放歌", "放一首", "来一", "听", "唱", "bgm", "音乐来")
+_DANGER_WORDS = ("锁屏", "锁定", "锁屏", "关机", "重启", "休眠", "睡眠", "lock", "power", "shutdown", "reboot")
+_last_user_text = [""]  # 可变容器：分发层的越界闸门读它
+_PLAYED = [False]  # 本轮是否已播过一次歌（play_music 闸门）
+
+
 def _exec_tool_with_retry(name: str, args: dict) -> str:
     """Execute a tool, retry once on failure."""
+    # **硬闸门**（11:12 自曝，tests/2026-11-18-10-17-23_cc/record_5.md 轮 5/5b）：用户只说
+    # 「搜索…」，2B 模型连着两轮自作主张调 `play_music`（还先补 media_control(pause)）。
+    # 提示词压不住，所以在分发层拒绝执行——话里没有播放动词就不放歌，如实告诉模型。
+    if name == "play_music":
+        u = _last_user_text[0]
+        if u and not any(v in u for v in _PLAY_VERBS):
+            return (f"没有播歌：这句话里没有播放指令（原文「{u[:40]}」）。"
+                    f"要播歌请说「播放…」「来一首…」「听…」；搜索/查询我不会自作主张放歌。")
+        if u and u.startswith("打开") and any(v in u for v in ("页", "网站", "站点", "浏览器", "网")):
+            # 11:56 自曝（record_9.md 轮 19）：「打开我的播歌页」里的「播」撞了 `_PLAY_VERBS`，
+            # 闸门放行，模型真去播歌（BV11a411R7AM）而没打开 config.yaml 里的自定义对象
+            # `我的播歌页`。这是**动词假阳性**：「打开 + …页/网站/浏览器」是开对象，不是播歌。
+            return (f"没有播歌：「{u[:30]}」是**打开对象**的指令，该调 `open_site`"
+                    "（用户自定义站点在 config.yaml 的 `sites:` 里，用户名字优先），"
+                    "不是播放指令 —— 「播歌页」里的「播」撞了播放动词，我不拿它当播放。")
+        if _PLAYED[0]:
+            # 22:05 播歌唯一性 + 11:20 轮 6c 实测（模型连调两次 play_music，同一首歌
+            # 从 0:00 播两遍，第二遍还多杀一次窗口）：一轮里只允许一次播放，第二次拒。
+            return ("这一句已经播过一次歌了，**不再重复播放**（22:05 同一时刻只允许 1 个"
+                    "播歌窗口）。第一次的证据已在上面，直接引用它回复。")
+        _PLAYED[0] = True
+    if name == "media_control":
+        # 11:32 自曝（record_7.md 轮 7-10）：「暂停播放」「恢复播放」「关闭音乐」全被模型
+        # 派给 `media_control`（系统媒体键，回「媒体操作已执行」但**没有回读**，证明不了
+        # 当前视频被暂停），`music_control`（CDP 回读 paused）一次都没被调用。
+        u = _last_user_text[0]
+        if u and any(v in u for v in ("播放", "音乐", "视频", "暂停", "恢复", "关闭")) \
+                and not any(v in u for v in ("下一首", "上一首", "静音", "音量")):
+            return ("没有按系统媒体键：这句话是**播放控制**，请用 `music_control`"
+                    "（pause 暂停 / resume 恢复 / close 关闭我自己起的窗口），"
+                    "它会回读 `video.paused` 作证据；`media_control` 是系统媒体键，"
+                    "「已执行」三个字证明不了当前视频被暂停。")
+    if name in ("click_at", "press_key", "scroll_screen", "type_text", "run_python"):
+        # 11:44 自曝（record_7.md 轮 8c）：`media_control` 被闸门挡回、提示让它用
+        # `music_control`，模型转手调 `click_at (0,0)` + `press_key ctrl+c` 凑数，
+        # 「暂停播放」始终没落到 CDP 回读。播放控制话术下不接受这类凑数动作。
+        u = _last_user_text[0]
+        site_open = u.startswith("打开") and any(v in u for v in ("页", "网站", "站点", "浏览器", "网", "github", "b站", "b 站"))
+        if (u and any(v in u for v in ("播放", "音乐", "视频"))
+                and any(v in u for v in ("暂停", "恢复", "关闭", "续播"))) or site_open:
+            return (f"没有执行「{tool_label(name)}」：这句话是"
+                    f"{'打开指定对象' if site_open else '播放控制'}（原文「{u[:40]}」），"
+                    f"该调的是 {'`open_site`（自定义对象在 config.yaml `sites:`）' if site_open else '`music_control`（pause/resume/close）'}"
+                    "，它会给出地址/标题或 `video.paused` 的回读证据。点坐标、按键、滚轮、敲字、"
+                    "找屏幕、跑代码都不算打开/暂停/恢复/关闭。")
+    if name == "kill_process":
+        # Q29/Q32/Q34 只授权关**我自己起的 pid**。`kill_process("chrome")` 会连你
+        # 自己的窗口一起杀（11:20 轮 6c 实测：模型在播完后自己补了这句）。
+        tgt = str(args.get("name", "")).lower().removesuffix(".exe")
+        if tgt in ("chrome", "msedge", "edge", "browser", "firefox"):
+            return (f"没有杀 {args.get('name')}：`kill_process` 按进程名杀，会连**你自己**"
+                    f"的浏览器窗口一起杀。授权范围（Q29/Q32/Q34）只允许我关**我自己起的"
+                    f"pid**，播完的窗口由 `play_music` / `music_control(action=close)` 收尾。")
+    # **危险工具闸门**（11:12 自曝，record_6.md 轮 6b）：没人让它锁屏，模型自己调了
+    # `lock_screen`，回「已锁定屏幕。」——用户人不在电脑前。锁屏/关机/重启这类
+    # **不可逆的系统操作只在用户话里明确出现时才允许执行。
+    if name in ("lock_screen", "power_command"):
+        u = _last_user_text[0]
+        if u and not any(v in u for v in _DANGER_WORDS):
+            return (f"没有执行「{tool_label(name)}」：这句话里没有锁屏/关机/重启的意思"
+                    f"（原文「{u[:40]}」）。这类操作只在你明确说「锁屏/关机/重启」时才做。")
     result = dispatch(name, args)
     if "执行失败：" in result and result.startswith("工具「"):
         time.sleep(0.5)
@@ -538,6 +625,24 @@ def handle_wake() -> None:
 
 
 def _handle_wake_inner() -> None:
+    """唤醒流水线 + **音乐 ducking**（records/2026-11-18-10-17-23.md 第 1 项：「音乐播放时
+    如果触发应该暂停音乐,录音结束后恢复(或直到'爱莉希雅'回复完成后恢复）」）。
+
+    触发点 = 唤醒命中（不是录音结束）；恢复点 = 回复（TTS）播报完成后。`finally` 保证
+    空转录、低质量转录、`_Aborted`（中止指令/打断）、异常都走恢复，**不许静音卡死**。
+    只碰我自己起的窗口（CDP 9333 只在我起的实例上监听），没播放就如实说。
+    """
+    from jarvis.tools.browser_cdp import duck
+
+    note = duck("pause")
+    print(f"[Duck] {note}")
+    try:
+        _handle_wake_body()
+    finally:
+        print(f"[Duck] {duck('resume')}")
+
+
+def _handle_wake_body() -> None:
     global _stt_recording
     # Mark the turn as recording from the very start: `is_recording()` gates the
     # wake barge-in abort (wake.py 121-132), and the flag used to be set only
@@ -629,6 +734,8 @@ def _process_request(user_text: str, source: str = "voice") -> str:
     _check_abort()
     _play_beep()
     event_log.log("user", user_text, source)
+    _last_user_text[0] = user_text  # 越界闸门读这份原文（main._exec_tool_with_retry）
+    _PLAYED[0] = False  # 每句只允许一次 play_music（22:05 播歌唯一性）
     _broadcast({"type": "user", "text": user_text})
     _broadcast({"type": "status", "message": "思考中…"})
 

@@ -411,3 +411,19 @@ o_speech_seconds）本批未实施，仍挂在 todo。
 「无法语音唤醒」是**现象不是模型失效**：`[ABORT] set by listen_for_wake_word:212` + `Stopped. (voice interrupt)` 自停，峰照常触发。
 顺带抓到的驱动教训：**驱动连上前说话会被采样窗漏掉**（前 90 s WS 零消息；日志另有 3 次唤醒 + 3 次转录全空）→ 以后每轮「我喊『说』你再说」。
 关联 `record_11.md`、`hard_bug.md` **HB-048**（未修）、`records/2026-11-17-22-05-05.md`（音乐唯一性新规则）。20 轮语音进度：**1-10 已跑（1-4 PASS、5 部分、6-10 FAIL）+ 轮 11 FAIL**，轮 12-20 明天继续。
+
+## 2026-11-18-12-07 · 批次 tests/2026-11-18-10-17-23_cc（非语音 37 条记录）
+- **通过**：2a 打开浏览器、2b 打开微信（只打开）、2c 自定义对象（19b FAIL→19c PASS）、2d 搜索核心（baidu）、
+  2e github、2f b站、暂停播放（CDP 回读 paused=True）、恢复播放（paused=False）、关闭音乐（关后我起的窗口数 0）、
+  播歌唯一性（≤1）、窗口上限（只数我起的，全程 ≤1）。
+- **未测/未复现**（照口径写未测）：bing 兜底（baidu 从未被挡）、语音 ducking 真人验收、语音 20 轮 12-20、
+  到达结尾（两次都在 t+93/105 s CDP 断读 = Chrome 实例死亡处，如实记 False，没有说成播完）。
+- **本轮核心产出**：CDP Page.navigate 主路径 + **扫全部标签读地址**作判据；profile 路径认 pid 作窗口身份
+  （pid 随实例漂移）；	askkill 不杀进程树（曾误杀 Weixin）；分发层硬闸门（小模型不听提示词：越界播歌、
+  锁屏、kill_process(chrome)、media_control 无回读、click_at (0,0)/ctrl+c 凑数全实测过）；
+  **诚实拒绝里列出可用名字**能把编造名字的小模型拉回正确条目（19b→19c）；ideo.play() 先于 toggle 点击
+  （toggle 把已在播的视频点成暂停）；断读重连（断读 ≠ 到达结尾）。
+- **事故（自曝，全部落盘）**：jarvis17 进程死亡（HB-049，无退出码证据）、web.py 接不住
+  WebSocketDisconnected（已修）、我两次把 if name == "kill_process": 头部吃掉、一次吃掉
+  def evaluate 头部、一次删掉 play_music 结尾两行、一次写出**不存在的** _visible_windows_all()
+  —— 都补回并 py_compile 验证。

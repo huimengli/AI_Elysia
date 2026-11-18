@@ -73,6 +73,16 @@ def open_app(name: str) -> str:
     不等于应用存在 —— `Popen('打开记事本')` 这种直接抛，而 `Popen('code')` 在没装时也会抛，
     但 `Popen` 成功启动一个立刻退出的程序老实现也算成功）。多候选**如实列出，不静默乱选**。
     """
+    # 2a（records/2026-11-18-10-17-23.md）：「打开浏览器」= 开**我自己起的**浏览器窗口
+    # （profile 认 pid、CDP 9333 可验证），不是启动系统默认浏览器。轮 1（10:41，
+    # tests/2026-11-18-10-17-23_cc/record_1.md）实测 `open_app('浏览器')` 匹配到应用表
+    # 「在沙盒中运行网页浏览器」（Sandboxie `Start.exe default_browser`），回读进程名
+    # `Start` 被当成功 —— 启动器存根，页面根本没验到。所以浏览器词**先走 open_site**。
+    _BROWSER_WORDS = {"浏览器", "browser", "网页浏览器", "上网", "浏览器"}
+    key0 = name.strip().lower().replace(" ", "")
+    if key0 in _BROWSER_WORDS:
+        r = open_site("浏览器")
+        return f"「{name}」按浏览器口径走 open_site（我自己起的窗口 + 地址证据）：\n{r}"
     cands = apps_match(name)
     if len(cands) > 1:
         # **同一个程序**判据是 exe 文件名，不是 launch 字符串：`Notepad`（开始菜单
@@ -249,6 +259,7 @@ def open_url(url: str) -> str:
     then poll the window list for title evidence. Only a real title counts as
     success; otherwise report honestly.
     """
+    import json
     import time
 
     raw = url
@@ -270,6 +281,7 @@ def open_url(url: str) -> str:
     # typing into the user's browser — measured 2026-11-17 11:40 the reuse branch
     # matched the DSH browser window (pid 16732, absent from PID_FILE, counted 0).
     from jarvis.tools.desktop import _visible_windows, focus_window
+    from jarvis.tools.browser_cdp import pages
 
     # Reuse / navigate **only jarvis-started windows** (user authorisation 2026-11-17 12:01,
     # need_user Q32-1). Round 1 (14:36, tests/2026-11-16-12-18-00_music_cc/record_12.md)
@@ -278,19 +290,25 @@ def open_url(url: str) -> str:
     # log claimed 复用 without ever navigating. A window title cannot identify a Bilibili
     # page at all (titles carry no BV id), so page identity is read through CDP
     # (`location.href`) — that is the only real evidence.
+    # 2026-11-18 10:30: the scan covers **all** tabs (10:27 实测 `open_site('github')` 的
+    # 复读一直是 `https://www.baidu.com/`，因为 `open_cdp("")` 只取第一个 page target =
+    # 后台标签)。中文标题也不含 URL 关键词（「百度一下，你就知道」不含 `baidu`），
+    # 所以**地址证据是主判据**，标题只作参考。
     mine = _jarvis_windows()
     ident = _url_identity(url)
     if mine:
-        addr, aerr = _cdp_address()
-        if ident and ident in addr:
+        ps = pages()
+        hit = [(t, a) for t, a in ps if ident and ident in a]
+        if hit:
             t = mine[0][2]
             return (f"复用我自己起的窗口：{focus_window(t)}\n"
-                    f"页面地址证据：{addr}（含 {ident}），没有导航")
+                    f"页面地址证据（扫全部标签）：{hit[0][1]}（含 {ident}），"
+                    f"标题「{hit[0][0][:40]}」，没有导航")
         nav = navigate_url(url)
-        addr2, aerr2 = _cdp_address()
-        ok = bool(ident) and ident in addr2
-        return (f"我起过窗口，当前地址 {addr}{'（'+aerr+'）' if aerr else ''} 不含目标 {ident}，"
-                f"已导航：{nav}\n复读地址：{addr2}{'（'+aerr2+'）' if aerr2 else ''}，"
+        ps2 = pages()
+        ok = [(t, a) for t, a in ps2 if ident and ident in a]
+        return (f"我起过窗口，当前标签地址 {[a for _, a in ps]} 不含目标 {ident}，"
+                f"已导航：{nav}\n复读全部标签地址：{[a for _, a in ps2]}，"
                 f"导航{'成功' if ok else '未证实'}")
 
     # Window limit (user rule 20:09: **只限 jarvis 起的窗口 ≤3** — the user's own
@@ -337,7 +355,23 @@ def open_url(url: str) -> str:
         waited = 0.0
         last = ""
         recorded = None
+        ident = _url_identity(url)
         while waited < 12.0:
+            # 主判据 = 我起实例里有标签的**地址**含目标（中文标题永远不含 URL 关键词，
+            # 「百度一下，你就知道」不含 `baidu` —— 10:27 实测的假阴性）。
+            hit2 = [(t, a) for t, a in pages() if ident and ident in a]
+            if hit2:
+                # 窗口 pid：用 profile 认 pid（第 2 项口径），窗口标题只作参考
+                w = _jarvis_windows()
+                if w:
+                    p = w[0][1]
+                    if p not in _launched_pids:
+                        _launched_pids.append(p)
+                        _save_pids(_launched_pids)
+                    recorded = p
+                return (f"{how}，并复读到**页面地址证据**：{hit2[0][1]}"
+                        f"（含 {ident}，标题「{hit2[0][0][:40]}」，扫全部标签，"
+                        f"用了 {waited:.1f} 秒，记录窗口 pid {recorded} 为我起的窗口）")
             hit, last = _window_evidence(keys)
             if hit:
                 # The Popen pid is a launcher that exits at once; the window
@@ -355,7 +389,7 @@ def open_url(url: str) -> str:
                         f"用了 {waited:.1f} 秒，记录窗口 pid {recorded} 为我起的窗口）")
             time.sleep(1.0)
             waited += 1.0
-        return (f"{how}，但 12 秒内没有复读到匹配 {sorted(keys)} 的窗口标题，"
+        return (f"{how}，但 12 秒内**没有页面地址含 {ident} 的标签**，窗口标题也没有匹配 {sorted(keys)}，"
                 f"页面可能没有真的打开，请确认。当前窗口列表：{last[:200]}")
 
     launched = webbrowser.open(url)
@@ -552,6 +586,7 @@ def navigate_url(url: str) -> str:
     19:52: the focused window's title stayed put while an unrelated window's
     title counted as "changed").
     """
+    import json
     import time
 
     raw = url
@@ -562,6 +597,7 @@ def navigate_url(url: str) -> str:
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
     keys = _url_keys(url)
+    ident = _url_identity(url)
     # **Only windows jarvis launched are navigable** (user authorisation 2026-11-17
     # 12:01, Q32-1). Measured 2026-11-17 11:40: picking the first visible browser
     # window focused pid 15416 (the DSH browser window, absent from PID_FILE) and
@@ -572,42 +608,35 @@ def navigate_url(url: str) -> str:
         return (f"我自己起的浏览器窗口 0 个（浏览器窗口共 {total} 个）。"
                 f"**你的窗口我不聚焦、不输入**，{url} 未打开；要我自己起窗口请用 open_url"
                 f"（上限 {WINDOW_LIMIT}，只数我的窗口）。")
-    from jarvis.tools.desktop import focus_window, press_key, type_text, _visible_windows
 
-    # Prefer my window that already carries this site, so the typed URL lands in
-    # the page jarvis is driving, not in a window of the user's.
-    hwnd, pid, base = next((w for w in mine if any(k in w[2].lower() for k in keys)), mine[0])
-    step = focus_window(base)
-    if "找不到" in step:
-        return f"导航失败：{step}"
-    if "拒绝" in step:
-        # System kept the foreground: typing here goes into whatever app the user
-        # is looking at, not into this window's address bar. Do not type.
-        return f"导航中止：{step}（URL 未敲入任何窗口：{url}）"
-    keys_pressed = press_key("ctrl+l")
-    time.sleep(0.4)
-    typed = type_text(url)
-    entered = press_key("enter")
+    # **CDP `Page.navigate` 是主路径**（丙方案口径，19:47 授权；轮 4 实测键盘路线不可靠：
+    # tests/2026-11-18-10-17-23_cc/record_4.md，同一 Chrome 实例带着「要恢复页面吗？」/
+    # 「无法更新 Chrome」弹窗抢焦点，12 秒地址仍是 baidu）。无焦点、无键盘、无视觉、无点击。
+    from jarvis.tools.browser_cdp import navigate as cdp_navigate, pages
 
-    def title_of(hwnd) -> str | None:
-        for h, p, t in _visible_windows():
-            if h == hwnd:
-                return t
-        return None
-
+    v, e = cdp_navigate(url)
+    if e and "连不上" in e:
+        # 我的窗口没有 CDP 端口（多半是用户起的窗口），键盘路线也照旧如实报
+        return (f"CDP 用不了（{e}），没有导航任何窗口。我起的窗口："
+                f"{[(p, t[:30]) for _, p, t in mine]}")
+    ok = []
     waited = 0.0
     while waited < 12.0:
+        ps = pages()
+        ok = [(t, a) for t, a in ps if ident and ident in a]
+        if ok:
+            break
         time.sleep(1.0)
         waited += 1.0
-        now = title_of(hwnd)
-        if now is None:
-            return (f"导航中断：被聚焦的窗口「{base}」（进程 {pid}）在 {waited:.1f} 秒后"
-                    f"消失了，无法判定是否跳转（{typed}）。请确认。")
-        if now != base:
-            return (f"已在被聚焦的窗口导航：基准「{base}」（进程 {pid}）-> 现在「{now}」"
-                    f"（{keys_pressed}，{typed}，{entered}，用了 {waited:.1f} 秒）")
-    return (f"已把 {url} 送进地址栏（{keys_pressed}，{typed}，{entered}），但 12 秒内"
-            f"**被聚焦的窗口**标题没变（仍是「{base}」（进程 {pid}）），页面可能没真的跳转，请确认。")
+    first = json.loads(v) if v else {}
+    if ok:
+        return (f"已用 CDP `Page.navigate` 导航我自己起的窗口：{url}\n"
+                f"导航瞬间复读：{json.dumps(first, ensure_ascii=False)}\n"
+                f"复读全部标签（{waited:.1f} 秒）：{[a for _, a in ok]}（含 {ident}），**导航成功**")
+    return (f"已用 CDP `Page.navigate` 发出 {url}，导航瞬间复读"
+            f"「{json.dumps(first, ensure_ascii=False)}」，12 秒后全部标签地址 "
+            f"{[a for _, a in pages()]} **不含 {ident}，导航未证实**（页面可能被拒绝、被重定向，"
+            f"或我起的窗口已不在）。没有关闭、没有猜成功。")
 
 
 def first_bilibili_video(keyword: str) -> str:
@@ -757,7 +786,8 @@ def play_music(url: str, keyword: str = "", close_at_end: bool = True, max_wait:
     import time
 
     from jarvis.tools.browser_cdp import (PLAY_RECT_JS, READY_JS, SETUP_JS, STATE_JS,
-                                          evaluate, kill_recorded_pid, open_cdp)
+                                          RESUME_JS, evaluate, kill_recorded_pid,
+                                          open_cdp, pages)
 
     raw = url
     # 2026-11-17 19:25 fix（`tests/2026-11-17-18-46-00_cc/record_1.md` 轮 1 暴露）：
@@ -855,7 +885,9 @@ def play_music(url: str, keyword: str = "", close_at_end: bool = True, max_wait:
 
     cur, serr = read()
     if cur is None:
-        return "\n".join(log) + [f"读不到页面状态，没有动任何设置：{serr}"]
+        # 这里是 `str + list`（2026-11-18 10:30 自曝：已 commit 的代码里就带着，
+        # 走到这条分支必 `TypeError: can only concatenate str`），改成拼字符串。
+        return "\n".join(log) + f"\n读不到页面状态，没有动任何设置：{serr}"
     log.append(f"起始读数：{json.dumps(cur, ensure_ascii=False)}  {serr}")
 
     # 最低分辨率要几秒才落下来；**判据是「宽度 640」（最低档 360P 生效）**，高度随源视频比例
@@ -894,11 +926,21 @@ def play_music(url: str, keyword: str = "", close_at_end: bool = True, max_wait:
     target_ident = _url_identity(url)
     switched = ""
     waited = 0.0
+    reconnects = 0
     while waited < max_wait:
         time.sleep(3.0)
         waited += 3.0
         cur, serr = read()
         if cur is None:
+            # **断读重连**（HB-048 项：CDP 断读不等于到达结尾，11:46 轮 11 在 t+93s 断读后
+            # 直接判「到达结尾=False」）。pid 会随 Chrome 实例漂移，9333 上的 page target
+            # 也会换；先扫全部标签确认实例还在，连上就继续轮询；连不上 3 次才收。
+            tabs = pages()
+            if tabs and reconnects < 3:
+                reconnects += 1
+                log.append(f"断读重连 {reconnects}：扫到 {len(tabs)} 个标签（"
+                           f"{[a for _, a in tabs][:2]}），t+{int(waited)}s 继续轮询")
+                continue
             log.append(f"读数中断：{serr}（t+{int(waited)}s）")
             break
         ident = _url_identity(str(cur.get("地址") or ""))
@@ -923,6 +965,24 @@ def play_music(url: str, keyword: str = "", close_at_end: bool = True, max_wait:
             if stalled >= 10:
                 if not clicked:
                     clicked = True
+                    # **先 `video.play()` 回读，再考虑点击**（11:46 轮 11 实测，record_8.md）：
+                    # SETUP_JS 已回「已发起播放:true」，ct 30 s 没动，兜底那次「播放/暂停」toggle
+                    # 把**已经在播**的视频点成暂停 —— 45 s 时 `music_control` 回读
+                    # `paused=True, ct=7.2`。toggle 是切换键，不能当「让它播」用。
+                    s3, e3 = evaluate(RESUME_JS)
+                    if s3:
+                        d3 = json.loads(s3)
+                        if not d3.get("paused"):
+                            log.append(f"时间不前进，改用 video.play()：回读 paused=False，"
+                                       f"ct={d3.get('ct')}/{d3.get('du')}（t+{int(waited)}s，"
+                                       f"没有用 toggle 点击）")
+                            stalled = 0
+                            last_ct = d3.get("ct") if isinstance(d3.get("ct"), (int, float)) else last_ct
+                            continue
+                        log.append(f"video.play() 后仍 paused={d3.get('paused')}（ct={d3.get('ct')}），"
+                                   f"改用受信点击")
+                    else:
+                        log.append(f"video.play() 读不到（{e3}），改用受信点击")
                     c2, e2 = open_cdp("")
                     if c2 is None:
                         log.append(f"受信点击播放器不可用：{e2}")
@@ -954,13 +1014,106 @@ def play_music(url: str, keyword: str = "", close_at_end: bool = True, max_wait:
 
     if close_at_end:
         wins = _jarvis_windows()
-        mine = [(h, p, t) for h, p, t in wins if "bilibili" in t.lower()]
-        if not mine:
-            log.append("找不到我自己起的 B 站窗口（pid 记录里没有对应标题），没有关闭任何窗口。")
+        # HB-048 第 5 条（轮 11 实测「找不到我自己起的 B 站窗口，没有关闭任何窗口」）：
+        # 结尾关窗以前用「pid 对标题」，Chrome 实例 pid 会漂移（11820 → 12808），标题里也
+        # 没有 BV 身份。现在用与窗口计数同一口径（profile 认 pid，`0221012`）。
+        # 轮 6b（11:12，record_6.md）暴露这条**假阴性**：收尾时窗口明明在（pid 2736 在播，
+        # 之后漂移成 7984），`_jarvis_windows()` 却报 0。所以把两份 pid 集合一起落进日志，
+        # 下次出现假阴性时能看出是 pid 漂移还是 profile 扫描漏。
+        if not wins:
+            from jarvis.tools.desktop import _visible_windows
+            log.append("没有我起的窗口（profile 认 pid），没有关闭任何窗口。"
+                       f"证据：启动记录 {sorted(_launched_pids)} ∪ profile 扫描 "
+                       f"{sorted(_jarvis_profile_pids())}；全部可见窗口 "
+                       f"{[(p, t[:24]) for _, p, t in _visible_windows()][:12]}")
         else:
-            h, p, t = mine[0]
+            h, p, t = wins[0]
             log.append(f"关闭我自己起的窗口 pid {p}（标题「{t[:40]}」，Q29 只关 jarvis 自起窗口）："
                        f"{kill_recorded_pid(p)}")
             time.sleep(1.5)
             log.append(f"关后我起的窗口数：{len(_jarvis_windows())}")
     return "\n".join(log)
+
+
+# --- 「打开 X」与播放控制（records/2026-11-18-10-17-23.md 第 2、3 项）---
+
+# 内置站点表。`sites:` 段（config.yaml）是**用户自定义对象**（2c），优先级高于内置，
+# 以后由设置界面维护（排在 monitor 之后，同级 P2）。
+_BUILTIN_SITES = {
+    "浏览器": "https://www.baidu.com",
+    "browser": "https://www.baidu.com",
+    "b站": "https://www.bilibili.com",
+    "bilibili": "https://www.bilibili.com",
+    "bili": "https://www.bilibili.com",
+    "github": "https://github.com",
+    "百度": "https://www.baidu.com",
+    "baidu": "https://www.baidu.com",
+    "bing": "https://www.bing.com",
+}
+
+
+def _user_sites() -> dict[str, str]:
+    """`config.yaml` 的 `sites:`（用户自定义对象名 → 网址）。读不到就返回空表，
+    不影响内置映射；这条路径是以后设置界面（P2）要写的同一份数据。"""
+    import os
+
+    import yaml
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__)))), "config.yaml")
+    try:
+        with open(path, encoding="utf-8") as f:
+            cfg = yaml.safe_load(f) or {}
+        raw = cfg.get("sites") or {}
+        if not isinstance(raw, dict):
+            return {}
+        return {str(k).strip().lower(): str(v) for k, v in raw.items()}
+    except Exception:
+        return {}
+
+
+def open_site(site: str) -> str:
+    """打开用户指定的对象（2a 浏览器 / 2e github / 2f b 站 / 2c 自定义），走我自己起的
+    窗口（profile 认 pid，≤3 上限、播歌唯一性 ≤1），复用优先，导航后用 CDP 地址复读。
+
+    找不到映射就**如实说没有**，不猜网址、不猜应用；微信这类桌面程序请走 `open_app`。
+    """
+    key = (site or "").strip().lower().replace(" ", "")
+    if not key:
+        return "没有给出要打开的对象名，没有打开任何东西。"
+    user = _user_sites()
+    url = user.get(key)
+    src = "config.yaml 的 sites（用户自定义）"
+    if not url:
+        url = _BUILTIN_SITES.get(key)
+        src = "内置站点表"
+    if not url:
+        return (f"「{site}」在映射里找不到（用户自定义 {list(user)[:12]}、"
+                f"内置 {sorted(_BUILTIN_SITES)}），没有打开任何东西。"
+                f"桌面程序请用 open_app，网址请用 open_url。")
+    r = open_url(url)
+    return f"打开「{site}」→ {url}（来源：{src}）\n{r}"
+
+
+def music_control(action: str) -> str:
+    """播放控制指令（3）：`pause` 暂停当前播放的视频、`resume` 恢复、`close` 关掉播放所在
+    的浏览器窗口。只作用于我自己起的窗口（CDP 9333 + profile 认 pid，Q29/Q32/Q34），
+    你的窗口永不动。暂停/恢复都要回读 `paused`，不看页面外观。"""
+    from jarvis.tools.browser_cdp import duck, kill_recorded_pid
+
+    a = (action or "").strip().lower()
+    if a in ("pause", "暂停", "暂停播放"):
+        return duck("pause")
+    if a in ("resume", "play", "恢复", "继续播放"):
+        # `explicit=True`：这条是**用户明说的恢复指令**（轮 9 实测：暂停是 media_control
+        # 的媒体键按下的，我方的 `_duck_state` 没置位，`duck("resume")` 回「没有我暂停过的
+        # 播放，无需恢复」，视频始终没恢复）。我起窗口 + 回读 paused 为证，仍然不碰你的窗口。
+        return duck("resume", explicit=True)
+    if a in ("close", "关闭", "关闭音乐", "stop"):
+        wins = _jarvis_windows()
+        if not wins:
+            return "没有我起的窗口（profile 认 pid），没有关闭任何窗口。"
+        h, p, t = wins[0]
+        out = kill_recorded_pid(p)
+        return f"关闭我自己起的窗口 pid {p}（标题「{t[:40]}」，Q29 只关 jarvis 自起窗口）：{out}"
+    return (f"「{action}」不是可执行的播放控制（只支持 pause 暂停 / resume 恢复 / "
+            f"close 关闭音乐），没有做任何操作。")

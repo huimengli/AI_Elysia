@@ -186,6 +186,29 @@ def open_cdp(kw: str = "", port: int = CDP_PORT) -> tuple[CDP | None, str]:
         return (None, f"连 CDP websocket 失败：{e}")
 
 
+def navigate(url: str, kw: str = "", port: int = CDP_PORT) -> tuple[str, str]:
+    """CDP `Page.navigate` on one of jarvis' pages. Returns (address evidence, "").
+
+    Keyboard route (Ctrl+L + type + Enter) proved fragile in the field
+    (round 4, 10:55, tests/2026-11-18-10-17-23_cc/record_4.md): the same Chrome
+    instance had its own 「要恢复页面吗？」/「无法更新 Chrome」 dialogs, so the keystrokes
+    landed on a dialog and the address bar never moved (12 s, address stayed baidu).
+    `Page.navigate` needs no focus, no keyboard, no vision, no click.
+    """
+    c, e = open_cdp(kw, port)
+    if c is None:
+        return ("", e)
+    try:
+        r = c.send("Page.navigate", {"url": url})
+        err = (r or {}).get("error")
+        if err:
+            return ("", f"Page.navigate 被页面拒绝：{err}")
+        v, e2 = c.ev(PAGE_JS)
+        return (v, e2)
+    finally:
+        c.close()
+
+
 def evaluate(expr: str, kw: str = "", port: int = CDP_PORT) -> tuple[str, str]:
     c, e = open_cdp(kw, port)
     if c is None:
@@ -196,13 +219,43 @@ def evaluate(expr: str, kw: str = "", port: int = CDP_PORT) -> tuple[str, str]:
         c.close()
 
 
+def pages(port: int = CDP_PORT) -> list[tuple[str, str]]:
+    """我起实例里**所有**标签页的 (标题, 地址)。
+
+    2026-11-18 10:30 自曝：`open_cdp("")` 只取**第一个** page target，多标签时读到的
+    不是活动标签 —— `open_site('github')` 的复读一直是 `https://www.baidu.com/`（b站导航
+    同理）。所以验证导航必须看全部标签，不能只读第一个。
+    """
+    import json
+
+    out = []
+    for t in targets(port):
+        if t.get("type") != "page":
+            continue
+        try:
+            c = CDP(t["webSocketDebuggerUrl"])
+            try:
+                v, e = c.ev(PAGE_JS)
+                if v:
+                    d = json.loads(v)
+                    out.append((str(d.get("标题", "")), str(d.get("地址", ""))))
+            finally:
+                c.close()
+        except Exception:
+            continue
+    return out
+
+
 def kill_recorded_pid(pid: int) -> str:
     """Close a window by killing a pid jarvis recorded for itself (need_user Q29/Q32/Q34).
     Pids jarvis never recorded are refused."""
     from jarvis.tools.app_control import forget_pid, jarvis_pids
     if pid not in jarvis_pids():
         return f"pid {pid} 不在我起的窗口记录里，拒绝关闭。"
-    r = subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"],
+    # **只杀这一个 pid，不杀进程树**（11:12 自曝，record_6.md 轮 6b：`taskkill /T` 把
+    # Weixin 10788 当成 chrome pid 2736 的子进程一起杀了 —— 那是你早上开的微信，
+    # 不在我的窗口记录里）。渲染子进程会在浏览器主进程退出后自行收尾。
+    r = subprocess.run(["taskkill", "/PID", str(pid), "/F"],
                        capture_output=True, text=True)
     out = r.stdout.strip() or r.stderr.strip()
     if r.returncode == 0:
@@ -210,3 +263,66 @@ def kill_recorded_pid(pid: int) -> str:
         # points at a dead pid (21:47 self-disclosure in records/2026-11-17-20-16-55.md).
         forget_pid(pid)
     return out
+
+
+# --- 唤醒 ducking（records/2026-11-18-10-17-23.md 第 1 项）---
+
+PAUSE_JS = """(() => {
+  const v=document.querySelector('video');
+  if(!v) return JSON.stringify({有video:false});
+  const was=!v.paused && !v.ended;
+  v.pause();
+  return JSON.stringify({有video:true, 播放中:was, paused:v.paused,
+    ct:Number(v.currentTime.toFixed(1)), du:v.duration});
+})()"""
+
+RESUME_JS = """(() => {
+  const v=document.querySelector('video');
+  if(!v) return JSON.stringify({有video:false});
+  v.play();
+  return JSON.stringify({有video:true, paused:v.paused,
+    ct:Number(v.currentTime.toFixed(1)), du:v.duration});
+})()"""
+
+PAGE_JS = """(() => JSON.stringify({标题:document.title.slice(0,60),地址:location.href.slice(0,90)}))()"""
+
+# Only a pause **we** issued is resumed, so a video the user paused by hand stays paused
+# (22:05 music uniqueness + 10:17 ducking: never act on windows we did not start).
+_duck_state = {"paused": False}
+
+
+def duck(action: str = "pause", explicit: bool = False) -> str:
+    """唤醒触发时暂停我自己起窗口里的播放，回复（TTS）播报完成后恢复。
+
+    只碰我自己起的窗口：CDP 端口 9333 只在我起的实例上监听，`open_cdp` 连不上就是
+    「没有我起的窗口」，此时如实返回，绝不猜「已暂停」。恢复只针对**我暂停过的**播放，
+    你手动暂停的视频不会被我说「恢复」掉。回读 `paused` 为证，不看页面外观。
+    """
+    import json
+
+    if action == "pause":
+        s, e = evaluate(PAUSE_JS)
+        if not s:
+            return f"没有暂停任何播放（CDP 连不上：{e}）"
+        d = json.loads(s)
+        if not d.get("有video"):
+            return "没有暂停任何播放（我自己起的窗口里没有 video 元素）"
+        if d.get("播放中"):
+            _duck_state["paused"] = True
+            return (f"已暂停我自己的播放（回读 paused={d.get('paused')}，"
+                    f"ct={d.get('ct')}/{d.get('du')}）")
+        return f"没有在播，无需暂停（回读 paused={d.get('paused')}，ct={d.get('ct')}）"
+
+    if not _duck_state["paused"] and not explicit:
+        return "没有我暂停过的播放，无需恢复。"
+    s, e = evaluate(RESUME_JS)
+    if not s:
+        return f"恢复失败（CDP 连不上：{e}）"
+    d = json.loads(s)
+    was_mine = _duck_state["paused"]
+    _duck_state["paused"] = False
+    who = "我按的暂停" if was_mine else "不是按的暂停（媒体键/你手动）"
+    return (f"已恢复播放（回读 paused={d.get('paused')}，"
+            f"ct={d.get('ct')}/{d.get('du')}；暂停来源：{who}，按用户指令恢复）"
+            if explicit else
+            f"已恢复播放（回读 paused={d.get('paused')}，ct={d.get('ct')}/{d.get('du')}）")

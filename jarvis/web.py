@@ -8,6 +8,7 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from starlette.websockets import WebSocketDisconnected
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 
 from jarvis.tts import speak_streamed, stop_speaking, is_speaking
@@ -385,6 +386,13 @@ async def websocket_endpoint(ws: WebSocket):
                 abort_all()
 
     except WebSocketDisconnect:
+        if ws in _clients:
+            _clients.remove(ws)
+    except WebSocketDisconnected:
+        # 11:56 自曝（record_9.md 轮 21-23）：驱动断开后 `ws.receive_text()` 抛的是
+        # starlette 的 `WebSocketDisconnected`（「WebSocket is not connected. Need to call
+        # "accept" first.」），不是 `WebSocketDisconnect`，这条 catch 接不住，每条断连
+        # 都把栈刷进 ASGI 日志。接住它，断连不报错。
         if ws in _clients:
             _clients.remove(ws)
 

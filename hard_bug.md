@@ -42,3 +42,23 @@
   3. 转录侧：让录音拿到**整句**（ack 期间不采 / 录完再播 ack，或提高 VAD 中止门限），并在歌名缺失时**如实问用户**而不是用历史关键词；
   4. CDP 侧：断读后重连新实例，不许把「断读」当「到达结尾」。
 - **关联**：`tests/2026-11-08-20-44-17_cc/record_11.md`、`records/2026-11-17-22-05-05.md`（唯一性新规则）、`records/2026-11-17-20-16-55.md`（第 4 项 20 轮）、`0221012`（第 2、3 项）。
+
+## HB-049 · 2026-11-18-11-56 · 状态：open
+- **影响**：20 轮批次跑到轮 21-23 时 WS 连不上，**jarvis 进程已消失**（jarvis.main 无 python 进程、
+  /api/health 空回），轮 21/22/23 直接 ConnectionRefused 崩掉。
+- **现象**：.tmp\jarvis17.log 尾是连续的 [Wake] peak …/ threshold 0.75（主线程无 traceback）；
+  .tmp\jarvis17.err 只有 WS 断连的 ASGI 栈：ws.receive_text() 抛 starlette.websockets.WebSocketDisconnected
+  （「WebSocket is not connected. Need to call "accept" first.」），websocket_endpoint 的
+  xcept WebSocketDisconnect（web.py:387）**接不住这个类型**，每条断连刷一次栈。
+- **尝试**：查 health / 进程表 / 两份日志；没有主线程崩溃证据 → **进程死亡原因未证实**
+  （最可能 OOM/系统杀，24 GB 内存 + 8 GB 分页，你 2026-11-16 定过「chrome 崩溃属内存溢出，
+  需要用户注意的问题」，Q31/Q22 口径：页文件不动）。
+- **根因（已证实部分）**：WS 断连异常类型不匹配，错误日志刷爆且断连不被优雅处理；
+  进程死亡本身无证据链（隐藏 Start-Process + 重定向日志没有退出码记录）。
+- **方案**
+  1. web.py 补 xcept WebSocketDisconnected（已落地，编译通过）；
+  2. 给 jarvis 加**看门狗/退出码落盘**：外层启动脚本把退出码写进 .tmp\jarvisN.exit，
+     下次死亡就有硬证据（未做，P1）；
+  3. 每轮驱动在 WS 连不上时**如实记 FAIL 并查 health**，不把连不上算成模型失败。
+- **关联需求/测试**：records/2026-11-18-10-17-23.md、tests/2026-11-18-10-17-23_cc/record_9.md、
+  HB-047（chrome 崩溃，wontfix，Q31）、Q22（8 GB 分页不动）。
