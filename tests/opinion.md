@@ -426,3 +426,28 @@ o_speech_seconds）本批未实施，仍挂在 todo。
   WebSocketDisconnected（已修）、我两次把 if name == "kill_process": 头部吃掉、一次吃掉
   def evaluate 头部、一次删掉 play_music 结尾两行、一次写出**不存在的** _visible_windows_all()
   —— 都补回并 py_compile 验证。
+
+
+## 2026-11-18 12:44 · 批次 10:17 追加（轮 24-28，CDP 中文读取路线）
+
+- **轮 24 核心 PASS**：`web_search`（baidu）+ `read_page` 读到中文正文（标题「爱莉希雅 歌曲_百度搜索」+
+  正文栏目）；`play_music` 被动词闸门挡回（「没有播歌：这句话里没有播放指令（原文『搜索 爱莉希雅 歌曲』）」）。
+- **轮 25 PASS（P1 路线实证）**：`open_site(b站)` CDP 导航成功 + `read_page` 读出首页栏目
+  （首页/番剧/直播/游戏中心/会员购/漫画/赛事/下载客户端/动态/热门/电影/国创/…/新歌热榜）+ 视频卡片标题、
+  播放量、时长；回复照正文列出栏目。**中文 DOM 读取在真实页面成立，全程无 OCR、无视觉、无坐标**。
+- **轮 27 PASS**：`open_site` + `read_page` 再次读出首页正文；我起的窗口数 1（复用）。
+- **轮 26 FAIL → 轮 28 闸门生效**：轮 26 模型「在页面上找到『番剧』并点击」去 web_search + 两次 bs4
+  （`ModuleNotFoundError`）；加分发层闸门（话里有「点击/找到」+「页面/页」→ 拒 web_search/run_python/
+  read_screen/find_on_screen/fetch_page，指名 `find_on_page`/`click_page_text`）后，轮 28 模型**只调
+  `find_on_page`**，没越界 —— 再次证明「提示词压不住 2B，分发层硬闸门有效」。
+- **轮 28 FAIL 在我自己的代码**：`find_on_page` 崩 `'NoneType' object has no attribute 'get'`。根因是我拼接
+  JS 字符串**漏了外层 for 的右花括号** → 表达式求值 undefined → CDP 回 `null` → `json.loads('null')` = None。
+  补括号后直测命中 `找到 2 处「番剧」：[('番剧', 100, 32), ('番剧', 204, 186)]`；加防御（非 dict 如实报不崩）。
+- **未结案（HB-050）**：`click_page_text` 直测说「已用 CDP 受信点击 @(x=100,y=32)」，**地址复读没变**
+  （导航未发生）；坐标核对正确（矩形中心 = 100,32）、`elementFromPoint` 点下就是目标链接的 SPAN。
+  「页面点击能导航」**未测**，不承诺。
+- **本轮新增规矩（对我自己）**：JS 用字符串拼接必须逐段核对花括号，并先用最小表达式自测
+  （`(() => JSON.stringify({a:1}))()`）；不要在 `pwsh -c` 里塞带反引号的中文串（被 PowerShell 转义吃掉）。
+- **未测照口径写未测**：桌面中文识别（无引擎，Q37）、页面点击导航（HB-050）、到达结尾在实例存活下复现、
+  bing 兜底、语音 20 轮 12-20 + 语音 ducking 真人验收。
+

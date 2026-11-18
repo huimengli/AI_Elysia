@@ -54,3 +54,20 @@ d283fe9 test(AI): Q16 只 B 复测 v1.0c 三轮（0.65/0.70/0.72）—— 0.65 �
 - **2026-11-17 v1.2/v1.3 重训**：两次都「任一条不如 v0.9 → `config.yaml` 不动」，现役保持 `aili_xiya_v0.9.onnx` + `0.75`；
   v1.2 交集 正20/负12=32、v1.3 交集 正74/负15=89，@0.75 部署轴 13 次 10（v0.9 12）、长噪 0、环境音 0。
   数字全部来自日志；自曝三次解析 bug（`endswith('入库')` 把「不入库」判成入库、正样本 76 心算成 75、交集上界数学不可能）。
+
+- **2026-11-18 12:25-12:52 · 中文读取改走 CDP（P1 路线实证）+ 页面点击未结案（→ record_10/11.md）**：
+  本机没有可用中文 OCR（12:25 实测：WinRT 不可用、Umi-OCR 只有 Downloads 自解压包**未装**、`:50015` 无监听
+  `WinError 10061`）→ 提 **Q37** 待你裁决；我起窗口改走 CDP 读 DOM。新工具 `read_page`/`find_on_page`/
+  `click_page_text`（只碰我起窗口，无 OCR、无视觉坐标）+ 分发层闸门（「点击/找到」+「页面/页」→ 拒
+  `web_search`/`run_python`/`read_screen`/`find_on_screen`/`fetch_page`）。**实测 PASS**：轮 24（baidu 搜索页
+  中文正文读出 + `play_music` 被动词闸门挡回）、轮 25/27（B 站首页栏目与卡片读出、回复照正文列出）、
+  轮 28 模型**只调 `find_on_page`**（闸门生效，没越界）。**未结案 HB-050**：`click_page_text` 直测说
+  「已用 CDP 受信点击 @(x=100,y=32)」，坐标核对正确（`a[href=…/anime/]` 矩形中心 = 100,32、
+  `elementFromPoint` 点下就是该链接的 SPAN），**地址复读没变** → 导航未证实；下一步方案②「取 `href` +
+  `Page.navigate` 我自己起的窗口」。**自曝**：我拼接 JS **两次漏花括号**（外层 `for` 的 `}`、诊断 JS 箭头函数体的 `}`），
+  都表现为「表达式返回 `null`」（第一次误当工具逻辑 bug）；`pwsh -c` 带反引号的中文串被转义打断（追加没执行）；
+  「no-op」edit 删掉 `s, e = evaluate(RESUME_JS)` 的换行 → `SyntaxError`（第四次同类事故）。教训：JS 拼接后先用
+  最小表达式自测（`(() => JSON.stringify({a:1}))()`）。12:44 你要求「先暂停并落盘」：驱动轮次已停；
+  jarvis20 + llama `:8080` + api_v2 仍在跑（是否停来腾内存由你定）。本地 commit hash 见下一条台账。
+
+- 383ea5e docs(AI): 修复 here-string 反引号转义吃掉的字母，归档压缩 progress.md —— **已本地 commit，未 push**（rev-list = 220）

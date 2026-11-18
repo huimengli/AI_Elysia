@@ -62,3 +62,28 @@
   3. 每轮驱动在 WS 连不上时**如实记 FAIL 并查 health**，不把连不上算成模型失败。
 - **关联需求/测试**：records/2026-11-18-10-17-23.md、tests/2026-11-18-10-17-23_cc/record_9.md、
   HB-047（chrome 崩溃，wontfix，Q31）、Q22（8 GB 分页不动）。
+
+## HB-050 · 2026-11-18-12-44 · 状态：open（我暂停落盘时未结案）
+- **编号/时间**：HB-050，2026-11-18 12:40-12:44（jarvis20，WS 文本，无语音）。
+- **影响**：`click_page_text`（我起窗口里的页面点击）能否真的导航**未证实**；「页面里找字并点击」
+  这条能力现在只能记「命中坐标 + 点下元素 = 目标链接」。
+- **现象**：直测 `find_page_text("番剧", click=True)` 报「已用 CDP 受信点击『番剧』 @(x=100,y=32)」，
+  点击后复读 标题「哔哩哔哩 (゜-゜)つロ 干杯~-bilibili」 地址 `https://www.bilibili.com/` —— **地址没变**。
+  轮 28 用户话「点击页面上的番剧」，模型只调 `find_on_page`（闸门生效），工具崩在我自己的代码上。
+- **尝试与实测**：
+  1. 复现崩因：`c.ev` 返回 `'null'` → `json.loads('null')` = `None` → `.get` 崩（`'NoneType' object has no attribute 'get'`）；
+     **根因是我拼接 JS 字符串时漏了外层 `for` 的右花括号**（`if(hits.length>=5) break; }` 只闭合 `if`），
+     `return` 落进 for 体、函数体未闭合 → 表达式求值 undefined → CDP 回 `null`；补 ` }` 后立刻命中
+     `{"命中":[{"文本":"番剧","x":100,"y":32,"href":"https://www.bilibili.com/anime/"},…]}`；已加防御（非 dict 如实报）。
+  2. 坐标核对：`a[href="https://www.bilibili.com/anime/"]` 矩形 `x=86,y=0,w=28,h=64` → 中心 (100,32)；
+     `document.elementFromPoint(100,32)` → `{"点下元素":"SPAN","文本":"番剧","祖先a":"…/anime/"}`，点下就是目标链接。
+  3. 对照：DOM `a.click()`（不可信事件）同页面不导航；且同一页面两次查询该 href，一次列出 3 个、一次返回「没有该链接」
+     —— **同一页面查询不一致，原因未证实**。
+- **根因**：**未证实**。可能方向（都未验证，不写成结论）：SPA 路由对 CDP 事件的响应需要额外的 pointer/时间序列；
+  我的 `real_click` 序列（mouseMoved → 250 ms → mousePressed → 80 ms → mouseReleased）在这类导航链接上
+  是否被页面识别为一次有效点击，没有证据；我的查询语句在 SPA 重渲染后的时序敏感也可能造成「没有该链接」。
+- **方案（下一步，未开工）**：①在同一个 CDP 会话里做「点击前后连续读 `location.href` + 记录 DOM 快照」的
+  最小实验，判定是事件没被识别还是页面在点击后立刻重渲染；②若事件路线不稳，改用「找到元素后取 `href`，
+  用 `Page.navigate` 导航我自己起的窗口」（丙方案精神：无视觉、无坐标，导航成功以地址复读为证）；
+  ③`click_page_text` 在实验结论出来前，回复里必须如实说「点了、地址没变」，不承诺导航成功。
+- **关联**：tests/2026-11-18-10-17-23_cc/record_10.md、record_11.md、need_user.md Q37、progress.md P1②。

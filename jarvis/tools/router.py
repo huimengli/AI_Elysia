@@ -16,6 +16,7 @@ from jarvis.tools.desktop import (
     click_at, scroll_screen, move_mouse, read_screen, find_on_screen,
 )
 from jarvis.tools.vision import describe_screen
+from jarvis.tools.browser_cdp import read_page, find_page_text
 # `delegate_task` 已从工具面摘掉（2026-11-13 12:59 用户规矩：爱莉希雅不允许启动
 # 子智能体）。jarvis/tools/subagent.py 文件保留，只是不再暴露给模型。
 
@@ -30,6 +31,9 @@ TOOL_MAP = {
     "play_music": lambda a: play_music(a.get("url", ""), a.get("keyword", "")),
     "manage_browser_windows": lambda a: manage_browser_windows(a.get("close_extra", False)),
     "navigate_url":       lambda a: navigate_url(a["url"]),
+    "read_page":          lambda a: read_page(a.get("keyword", "")),
+    "find_on_page":       lambda a: find_page_text(a["text"]),
+    "click_page_text":    lambda a: find_page_text(a["text"], click=True),
     "get_weather":      lambda a: get_weather(a.get("location", "")),
     "get_time":         lambda _: get_time(),
     # Apps & processes
@@ -82,6 +86,9 @@ TOOL_LABELS = {
     "play_music": "播放音乐（关弹幕/最低档/播完关窗）",
     "manage_browser_windows": "管理浏览器窗口",
     "navigate_url": "导航网址",
+    "read_page": "读取我起窗口的页面文本（CDP，无 OCR）",
+    "find_on_page": "页面文本查找（CDP，无 OCR）",
+    "click_page_text": "点击页面文字（CDP 受信点击）",
     "get_weather": "查天气",
     "get_time": "看时间",
     "open_app": "打开应用",
@@ -391,6 +398,25 @@ TOOL_SCHEMAS = [
         "parameters": {"type": "object", "properties": {
             "seconds": {"type": "integer"},
             "message": {"type": "string"}}, "required": ["seconds"]}}},
+
+    {"type": "function", "function": {
+        "name": "read_page",
+        "description": "Read the text of **my own** browser window via CDP DOM (no OCR, no vision, no coordinates): returns page title, address, and the first 1200 characters of `innerText`. Use it to see search results / page content after `web_search`/`open_site`. If CDP is unreachable it reports that honestly (no page = no reading).",
+        "parameters": {"type": "object", "properties": {
+            "keyword": {"type": "string", "description": "Optional keyword to pick which of my tabs to read; omit for the active one."}},
+            "required": []}}},
+
+    {"type": "function", "function": {
+        "name": "find_on_page",
+        "description": "Locate text inside **my own** browser window by DOM text matching (not OCR). Returns up to 5 hits with page CSS coordinates, plus the list of text the page actually shows if nothing matches. Use this instead of `find_on_screen`, whose OCR engine is unavailable on this machine.",
+        "parameters": {"type": "object", "properties": {
+            "text": {"type": "string"}}, "required": ["text"]}}},
+
+    {"type": "function", "function": {
+        "name": "click_page_text",
+        "description": "Click the first DOM element in **my own** browser window whose text matches. Trusted CDP mouse events at `getBoundingClientRect` coordinates (page CSS px, not vision coordinates); afterwards it reads back title + address as evidence. Use for links/buttons in my window; never for desktop apps.",
+        "parameters": {"type": "object", "properties": {
+            "text": {"type": "string"}}, "required": ["text"]}}},
 
     # Subagent 已摘掉：delegate_task 不再暴露给模型（2026-11-13 12:59 规矩）
 ]

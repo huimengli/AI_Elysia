@@ -326,3 +326,73 @@ def duck(action: str = "pause", explicit: bool = False) -> str:
             f"ct={d.get('ct')}/{d.get('du')}；暂停来源：{who}，按用户指令恢复）"
             if explicit else
             f"已恢复播放（回读 paused={d.get('paused')}，ct={d.get('ct')}/{d.get('du')}）")
+
+
+# ─── 我起窗口的页面读取（2026-11-18 12:30，P1 中文「OCR」替代路线） ───
+# 本机没有可用中文 OCR：`Windows.Media.Ocr` 在这台机器不可用（wow-sight selftest 早测过），
+# Umi-OCR 只有 Downloads 里的自解压安装包、没有安装、:50015 无监听（12:25 实测连接被拒）。
+# 所以对**我自己起的浏览器窗口**，文本一律走 CDP 读 DOM（无 OCR、无视觉、无坐标猜测）；
+# 桌面（非我起窗口）的中文识别仍是 P1，挂 Q37 等你决定是否常驻 Umi-OCR。
+
+PAGE_TEXT_JS = """(() => JSON.stringify({标题:document.title.slice(0,60),
+  地址:location.href.slice(0,90),
+  正文:document.body.innerText.slice(0,1200)}))()"""
+
+
+def read_page(kw: str = "", port: int = CDP_PORT) -> str:
+    """读我自己起的浏览器窗口的可见文本（innerText），带标题+地址复读。"""
+    s, e = evaluate(PAGE_TEXT_JS, kw, port)
+    if not s:
+        return f"读不到页面文本（CDP 连不上：{e}）"
+    d = json.loads(s)
+    return (f"我起的浏览器窗口 标题「{d['标题']}」 地址 {d['地址']}\n"
+            f"页面正文（innerText 前 1200 字）：\n{d['正文']}")
+
+
+def _find_js(text: str) -> str:
+    t = json.dumps(text, ensure_ascii=False)
+    return ("(() => { const t=" + t + "; const sel='a,button,[role=button],h1,h2,h3,h4,li';"
+           " const hits=[]; for(const el of document.querySelectorAll(sel)){"
+           " const s=(el.innerText||'').trim(); if(!s) continue;"
+           " if(s.includes(t) || t.includes(s)){"
+           " const r=el.getBoundingClientRect(); if(r.width<1||r.height<1) continue;"
+           " hits.push({文本:s.slice(0,40), x:Math.round(r.x+r.width/2),"
+           " y:Math.round(r.y+r.height/2), href:(el.href||'').slice(0,70)});"
+           " if(hits.length>=5) break; } }"
+           " const cand=[]; for(const el of document.querySelectorAll(sel))"
+           "{const s=(el.innerText||'').trim(); if(s){cand.push(s.slice(0,30));"
+           " if(cand.length>=10) break;}}"
+           " return JSON.stringify({命中:hits, 候选:cand}); })()")
+
+
+def find_page_text(text: str, click: bool = False, kw: str = "",
+                   port: int = CDP_PORT) -> str:
+    """在我起的窗口里按 DOM 文本找元素；click=True 时用 CDP 受信点击点它，点击后复读标题/地址。
+    坐标是页面 CSS px（`getBoundingClientRect`），不是视觉坐标。"""
+    c, e = open_cdp(kw, port)
+    if c is None:
+        return f"读不到页面（CDP 连不上：{e}）"
+    try:
+        v, e2 = c.ev(_find_js(text))
+        if not v:
+            return f"页面查找失败：{e2}"
+        d = json.loads(v)
+        if not isinstance(d, dict):
+            return f"页面查找没有拿到结构化结果（JS 返回 {str(d)[:40]}），如实报告，不猜。"
+        hits = d.get("命中") or []
+        if not hits:
+            return (f"页面里找不到「{text}」（我起的窗口，DOM 文本匹配，没有 OCR）。"
+                    f"页面上能看到的条目：{d.get('候选')}")
+        if not click:
+            return (f"找到 {len(hits)} 处「{text}」："
+                    f"{[(h['文本'], h['x'], h['y']) for h in hits[:3]]}（页面坐标，可点）")
+        h = hits[0]
+        c.real_click(h["x"], h["y"])
+        time.sleep(1.0)
+        v2, e3 = c.ev(PAGE_JS)
+        d2 = json.loads(v2) if v2 else {}
+        return (f"已用 CDP 受信点击「{h['文本']}」 @(x={h['x']},y={h['y']})"
+                f"（页面坐标，非视觉坐标），点击后复读 标题「{d2.get('标题')}」"
+                f" 地址 {d2.get('地址')} {e3}")
+    finally:
+        c.close()

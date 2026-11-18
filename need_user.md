@@ -273,3 +273,21 @@ signed-in profile」）→ **jarvis 的 profile 没有 B 站登录 cookie**。
   2. 你把凭据交给我并以加密方式存（AGENTS 第 0 节：敏感信息加密存储、禁止 commit、禁止上传），
      我再实现「读凭据 → 填微信登录框」这条路径。
 - 未选定前，2b 的登录部分不推进实现。
+
+## Q37 · 2026-11-18-12-28 · 状态：wait
+- **问题**：本机**没有可用中文 OCR**。`read_screen` / `find_on_screen` 走 `Windows.Media.Ocr`
+  （`TryCreateFromUserProfileLanguages`），这台机器 WinRT OCR 不可用（wow-sight selftest 早测过）；
+  Umi-OCR 只有 `C:\Users\楼听\Downloads\Umi-OCR_Paddle_v2.1.5.7z.exe`（自解压安装包，未安装），
+  `:50015` 无监听（12:25 实测连接被拒）。实测现场：轮 20 `find_on_screen("打开浏览器")`
+  → 「屏幕上找不到『打开浏览器』（已尝试向下滚动）」。
+- **我做了什么**：**我起的浏览器窗口**的读取改走 CDP 读 DOM（`read_page` / `find_on_page` /
+  `click_page_text`，12:27 编译通过、jarvis19 已载入），不依赖 OCR、不碰你的窗口、无视觉坐标。
+  **桌面（非我起窗口）的中文识别仍然没有引擎**，所以 P1「`find_on_screen` 中文 OCR」这条卡在引擎上。
+- **要你确认（二选一）**：
+  1. **安装并常驻 Umi-OCR HTTP 模式（`:50015`）**（我可以把 `read_screen` 接到它的 API，
+     桌面中文就能识别；需要你允许安装、并决定它常驻吃多少内存 —— 24 GB 内存 + 8 GB 分页，
+     现 Chrome 播放期已经会崩，加引擎要你来权衡）；
+  2. **桌面中文识别记为「不做」**（P1 关闭，只保留我起窗口的 CDP 读取），我照口径写未测。
+- **关联**：records/2026-11-18-10-17-23.md、progress.md P1 待办②、tests/2026-11-18-10-17-23_cc/opinion.md、
+  HB-040 家族（`find_on_screen` 中文）。
+

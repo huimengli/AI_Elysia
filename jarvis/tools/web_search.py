@@ -31,7 +31,8 @@ def search(query: str, max_results: int = 5) -> str:
         log.append(f"页面证据：标题「{title}」地址 {addr}")
         if name == "baidu" and "baidu.com/s?" in addr:
             return (f"搜索「{query}」已用 baidu 打开浏览器：{url}\n" + "\n".join(log) +
-                    "\n要看结果请用 read_screen / find_on_screen。")
+                    "\n要看结果请用 `read_page`（我起窗口的 DOM 中文读得到）；"
+                    "这台机器没有中文 OCR，`read_screen`/`find_on_screen` 对中文必然找不到。")
         log.append(f"baidu 落不到搜索页（标题「{title}」），换 bing 兜底")
     return (f"搜索「{query}」两个引擎都没有落到搜索页，**没有搜到**。\n" + "\n".join(log))
 

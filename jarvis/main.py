@@ -241,9 +241,12 @@ def _system_prompt() -> str:
         "- 搜索/查询类请求**只调用 web_search**：不要顺手播歌。`play_music` 只在用户明确说"
         "播放/听歌/放歌/来一首时才调用（11:07 实测：用户说「搜索 爱莉希雅 歌曲」，模型自作主张"
         "调 play_music(keyword='爱莉希雅') 把搜索页换成视频播放，这是越界）。\n"
-        "- 要看搜索结果用 `read_screen` / `find_on_screen`（我起的浏览器窗口读得到）。"
-        "**不要 `run_python` 抓网页**（11:14 实测模型写 bs4，`ModuleNotFoundError`，"
-        "结果一个没拿到）。需要时间/日期才调 get_time，没被问不要调。\n"
+        "- 要看我起的浏览器窗口的内容用 `read_page`（CDP 读 DOM 文本，带标题+地址复读）；"
+        "要在页面里找字/点链接用 `find_on_page` / `click_page_text`（DOM 文本匹配 + CDP 受信点击）。"
+        "**这台机器没有可用中文 OCR**（WinRT OCR 不可用、Umi-OCR 未安装），`read_screen`/"
+        "`find_on_screen` 对中文必然找不到（12:00 实测「屏幕上找不到『打开浏览器』」），"
+        "浏览器内容一律走 CDP，不要拿它凑数。**不要 `run_python` 抓网页**（11:14 实测模型写 bs4，"
+        "`ModuleNotFoundError`，结果一个没拿到）。需要时间/日期才调 get_time，没被问不要调。\n"
         "- Stop after the tool gives evidence; do not pad with get_open_windows / press_key / "
         "run_python once the result is in hand.\n\n"
         "Always reply in Simplified Chinese (简体中文) unless the user explicitly asks for another language. "
@@ -562,6 +565,18 @@ def _exec_tool_with_retry(name: str, args: dict) -> str:
                     f"该调的是 {'`open_site`（自定义对象在 config.yaml `sites:`）' if site_open else '`music_control`（pause/resume/close）'}"
                     "，它会给出地址/标题或 `video.paused` 的回读证据。点坐标、按键、滚轮、敲字、"
                     "找屏幕、跑代码都不算打开/暂停/恢复/关闭。")
+# 12:31 自曝（record_10.md 轮 26）：「在页面上找到『番剧』并点击」模型去 web_search +
+    # 两次 run_python(bs4)（ModuleNotFoundError），一个链接都没读到，还把 b 站导航走。
+    # 提示词压不住 2B 模型，所以这条走分发层：找字/点击类话术只准 find_on_page / click_page_text。
+    if name in ("web_search", "run_python", "read_screen", "find_on_screen", "fetch_page"):
+        u = _last_user_text[0]
+        if u and ("点击" in u or "找到" in u) and ("页面" in u or "页" in u):
+            return (f"没有执行「{tool_label(name)}」：这句话是在**我自己起的浏览器页面里**"
+                    f"找字/点击（原文「{u[:40]}」），该调的是 `find_on_page` / `click_page_text`"
+                    "（CDP 读 DOM + 受信点击，页面坐标）。这台机器没有中文 OCR，"
+                    "bs4/requests 抓网页在这台机器没有装（实测 ModuleNotFoundError），"
+                    "web_search 只会把页面导航走，不是点击。")
+
     if name == "kill_process":
         # Q29/Q32/Q34 只授权关**我自己起的 pid**。`kill_process("chrome")` 会连你
         # 自己的窗口一起杀（11:20 轮 6c 实测：模型在播完后自己补了这句）。
