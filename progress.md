@@ -86,3 +86,5 @@ d283fe9 test(AI): Q16 只 B 复测 v1.0c 三轮（0.65/0.70/0.72）—— 0.65 �
   定性需 ≥3 独立 Model 实例取多数（HB-032）。**Umi-OCR**：窗口在跑（pid 8232）但**无监听 50015**（curl 连不上）
   → Q37 仍 `wait`，需要你在 Umi-OCR 开「HTTP 服务」并告诉我端口。自曝六条（控制字符、不存在的 cwd、GSV 路径等）
   全部落盘。本地 commit hash 见下一条台账。
+
+- 1805085 feat(AI): 页面点击导航走「取 href + Page.navigate 我自己起的窗口」，HB-050 结案 —— **已本地 commit，未 push**（rev-list = 224）
