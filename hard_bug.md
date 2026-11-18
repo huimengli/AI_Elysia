@@ -49,14 +49,14 @@
 - **现象**：.tmp\jarvis17.log 尾是连续的 [Wake] peak …/ threshold 0.75（主线程无 traceback）；
   .tmp\jarvis17.err 只有 WS 断连的 ASGI 栈：ws.receive_text() 抛 starlette.websockets.WebSocketDisconnected
   （「WebSocket is not connected. Need to call "accept" first.」），websocket_endpoint 的
-  xcept WebSocketDisconnect（web.py:387）**接不住这个类型**，每条断连刷一次栈。
+  except WebSocketDisconnect（web.py:387）**接不住这个类型**，每条断连刷一次栈。
 - **尝试**：查 health / 进程表 / 两份日志；没有主线程崩溃证据 → **进程死亡原因未证实**
   （最可能 OOM/系统杀，24 GB 内存 + 8 GB 分页，你 2026-11-16 定过「chrome 崩溃属内存溢出，
   需要用户注意的问题」，Q31/Q22 口径：页文件不动）。
 - **根因（已证实部分）**：WS 断连异常类型不匹配，错误日志刷爆且断连不被优雅处理；
   进程死亡本身无证据链（隐藏 Start-Process + 重定向日志没有退出码记录）。
 - **方案**
-  1. web.py 补 xcept WebSocketDisconnected（已落地，编译通过）；
+  1. web.py 补 except WebSocketDisconnected（已落地，编译通过）；
   2. 给 jarvis 加**看门狗/退出码落盘**：外层启动脚本把退出码写进 .tmp\jarvisN.exit，
      下次死亡就有硬证据（未做，P1）；
   3. 每轮驱动在 WS 连不上时**如实记 FAIL 并查 health**，不把连不上算成模型失败。
