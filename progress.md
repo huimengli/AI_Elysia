@@ -73,3 +73,16 @@ d283fe9 test(AI): Q16 只 B 复测 v1.0c 三轮（0.65/0.70/0.72）—— 0.65 �
 - 383ea5e docs(AI): 修复 here-string 反引号转义吃掉的字母，归档压缩 progress.md —— **已本地 commit，未 push**（rev-list = 220）
 - d6f53e0 feat(AI): 中文读取改走 CDP 读 DOM（我起窗口），加页面找字/点击闸门 —— **已本地 commit，未 push**（rev-list = 221）
 - 58e8ed8 docs(AI): 暂停落盘 —— 修正两条假数 + 记录 12:51:52 唤醒触发观察 —— **已本地 commit，未 push**（rev-list = 222）
+- **2026-11-18 20:21-20:26 · HB-050 结案 + HB-051 打开（→ record_12.md 轮 29-33）**：
+  **HB-050 结案（方案②端到端 PASS，轮 33）**：`click_page_text` 受信点击后地址复读不变 → 取命中元素 `href`
+  + CDP `Page.navigate` 导航我自己起的窗口，地址 `https://www.bilibili.com/` → `https://www.bilibili.com/anime/`、
+  标题变「番剧 - …」，回复同时写明「点击后地址没变（导航未发生）」与导航后地址；直测（12:53）+ 模型调用（轮 33）
+  两次证据。轮 33 工具链（`open_site` → `find_on_page` 诚实报找不到+列条目 → `click_page_text`）全由 2B 自选，
+  我起窗口数 1（pid 15124）。轮 31b 是诚实样本（你关了我的窗口 → 我起窗口数 0，CDP 如实报连不上，
+  闸门把 `run_python`（想遍历 chrome 进程）挡回）。
+  **HB-051（open）**：你 20:21 逐字「我刚刚没说话,但是好像触发了3次(播放视频)」；jarvis22 336 行
+  `Wake word detected!` 4 次、越线 peak 9/257（0.78-0.82，阈值 0.75）、`Transcription empty` 3 次；自声抑制
+  只覆盖 jarvis 自己的 TTS，**浏览器视频音频不在 ducking 范围**。方案①播放期间麦克风门 ducking **等你授权**，
+  定性需 ≥3 独立 Model 实例取多数（HB-032）。**Umi-OCR**：窗口在跑（pid 8232）但**无监听 50015**（curl 连不上）
+  → Q37 仍 `wait`，需要你在 Umi-OCR 开「HTTP 服务」并告诉我端口。自曝六条（控制字符、不存在的 cwd、GSV 路径等）
+  全部落盘。本地 commit hash 见下一条台账。

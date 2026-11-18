@@ -291,3 +291,17 @@ signed-in profile」）→ **jarvis 的 profile 没有 B 站登录 cookie**。
 - **关联**：records/2026-11-18-10-17-23.md、progress.md P1 待办②、tests/2026-11-18-10-17-23_cc/opinion.md、
   HB-040 家族（`find_on_screen` 中文）。
 
+
+## Q37 答复（2026-11-18 12:58）· 状态：wait（等你的 OCR 地址）
+
+- **你的答复（12:58，逐字）**：「**本机有OCR,晚点找出来发你地址**」
+- **我的处理**：Q37 保持 `status: wait`（等地址），照口径把「桌面（非我起窗口）中文识别」记为**未测**，
+  不推进、不猜引擎；`read_screen`/`find_on_screen` 在拿到地址前不动它（现有 WinRT 路线对中文必然找不到，已实测）。
+- **拿到地址后我要做的**（先写清，不偷跑）：把 `_ocr_image()` 接到你的 OCR HTTP API（带坐标的文本块），
+  `read_screen`/`find_on_screen` 用它的返回算命中；验收判据 = **在真实屏幕上找到中文条目 + 坐标**，
+  找不到如实报；跑 3 轮验证（AGENTS §2：验证 3 轮），每轮 `record_i.md` + 累积 `tests/opinion.md`。
+- **同时**：`read_page`/`find_on_page`/`click_page_text`（我起窗口，CDP 读 DOM）已实测成立，不依赖 OCR，继续用。
+- **另**：12:58 你定「**保持全跑**」→ jarvis20 + llama `:8080 -c 24576` + GSV `:9880` 不杀，4 灯全绿；
+  内存空闲 7.0 GB、分页空闲 2.9 GB 是我实测的当前余量（播放期 Chrome 崩过 = Q31 内存溢出，HB-047 wontfix）。
+- **关联**：need_user.md Q37、record_10.md、record_11.md、progress.md P1②、todo.md。
+

@@ -387,12 +387,29 @@ def find_page_text(text: str, click: bool = False, kw: str = "",
             return (f"找到 {len(hits)} 处「{text}」："
                     f"{[(h['文本'], h['x'], h['y']) for h in hits[:3]]}（页面坐标，可点）")
         h = hits[0]
+        v1, _ = c.ev(PAGE_JS)
+        d1 = json.loads(v1) if v1 else {}
         c.real_click(h["x"], h["y"])
         time.sleep(1.0)
         v2, e3 = c.ev(PAGE_JS)
         d2 = json.loads(v2) if v2 else {}
-        return (f"已用 CDP 受信点击「{h['文本']}」 @(x={h['x']},y={h['y']})"
+        base = (f"已用 CDP 受信点击「{h['文本']}」 @(x={h['x']},y={h['y']})"
                 f"（页面坐标，非视觉坐标），点击后复读 标题「{d2.get('标题')}」"
                 f" 地址 {d2.get('地址')} {e3}")
+        # HB-050（12:44 实测：坐标对、点下就是目标链接的 SPAN，但地址没变）。方案②：
+        # 取命中元素的 href，用 Page.navigate 导航**我自己起的窗口**，地址复读为证。
+        href = str(h.get("href") or "")
+        if d2.get("地址") == d1.get("地址") and href.startswith("http"):
+            r = c.send("Page.navigate", {"url": href})
+            err = (r or {}).get("error")
+            time.sleep(1.0)
+            v3, e4 = c.ev(PAGE_JS)
+            d3 = json.loads(v3) if v3 else {}
+            if err:
+                return base + f"\n点击后地址没变（导航未发生），取 href {href} 走 Page.navigate 被页面拒绝：{err}"
+            return (base + f"\n点击后地址没变（导航未发生）→ 取 href {href} 用 CDP Page.navigate"
+                    f" 导航我自己起的窗口，复读 标题「{d3.get('标题')}」 地址 {d3.get('地址')} {e4}"
+                    f"（导航前地址 {d1.get('地址')}）")
+        return base
     finally:
         c.close()

@@ -22,7 +22,7 @@
 - [x] 12:25 `read_page` / `find_on_page` / `click_page_text` 落地（CDP 读 DOM，只碰我起窗口，无 OCR、无视觉坐标）；轮 24/25/27 **实证中文正文读出**
 - [x] 12:38 分发层闸门：话里有「点击/找到」+「页面/页」→ 拒 `web_search`/`run_python`/`read_screen`/`find_on_screen`/`fetch_page`，指名 `find_on_page`/`click_page_text`（轮 26 FAIL → 轮 28 模型只调 `find_on_page`，没越界）
 - [x] 12:43 修我漏的花括号（外层 `for` 右括号 → JS 求值 undefined → CDP 回 `null` → `json.loads('null')=None` → `.get` 崩）+ 非 dict 防御；直测命中 `2 处「番剧」 (100,32) (204,186)`
-- [ ] **HB-050 未结案**：`click_page_text` 点了、坐标对（矩形中心 100,32）、`elementFromPoint` 点下就是目标链接的 SPAN，**地址复读没变（导航未证实）**；方案②「取 `href` + `Page.navigate` 我自己起的窗口」待做
+- [x] **HB-050 结案（2026-11-18 20:24，方案②端到端 PASS）**：`click_page_text` 点了、坐标对（矩形中心 100,32）、`elementFromPoint` 点下就是目标链接的 SPAN，**地址复读没变（导航未证实）**；方案②「取 `href` + `Page.navigate` 我自己起的窗口」待做
 - [ ] **Q37 待你裁决**：本机无中文 OCR（WinRT 不可用、Umi-OCR 只有 Downloads 自解压包未装、`:50015` 无监听）→ 装并常驻 Umi-OCR，还是桌面中文识别记「不做」
 
 ## P1 · 唤醒 / 训练
@@ -51,3 +51,15 @@
 - **2b 打开微信** `[ ]`：只打开 PASS（轮 23 复读进程 Weixin），登录被 **Q36** 阻塞；
 - **第 1 项 ducking** `[ ]`：机械 + CDP 回读证据到位（`[Duck] 已暂停…paused=True` / `已恢复…paused=False`），真人麦克风验收未测；
 - 本地 commit **2ab1ebe**（37 轮收口）+ **383ea5e**（控制字符修复 + progress 归档）；`tree.md` 516 文件。
+
+- [ ] 2026-11-18 12:58 Q37 你答『本机有OCR，晚点发地址』→ 拿到地址后把 _ocr_image() 接你的 OCR HTTP API，验收 = 真实屏幕找到中文条目+坐标，跑 3 轮验证（→ need_user.md Q37）
+- [ ] 2026-11-18 12:58 你定『保持全跑』→ jarvis20 + llama :8080 + GSV :9880 不杀（内存空闲 7.0 GB、分页空闲 2.9 GB 是实测余量）
+
+
+- [ ] **P2 · 项目整体迁移**（你 19:57 定）：C: 盘剩余空间不是你腾的（19:57 实测 6.1 GB），之后你会把整个项目迁移；**Monitor 开工前必须先迁移**。迁移涉及路径/日志/.venv/GSV api_v2 工作目录，迁移后需重跑 4 灯复核 + tree.md 重建。
+- [ ] 更正我自己的记录口径：12:56 我把「C: 剩余 3.8 GB」写成「你说空间紧」，19:57 实测 6.1 GB 且你明确「不是我腾出来的」—— 数字照实测记，归因不猜。
+
+
+- [ ] **2026-11-18 20:21 播放中的视频触发唤醒（你确认没说话，3 次）→ HB-051**：方案①播放期间给麦克风门加 ducking（播完恢复，需你授权）；定性需 ≥3 独立 Model 实例取多数（HB-032）。播放音频这一类输入没进过 20 轮，照口径写未测。（→ records/2026-11-18-20-21-00.md、hard_bug.md HB-051）
+- [ ] 2026-11-18 19:57 服务重启实测：GSV 真实路径 `C:\Users\楼听\Desktop\git\JarvisAi\GPT-SoVITS-main\api_v2.py`（我先前用了不存在的 Desktop\GPT-SoVITS-main → spawn ENOENT，自曝）。以后起 GSV 用这个绝对路径 + Start-Process 带重定向。
+- [ ] 2026-11-18 19:57 HB-049 补证据：jarvis21 也死了（health 空、无监听、.err 尾 WinError 10061）。退出码落盘（`.tmp\jarvisN.exit`）仍未做 = 第 3 项未开工。
