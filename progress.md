@@ -72,3 +72,4 @@ d283fe9 test(AI): Q16 只 B 复测 v1.0c 三轮（0.65/0.70/0.72）—— 0.65 �
 
 - 383ea5e docs(AI): 修复 here-string 反引号转义吃掉的字母，归档压缩 progress.md —— **已本地 commit，未 push**（rev-list = 220）
 - d6f53e0 feat(AI): 中文读取改走 CDP 读 DOM（我起窗口），加页面找字/点击闸门 —— **已本地 commit，未 push**（rev-list = 221）
+- 58e8ed8 docs(AI): 暂停落盘 —— 修正两条假数 + 记录 12:51:52 唤醒触发观察 —— **已本地 commit，未 push**（rev-list = 222）
