@@ -72,3 +72,4 @@ b4dda29 docs(AI): onnx_opinion 按 21:13 新规矩重排进根目录，收口 v1
 - 2026-11-18 20:42 本台账归档到 `ai_buckup/progress.md_2026-11-18-20-42-00.md` 后压缩（100 → 64 行），归档动作记在此。
 
 - 709d87a docs(AI): HB-051 定性成立（10 秒录音法 + HB-032 三实例），progress.md 归档压缩 —— **已本地 commit，未 push**（rev-list = 226）
+- 1505453 docs(AI): 1 小时录音法的部分分布 + 停电窗口口径 + 两条自曝 —— **已本地 commit，未 push**（rev-list = 228）
