@@ -1,10 +1,6 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-19-14-45-00（v0.9b 复训产物 + 12 段真实负样本 + 3 轮对照落盘）。新增/变化：
-- `openWakeWord/output/aili_xiya_v0.9b/`（`aili_xiya_v0.9b.onnx` 13852 B + `.onnx.data` 1310720 B，入 Git 白名单照 v0.9/v1.0c 现成写法）、`openWakeWord/train_config_v09b.yaml`、`training/_t2_v09b_features.py`（照 `_t2_v11_features.py` 的 merge 做法）；
-- `tests/2026-11-19-14-26-09_v09b/`（`record_1.md`-`record_3.md` + `opinion.md`；3 轮 = 依次构造的 1 个独立实例，`threshold 0.75` 不动）；
-- `records/2026-11-19-13-10-55.md`（13:10 复训需求逐字、14:26「听过了,全都是真实的负样本」= 授权破入库规矩、12 段越线位置表、v0.9b 3 轮结论）、`onnx_opinion.md`（追加前已备份 `ai_buckup/onnx_opinion.md_2026-11-19-14-41-00.md`）、`tests/opinion.md`（523 行）；
-- 上一版（2026-11-17-22-20-00 语音 20 轮轮 11 落盘 + 音乐唯一性新规则 + onnx_opinion 移入根目录）的条目保留在下方：
+更新时间: 2026-11-17-22-20-00（语音 20 轮轮 11 落盘 + 音乐唯一性新规则 + onnx_opinion 移入根目录）。新增/变化：
 - `onnx_opinion.md`（**移入根目录**，你 21:13 定的 6 块规则：规则口径 / 版本表 / 部署 3 轮实测表 / 峰值数据表 / 结论 / 追加内容单行；每次追加前先备份到 `ai_buckup/onnx_opinion.md_<ts>.md`）；
 - `records/2026-11-17-21-13-04.md`（onnx_opinion 规则逐字）、`records/2026-11-17-20-16-55.md`（第 1-4 项顺序）、`records/2026-11-17-22-05-05.md`（**音乐唯一性**新规则 + 收尾交接）；
 - `tests/2026-11-08-20-44-17_cc/record_11.md`（语音轮 11 FAIL：转录吃尾 `[You] 播放到` → LLM 用历史「心灯明」播了之前指定的歌）+ 该批 `opinion.md`；
@@ -13,7 +9,7 @@
 
 结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/` 被忽略；现役唤醒 ONNX（v0.9 / v1.0c，含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：531
+### 文件数（git ls-files --cached --others --exclude-standard）：532
 ```
 ./
   .gitignore
@@ -216,6 +212,7 @@ records/
   2026-11-18-20-31-00.md
   2026-11-19-10-23-00.md
   2026-11-19-13-10-55.md
+  2026-11-19-15-18-21.md
   AI_Benchmark.md
   JARVIS_STATE.md
   PROJECT_SUMMARY.txt
