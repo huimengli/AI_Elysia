@@ -50,3 +50,7 @@ llm/models/*.gguf
 *.gguf
 *.exe
 *.dll
+!openWakeWord/output/aili_xiya_v0.9b/
+openWakeWord/output/aili_xiya_v0.9b/*
+!openWakeWord/output/aili_xiya_v0.9b/aili_xiya_v0.9b.onnx
+!openWakeWord/output/aili_xiya_v0.9b/aili_xiya_v0.9b.onnx.data
