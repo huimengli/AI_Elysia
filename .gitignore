@@ -54,3 +54,10 @@ llm/models/*.gguf
 openWakeWord/output/aili_xiya_v0.9b/*
 !openWakeWord/output/aili_xiya_v0.9b/aili_xiya_v0.9b.onnx
 !openWakeWord/output/aili_xiya_v0.9b/aili_xiya_v0.9b.onnx.data
+# 2026-11-19 18:24 你的选择「只入三实例交集的 9 段（推荐）」→ v0.9c 训练产物入库（照上面同款 4 行惯例，
+# 连 .onnx.data 一起，克隆才能加载）。**3 轮逐实例真人 [5,5,4] < v0.9 基线 [5,6,5] → 铁门槛 FAIL，建议废，
+# config.yaml 指向不动（v0.9 + 0.75 现役）**；入库只为留可复核的产物，不代表启用。
+!openWakeWord/output/aili_xiya_v0.9c/
+openWakeWord/output/aili_xiya_v0.9c/*
+!openWakeWord/output/aili_xiya_v0.9c/aili_xiya_v0.9c.onnx
+!openWakeWord/output/aili_xiya_v0.9c/aili_xiya_v0.9c.onnx.data

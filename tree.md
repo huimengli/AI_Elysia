@@ -9,7 +9,7 @@
 
 结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/` 被忽略；现役唤醒 ONNX（v0.9 / v1.0c，含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：532
+### 文件数（git ls-files --cached --others --exclude-standard）：533
 ```
 ./
   .gitignore
@@ -578,6 +578,7 @@ training/
   _t2_v06_features.py
   _t2_v06_noisy_clips.py
   _t2_v09b_features.py
+  _t2_v09c_features.py
   _t2_v10_clips.py
   _t2_v10_features.py
   _t2_v10b_features.py
