@@ -74,3 +74,4 @@ b4dda29 docs(AI): onnx_opinion 按 21:13 新规矩重排进根目录，收口 v1
 - 709d87a docs(AI): HB-051 定性成立（10 秒录音法 + HB-032 三实例），progress.md 归档压缩 —— **已本地 commit，未 push**（rev-list = 226）
 - 1505453 docs(AI): 1 小时录音法的部分分布 + 停电窗口口径 + 两条自曝 —— **已本地 commit，未 push**（rev-list = 228）
 - 3d433b0 docs(AI): HB-051 1 小时 360 段跑完 —— 越线率 2.5%、HB-032 12 段 10 True/2 False —— **已本地 commit，未 push**（rev-list = 230）
+- 242e4a3 docs(AI): 12 段越线位置表（听点已切）+ 入库规矩硬冲突摆明 —— **已本地 commit，未 push**（rev-list = 232）
