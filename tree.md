@@ -9,7 +9,7 @@
 
 结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/` 被忽略；现役唤醒 ONNX（v0.9 / v1.0c，含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：533
+### 文件数（git ls-files --cached --others --exclude-standard）：596
 ```
 ./
   .gitignore
@@ -120,6 +120,9 @@ openWakeWord/output/aili_xiya_v0.9/
 openWakeWord/output/aili_xiya_v0.9b/
   aili_xiya_v0.9b.onnx
   aili_xiya_v0.9b.onnx.data
+openWakeWord/output/aili_xiya_v0.9c/
+  aili_xiya_v0.9c.onnx
+  aili_xiya_v0.9c.onnx.data
 openWakeWord/output/aili_xiya_v1.0c/
   aili_xiya_v1.0c.onnx
   aili_xiya_v1.0c.onnx.data
@@ -504,6 +507,70 @@ tests/2026-11-19-14-26-09_v09b/
   record_1.md
   record_2.md
   record_3.md
+tests/2026-11-19-19-10-10_v09/
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-19-19-10-10_v09b/
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-19-19-10-10_v09c/
+  opinion.md
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
 training/
   _chk_feat_stats.py
   _chk_jieba_fast.py

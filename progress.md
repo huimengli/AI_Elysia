@@ -89,3 +89,4 @@ b4dda29 docs(AI): onnx_opinion 按 21:13 新规矩重排进根目录，收口 v1
   - Q38（数据积累路线）保持 status: wait；真人件不在训练集（时长可重叠对数 0/38）。
 
 - **089c251** docs(AI): rebuild tree.md for record 2026-11-19-15-18-21 —— tree.md 重建 532 文件 / 603 行。**已本地 commit，未 push**。
+- 2026-11-19 18:46 5dbf73f test(model): 复训 v0.9c（只入三实例交集 9 段）— 3 轮逐实例真人 [5,5,4] < v0.9 [5,6,5] -> 铁门槛 FAIL，建议废 v0.9c，config.yaml 不动；v0.9b 仍是唯一过线候选。**已本地 commit，未 push**（rev-list 240，main ahead 84）。自曝第 17-24 处。
