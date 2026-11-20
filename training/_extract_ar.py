@@ -3,8 +3,8 @@
 import os
 import tarfile
 
-TAR = r"C:\Users\楼听\Desktop\git\JarvisAi\_gsv_main.tar.gz"
-DEST_DIR = r"C:\Users\楼听\Desktop\git\JarvisAi\GPT-SoVITS-main"
+TAR = r".\_gsv_main.tar.gz"
+DEST_DIR = r".\GPT-SoVITS-main"
 PREFIX = "GPT-SoVITS-main/AR/"
 
 with tarfile.open(TAR) as tf:

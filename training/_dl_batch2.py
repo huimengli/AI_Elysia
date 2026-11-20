@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, ".")
-sys.path.insert(0, r"C:\Users\楼听\Desktop\git\JarvisAi\training")
+sys.path.insert(0, r".\training")
 from _dl_wheels import pick_wheel  # noqa: E402
 
 NAMES = [

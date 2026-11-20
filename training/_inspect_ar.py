@@ -3,7 +3,7 @@
 import io
 import tarfile
 
-TAR = r"C:\Users\楼听\Desktop\git\JarvisAi\_gsv_main.tar.gz"
+TAR = r".\_gsv_main.tar.gz"
 with tarfile.open(TAR) as tf:
     for m in tf.getmembers():
         if (m.name.startswith("GPT-SoVITS-main/GPT_SoVITS/AR/")

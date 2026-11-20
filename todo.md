@@ -84,6 +84,7 @@
 - [ ] **2026-11-20 13:20 迁移完整性校验（校验完成，路径修正待你定）**：新址 F:\git\JarvisAi 与原址 C:\Users\楼听\Desktop\git\JarvisAi 全量比对——141236 文件、相对路径 100% 一致、逐文件 SHA-256 全量 0 处不一致、目录 13776/13776、`.git` 2257 文件/13,276,709 B 全同、`main` = 3084bb2。**文件零缺失**。阻塞点：全树 269 处硬编码旧路径，其中 `config.yaml`(7) + `.venv/activate.bat`/`.venv-gsv/activate.bat` 会让清空后起服务直接坏（`jarvis/` 与 3 个 .bat 用 `%~dp0` 不受影响）。Q39 等你选：只改运行必需 / 全量替换 / 不改直接清空。(→ records/2026-11-20-13-20-00.md)
 - [x] **2026-11-20 13:44 config.yaml 改相对地址（完成）**：照你「我的名字不应该出现在数据中的, 将其改为相对地址」——删掉 6 行的 `C:\Users\楼听\Desktop\git\JarvisAi\` 前缀（:2/:9/:14/:18/:24 唤醒 ONNX、:45 sherpa model_dir、:62 llama gguf），改写成 `openWakeWord/output/<模型>/<模型>.onnx`、`.hf-cache/sherpa-paraformer-zh`、`llm/models/Qwen3.5-2B-Q4_K_M.gguf`；阈值与 label 不动。验证：config 里 `楼听` 与 `u697C` 归 0，7 个相对路径逐一实测存在。起服务复测未做（沙箱跑不了命令）。(→ records/2026-11-20-13-44-31.md)
 - [ ] 2026-11-20 13:55 姓名残留清扫（等你选范围，Q40）：照实测逐行扫 14 种扩展名，共 560 行含 楼听/u697C。代码/配置侧 366（其中旧路径 322）：openWakeWord/train_config* 112/16 文件、training/ 73/42、.tmp/ 169/99、.venv + .venv-gsv 各 4（pyvenv.cfg 的 home/executable/command + activate.bat；home 指向 AppData Python312，要消名字只能重建 venv）、_wheels/ 3 个 ps1 Set-Location、jarvis/tools/desktop.py:309 一处示例报错文本。历史 md 194（tests/ 91、records/ 32、ai_buckup/ 24、need_audio.md 39 等）—— AGENTS.md 规定只能追加，改历史内容需你逐字授权。范围未定前不动。(→ records/2026-11-20-13-44-31.md、need_user.md Q40)
+- [ ] 2026-11-20 15:12 姓名残留清扫：能改相对地址的改，不行就算了（157 文件 323 处旧前缀 → 相对；venv 文本改新址；41,093 个 .pyc 删掉重建；123 个 launcher .exe + pyvenv.cfg 的 home + 历史 md + .git 对象 照「就算了」不动）(→ records/2026-11-20-15-12-16.md)
 
 
 

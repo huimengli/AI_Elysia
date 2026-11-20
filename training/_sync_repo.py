@@ -5,7 +5,7 @@ import os
 import shutil
 import tarfile
 
-ROOT = r"C:\Users\楼听\Desktop\git\JarvisAi"
+ROOT = r"."
 REPO = os.path.join(ROOT, "GPT-SoVITS-main")
 TAR = os.path.join(ROOT, "_gsv_main.tar.gz")
 STAGE = os.path.join(ROOT, "_gsv_staged")

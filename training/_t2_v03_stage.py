@@ -1,5 +1,5 @@
 import os, shutil
-ROOT = r"C:\Users\楼听\Desktop\git\JarvisAi"
+ROOT = r"."
 OWW = os.path.join(ROOT, "openWakeWord", "output")
 V2 = os.path.join(OWW, "aili_xiya_v0.2")
 V1 = os.path.join(OWW, "aili_xiya_v0.1")

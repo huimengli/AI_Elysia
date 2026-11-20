@@ -5,7 +5,7 @@ import time
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
-sys.path.insert(0, r"C:\Users\楼听\Desktop\git\JarvisAi\training")
+sys.path.insert(0, r".\training")
 os.chdir(ROOT)
 
 import yaml

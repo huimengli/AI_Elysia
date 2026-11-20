@@ -1,11 +1,11 @@
 import traceback, numpy as np, glob
-out = open(r"C:\Users\楼听\Desktop\git\JarvisAi\_chk_predict_pipeline_out.txt", "w", encoding="utf-8")
+out = open(r".\_chk_predict_pipeline_out.txt", "w", encoding="utf-8")
 def P(s): out.write(str(s)+"\n"); out.flush()
 P("START")
 try:
     import openwakeword
     from openwakeword.utils import AudioFeatures
-    base = r"C:\Users\楼听\Desktop\git\JarvisAi\openWakeWord\output\aili_xiya_v0.1"
+    base = r".\openWakeWord\output\aili_xiya_v0.1"
     model = openwakeword.Model(wakeword_models=[base + "\\" + "aili_xiya_v0.1.onnx"])
     # find test clips
     pos = sorted(glob.glob(base + "\\positive_test\\*.wav"))[:3]

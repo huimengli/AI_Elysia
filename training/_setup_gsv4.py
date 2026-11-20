@@ -14,11 +14,11 @@ Lessons from pwsh-77 / pwsh-89:
 import subprocess
 import sys
 
-ROOT = r"C:\Users\楼听\Desktop\git\JarvisAi"
-PIP = [r"C:\Users\楼听\Desktop\git\JarvisAi\.venv-gsv\Scripts\pip.exe",
+ROOT = r"."
+PIP = [r".\.venv-gsv\Scripts\pip.exe",
        "install", "-i", "https://pypi.tuna.tsinghua.edu.cn/simple",
        "--no-cache-dir", "--timeout", "60", "--retries", "3"]
-PY = r"C:\Users\楼听\Desktop\git\JarvisAi\.venv-gsv\Scripts\python.exe"
+PY = r".\.venv-gsv\Scripts\python.exe"
 TIMEOUT = 900
 
 

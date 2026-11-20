@@ -6,8 +6,8 @@ import urllib.request
 
 URL = ("https://ghproxy.net/https://github.com/RVC-Boss/GPT-SoVITS/"
        "archive/refs/tags/v2.tar.gz")
-DEST_DIR = r"C:\Users\楼听\Desktop\git\JarvisAi\GPT-SoVITS-main"
-TAR = r"C:\Users\楼听\Desktop\git\JarvisAi\_gsv_v2.tar.gz"
+DEST_DIR = r".\GPT-SoVITS-main"
+TAR = r".\_gsv_v2.tar.gz"
 
 print("downloading v2 tag...", flush=True)
 req = urllib.request.Request(URL, headers={"User-Agent": "Mozilla/5.0"})

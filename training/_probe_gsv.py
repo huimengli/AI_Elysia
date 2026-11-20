@@ -3,7 +3,7 @@
 import os
 import sys
 
-now = r"C:\Users\楼听\Desktop\git\JarvisAi\GPT-SoVITS-main"
+now = r".\GPT-SoVITS-main"
 sys.path.append(now)
 sys.path.append(os.path.join(now, "GPT_SoVITS"))
 

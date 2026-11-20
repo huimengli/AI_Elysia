@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Update records/2026-10-13-11-55.md with assert-guarded replacements."""
-P = r"C:\Users\楼听\Desktop\git\JarvisAi\records\2026-10-13-11-55.md"
+P = r".\records\2026-10-13-11-55.md"
 s = open(P, encoding="utf-8").read()
 
 # 1) status line (no leading space in file — verified by char dump)

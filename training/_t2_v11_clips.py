@@ -18,7 +18,7 @@ import wave
 import numpy as np
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-ROOT = r"C:\Users\楼听\Desktop\git\JarvisAi"
+ROOT = r"."
 SR = 16000
 CHUNK = 1280
 THR = 0.70

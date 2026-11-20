@@ -14,7 +14,7 @@ import os
 import sys
 from difflib import SequenceMatcher
 
-ROOT = r"C:\Users\楼听\Desktop\git\JarvisAi"
+ROOT = r"."
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "training"))
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")

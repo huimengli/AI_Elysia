@@ -29,7 +29,7 @@ import subprocess
 import sys
 import urllib.request
 
-ROOT = r"C:\Users\楼听\Desktop\git\JarvisAi"
+ROOT = r"."
 OUT = os.path.join(ROOT, "openWakeWord", "output")
 V12 = os.path.join(OUT, "aili_xiya_v1.2")
 MODEL = "aili_xiya_v1.2"

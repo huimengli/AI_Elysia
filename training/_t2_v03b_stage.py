@@ -1,7 +1,7 @@
 import os, sys, shutil
-ROOT = r"C:\Users\楼听\Desktop\git\JarvisAi"
+ROOT = r"."
 sys.path.insert(0, ROOT)
-sys.path.insert(0, r"C:\Users\楼听\Desktop\git\JarvisAi\training")
+sys.path.insert(0, r".\training")
 import numpy as np
 from _t2_stream_features_v02 import (stream, clip_windows, load_wav,
     AudioFeatures, WARMUP, CHUNK, NFR, MAXW)

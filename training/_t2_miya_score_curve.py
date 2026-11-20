@@ -13,9 +13,9 @@ import sys
 import numpy as np
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-ROOT = r"C:\Users\楼听\Desktop\git\JarvisAi"
+ROOT = r"."
 sys.path.insert(0, ROOT)
-sys.path.insert(0, r"C:\Users\楼听\Desktop\git\JarvisAi\training")
+sys.path.insert(0, r".\training")
 SR = 16000
 CHUNK = 1280
 FPS = SR / CHUNK          # 每 chunk 0.08 s

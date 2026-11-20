@@ -1,9 +1,9 @@
 import traceback, sys
-out = open(r"C:\Users\楼听\Desktop\git\JarvisAi\_chk_feat_stats_out.txt", "w", encoding="utf-8")
+out = open(r".\_chk_feat_stats_out.txt", "w", encoding="utf-8")
 out.write("START\n"); out.flush()
 try:
     import numpy as np, random
-    base = r"C:\Users\楼听\Desktop\git\JarvisAi\openWakeWord\output\aili_xiya_v0.1"
+    base = r".\openWakeWord\output\aili_xiya_v0.1"
     def P(*a):
         out.write(" ".join(map(str,a)) + "\n"); out.flush()
     files = ["positive_features_train.npy","negative_features_train.npy","positive_features_test.npy","negative_features_test.npy","val_fp.npy"]

@@ -21,7 +21,7 @@ import numpy as np
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
-sys.path.insert(0, r"C:\Users\楼听\Desktop\git\JarvisAi\training")
+sys.path.insert(0, r".\training")
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 import _t2_stream_features_v02 as sf  # noqa: E402

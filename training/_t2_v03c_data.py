@@ -5,9 +5,9 @@
 """
 import os, sys, random
 from pathlib import Path
-ROOT = Path(r"C:\Users\楼听\Desktop\git\JarvisAi")
+ROOT = Path(r".")
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, r"C:\Users\楼听\Desktop\git\JarvisAi\training")
+sys.path.insert(0, r".\training")
 sys.path.insert(0, str(ROOT / "openWakeWord"))
 import numpy as np
 from _t2_synth_neg import make_texts, synth, _to_target_rate, _length_scale, _finalize  # seeds random=42 on import

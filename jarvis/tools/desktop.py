@@ -306,7 +306,7 @@ def screenshot(filename: str = "") -> str:
 
     HB-039（2026-11-13，`tests/2026-11-13-12-59-10_cc/record_19.md`）：老实现写到
     `~/Desktop`，服务作为 harness 后台任务启动时**桌面目录禁写** →
-    `PermissionError: [Errno 13] Permission denied: 'C:\\Users\\楼听\\Desktop\\xxx.png'`。
+    `PermissionError: [Errno 13] Permission denied: 'C:\\Users\\<user>\\Desktop\\xxx.png'`。
     现在写工作区内的 `.tmp/screens/`（沙箱允许），并在文案里给出真实路径与字节数
     （产物留在本机，我不读图 —— 零截图是 Agent 会话侧的约束）。
     """

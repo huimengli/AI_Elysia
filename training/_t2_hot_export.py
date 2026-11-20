@@ -15,7 +15,7 @@ import os
 import sys
 import time
 
-ROOT = r"C:\Users\楼听\Desktop\git\JarvisAi"
+ROOT = r"."
 sys.path.insert(0, ROOT)
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 

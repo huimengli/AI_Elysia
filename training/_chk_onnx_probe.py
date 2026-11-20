@@ -1,9 +1,9 @@
 import traceback, numpy as np
-out = open(r"C:\Users\楼听\Desktop\git\JarvisAi\_chk_onnx_probe_out.txt", "w", encoding="utf-8")
+out = open(r".\_chk_onnx_probe_out.txt", "w", encoding="utf-8")
 out.write("START\n"); out.flush()
 try:
     import onnxruntime as ort
-    base = r"C:\Users\楼听\Desktop\git\JarvisAi\openWakeWord\output\aili_xiya_v0.1"
+    base = r".\openWakeWord\output\aili_xiya_v0.1"
     sess = ort.InferenceSession(base + "\\" + "aili_xiya_v0.1.onnx", providers=["CPUExecutionProvider"])
     inp_name = sess.get_inputs()[0].name
     def P(s): out.write(s+"\n"); out.flush()
