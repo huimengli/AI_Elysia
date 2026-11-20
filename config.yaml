@@ -1,6 +1,6 @@
 wake_word:
   model: "C:\\Users\\\u697C\u542C\\Desktop\\git\\JarvisAi\\openWakeWord\\output\\\
-    aili_xiya_v0.9\\aili_xiya_v0.9.onnx"
+    aili_xiya_v0.9b\\aili_xiya_v0.9b.onnx"
   threshold: 0.75
   chunk_size: 1280
   model_options:
@@ -13,6 +13,9 @@ wake_word:
       \u97F3 fp 6 / \u5BF9\u6297 4 / \u73AF\u5883\u97F3 0\uFF0C\u9608\u503C 0.75\uFF09"
     model: "C:\\Users\\\u697C\u542C\\Desktop\\git\\JarvisAi\\openWakeWord\\output\\\
       aili_xiya_v0.9\\aili_xiya_v0.9.onnx"
+    threshold: 0.75
+  - label: "v0.9b（现役，2026-11-19 20 轮：真人 4.00 = 基线 4.00 / 新 9 段 2.00 / 旧 12 段 0.00 / 近音 1.00 / 无关 0.00，阈值 0.75；部署侧 13 次真呼唤与长噪 62.83 s 仍未测）"
+    model: "C:\\Users\\楼听\\Desktop\\git\\JarvisAi\\openWakeWord\\output\\aili_xiya_v0.9b\\aili_xiya_v0.9b.onnx"
     threshold: 0.75
   - label: "v1.0c\uFF08\u97F3\u8282\u7A97\u7EA6\u5B9A\uFF1A\u5224\u522B\u8F74\u9996\
       \u6B21\u8FBE\u6807 fp 1 / \u5BF9\u6297 3 / \u5B9A\u6807\u4E0E\u73AF\u5883 0\uFF0C\
