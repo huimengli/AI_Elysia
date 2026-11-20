@@ -84,5 +84,6 @@
 - 2026-11-20 15:48 **56f9881** `docs(AI): 重建 tree.md（602 非忽略文件，含 3 条新 record + progress 归档）` —— 照 AGENTS.md 第 2 节重建。已本地 commit，未 push（rev-list 249，main ahead 93）。
 - 自曝第 43 处：上一条 commit 的信息里我把 tree.md 的哈希写成 `56f9886`（真哈希 `56f9881`），已 `--amend` 改正为 9ff2d07。哈希要照 `git rev-parse` 取，不能凭记忆。
 - 2026-11-20 18:20 **本地起服务实测（照你的「本地起一下服务,看看能不能启动」）** —— 三台全起得来：llama :8080 加载 3.4 s + health 200；GPT-SoVITS :9880 约 77 s 起（Elysia GPT/SoVITS + roberta + hubert，cpu），真 TTS 探针 200 / 162,604 B / 32000 Hz / 2.54 s / 4,054 ms；jarvis :7860 1.7 s 起，`/api/health` 四块全 online（wake `aili_xiya_v0.9b.onnx` 0.75、whisper small warm、llama、GSV）。真 LLM 探针照 jarvis 形状 → content「收到」385 ms；照签名 `jarvis.llm.chat([…])` → `'收到'`。起的进程随我的程序结束被杀（两次实测端口全 FREE），常驻要你自己跑 `start_all.bat`。起 jarvis 期间真触发 3 次唤醒（peak 0.768/0.765/0.757，ack 播 2.26/3.32 s，录音 2.1 s 空转录），照实写、不算 3 轮验收。自曝第 44-47 处 (→ records/2026-11-20-16-26-59.md)
+- 自曝第 48 处：我起的三台服务（env 是我拼的，缺 `ALLUSERSPROFILE`）在**项目根**造了个垃圾目录 `%ALLUSERSPROFILE%\Application Data\Tencent\QQPCMgr\`（`dr.ini` 2 B + `dr_packet.dat` 0 B，创建 16:38，正好是我第一次起服务的时刻）—— 有代码把 `%ALLUSERSPROFILE%` 当字面路径写。已整目录删掉（5 项 2 字节），未进 Git。教训：**我拼的 env 和真实会话的 env 不等价**，起服务要照 `start_all.bat` 在你的会话里起，我这边起的进程随程序结束被杀、还会留下这类残渣。
 
 
