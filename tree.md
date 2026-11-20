@@ -1,15 +1,12 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-20-18-20-00（本地起服务实测后重建）。变化：新增 `records/2026-11-20-16-26-59.md`（三台服务起得来的第一手日志与探针）；`progress.md`/`todo.md` 追加本轮记录（未越 100 行阈值，暂不归档）。
+更新时间: 2026-11-20-22-14-46（台账对齐 + design v3.1 后重建）。变化：新增 `records/2026-11-20-22-14-46.md`（22:14 需求：先对齐 + 蓝屏降 P2 等复现 + Monitor 加 start_all_in_one）与 `ai_buckup/design.md_2026-11-20-22-14-46.md`（design v3.0 归档，10,772 B）；`design.md` 升 v3.1（140 行）、`hard_bug.md`（HB-050 状态更新 + HB-052，148 行）、`need_user.md`（Q41 状态更新，381 行）、`todo.md`（P2 加 start_all_in_one + 两处口径对齐，92 行）、`progress.md`（P2 段与 open bug 段随之改）。各台账未越 100 行阈值，本次不归档。上一条 tree（18:20，605 行）漏列 `records/2026-11-20-20-25-21.md` 与 `records/2026-11-20-21-01-37.md`，并仍列已删的 `%ALLUSERSPROFILE%/Application Data/Tencent/QQPCMgr/`（自曝第 48 处的垃圾目录）——本次照 ls-files 重建，照实记。
 
 结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/`、`.venv/`、`.venv-gsv/`、`openWakeWord/` 训练产物与 `train_config*.yaml`、`_wheels/` 被忽略；现役唤醒 ONNX（含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：605
+### 文件数（git ls-files --cached --others --exclude-standard）：607
 ```
 .//
-  jarvis_screen.png
-  jieba.cache
-  love_silvia.txt
   .gitignore
   LICENSE
   README.md
@@ -17,6 +14,9 @@
   design.md
   hard_bug.md
   install.bat
+  jarvis_screen.png
+  jieba.cache
+  love_silvia.txt
   need_audio.md
   need_user.md
   onnx_opinion.md
@@ -26,12 +26,10 @@
   start_all.bat
   todo.md
   tree.md
-%ALLUSERSPROFILE%/Application Data/Tencent/QQPCMgr/
-  dr.ini
-  dr_packet.dat
 ai_buckup/
   design.md_2026-11-17-10-24-25.md
   design.md_2026-11-17-10-44-33.md
+  design.md_2026-11-20-22-14-46.md
   hard_bug.md_2026-10-13-17-45.md
   hard_bug.md_2026-11-13-00-12-17.md
   hard_bug.md_2026-11-17-13-26-51.md
@@ -126,7 +124,6 @@ openWakeWord/output/aili_xiya_v1.0c/
   aili_xiya_v1.0c.onnx
   aili_xiya_v1.0c.onnx.data
 records/
-  2026-11-20-16-26-59.md
   2026-10-12-12-28-30.md
   2026-10-13-11-45.md
   2026-10-13-11-55.md
@@ -221,6 +218,10 @@ records/
   2026-11-20-13-20-00.md
   2026-11-20-13-44-31.md
   2026-11-20-15-12-16.md
+  2026-11-20-16-26-59.md
+  2026-11-20-20-25-21.md
+  2026-11-20-21-01-37.md
+  2026-11-20-22-14-46.md
   AI_Benchmark.md
   JARVIS_STATE.md
   PROJECT_SUMMARY.txt

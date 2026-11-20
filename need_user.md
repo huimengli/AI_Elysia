@@ -370,3 +370,12 @@ signed-in profile」）→ **jarvis 的 profile 没有 B 站登录 cookie**。
   3. **这台机器上装了哪些内核层的东西**：腾讯电脑管家 / AntiCheatExpert（ACE-ADVT/ACE-BASE，2026-11-16 改过）、米哈游 HoYoProtect、TAOKernel/TFsFlt（腾讯）、QQPCMgr `qmbsecx64`、向日葵（Oray 三个驱动）、虚拟声卡 `vbaudio`/`fxvad`、`inpoutx64`、**TweakCube**（GPD 功率/降频）、AMD 性能档 `AMDRyzenMasterDriver`。GPD WIN 4 + 集显 780M（驱动 2026-07-24 版）+ 这堆反作弊/杀软/远程驱动，是 `SYSTEM_PTE_MISUSE`(0x3B) 的常见嫌疑面。哪些能卸载/关闭，先关哪个，要你定。
 
 
+
+
+## Q41 状态更新（2026-11-20 22:14）· 状态：**等复现（P2）**
+
+- **你的话（逐字）**：「蓝屏的问题改为等复现,p2」
+- **我的处理**：蓝屏立案为 **HB-052**（`hard_bug.md`，P2、等复现）。本条三样**照旧挂着、复现时再要**，我不主动查、不再跑取证脚本（照你 21:01 的「既然没有证据就算了」口径继续有效）。
+- **复现时才能定到哪层**：`Get-WinEvent` 1001/41/6008 + 管理员拷的 dump（我解析模块表报崩掉的驱动名）+ 你那条指令的原话 + 项目侧当条日志（`.tmp/logs/`、`events.db`/`memory.db`）。三样齐才说得到「哪层说到哪层」，缺一样就明说定不到。
+- **顺带（照 design v3.1 §8）**：新增 `start_all_in_one.bat` 后 stdout 进 jarvis 管道 → **蓝屏前的指令文字才可能留证**；`start_all.bat` 照现内容不动，仍不落文件。
+- **不动的禁区**：`v0.9b + 0.75`、`stt.engine: whisper`、`stt.hot_bias: false`、`is_half: false`、页文件不碰（Q22）。

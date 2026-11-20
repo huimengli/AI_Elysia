@@ -1,10 +1,12 @@
 # 总设计
 
-- **版本**：v3.0（v2.0 已归档到 `ai_buckup/design.md_2026-11-17-10-44-33.md`；v1.0 在 `ai_buckup/design.md_2026-11-17-10-24-25.md`）
-- **更新时间**：2026-11-17-10-44
+- **版本**：v3.1 —— **v3.0 已归档到 `ai_buckup/design.md_2026-11-20-22-14-46.md`**（v2.0 在 `ai_buckup/design.md_2026-11-17-10-44-33.md`，v1.0 在 `ai_buckup/design.md_2026-11-17-10-24-25.md`）
+- **更新时间**：2026-11-20-22-14
+- **v3.1 唯一变化**：启动脚本定案为**两版并存**（照你 22:14 逐字「保留原start_all,写新start_all_in_one.bat」）——新增 §8，§4 第 4 项、§6 第 9 条、§7 补一条随之改；其余照 v3.0 不动。
 - **关联需求**：`records/2026-11-17-10-24-25.md`（「在 UI 中制作一个 moniter 界面」「先做 design，不开工」）
   + `records/2026-11-17-10-44-33.md`（Q30 答复：**Monitor = 日志中枢 + 单窗口托管 + 指定关闭 + 外部接入**）
-- **状态**：**只 design，未开工**。开工授权与关闭授权见 `need_user.md` **Q31（status: wait）**。
+  + `records/2026-11-20-22-14-46.md`（22:14：**保留原 `start_all.bat`，新写 `start_all_in_one.bat`** → §8）
+- **状态**：**只 design，未开工**（你 22:14：「记录后停工，明天开工」）。开工授权与关闭授权见 `need_user.md` **Q31（status: wait）**。
 
 ## 1. 你 10:44 的原话与逐条可行性（不假装都能做）
 
@@ -71,8 +73,8 @@
 3. **`jarvis/web.py`**：`GET /monitor`（页面）+ `GET /api/monitor`（快照）+ WS 类型
    `monitor`（指标）/ `log_batch`（≤20 行）/ `monitor_config`（间隔）+ `POST /api/service/stop`（body `{"name","pid"}`，
    **只接受 jarvis 自起 pid**，外部 pid 返回"拒绝：不是本进程起的"）
-4. **`start_all.bat`**（现 4 窗口）：改成只开 1 个窗口 `start "AiliXiya :7860" cmd /k ...jarvis.main`，
-   浏览器开 `/monitor`；旧版留在 git 历史，不新建别名脚本（不自行发明命名）
+4. **启动脚本（22:14 定案：两版并存，见 §8）**：**`start_all.bat` 原样保留、不改**（现 4 窗口；`cmd /k` 起的进程 stdout 归各自控制台，jarvis 抓不到；status panel 的 powershell 循环继续存在）；
+    新写 **`start_all_in_one.bat`**：只开 **1 个窗口**（jarvis），jarvis 作父进程起 llama-server / api_v2（`stdout=PIPE, stderr=STDOUT`），浏览器开 `/monitor`。
 5. **`jarvis/static/monitor.html`（新页面）**：布局如上；日志区每服务折叠，最新在上；
    每行 `[服务] 原文`；控制按钮带 pid 与确认
 6. **埋点**：`main.py` 唤醒/转写/回复、`tts.py` 合成耗时 → 同一环形缓冲（各 200 样本）供 F 块
@@ -95,6 +97,7 @@
 6. **间隔可调 1 s**：UI 选 1 s 后 WS 推送间隔实测 ≈1 s；隐藏页面后降频
 7. **内存**：日志环形 2,000 行/服务下，jarvis 提交 30 min 增长 <50 MB
 8. 语音 20 轮判据不被采样/日志拖慢（轮 11-20 仍等你在麦克风前）
+9. **两版并存不互相破坏**（§8）：先跑 `start_all.bat` 再起 `start_all_in_one.bat` 时，端口检查照现逻辑**跳过已起的服务**（不重复起、不杀），面板把它们标成「外部起 · 无日志接管」；`start_all.bat` 的 4 窗口行为与今天完全一致
 
 ## 7. 风险与边界（如实）
 
@@ -106,5 +109,32 @@
   否则一行刷屏
 - **GPT-SoVITS api_v2 由 jarvis 起时工作目录与 env 要照 `start_all.bat` 现内容设**（`cd /d GPT-SoVITS-main`、
   `MPLCONFIGDIR`、`HF_ENDPOINT=https://hf-mirror.com` 带 scheme，HB-029）
-- **语音/播放判据不能被架构改动破坏**：`aili_xiya_v0.9.onnx` + `thr 0.75`、`stt.engine: whisper`、
+- **语音/播放判据不能被架构改动破坏**：现役 `aili_xiya_v0.9b.onnx` + `thr 0.75`（2026-11-20 12:33 换，commit 853205；部署 3 轮验收仍未测）、`stt.engine: whisper`、
   `stt.hot_bias: false`、`is_half: false` 不动；**丙方案与轮 5-6 的实测仍等你跑 `start_all.bat`**
+- **两版并存的代价照实（§8）**：`start_all.bat` 起的进程 **jarvis 不认 pid**（不是它起的）→ 面板不给关闭按钮、无日志；
+  「关窗全关」只在 `start_all_in_one.bat` 版里成立；旧版 4 窗口（含 status panel）继续可用，**不做「自动升级」**
+
+
+## 8. `start_all_in_one.bat`（2026-11-20 22:14 新增，照你的话）
+
+> 逐字：「monitor加一条start_all改版->保留原start_all,写新start_all_in_one.bat」
+
+**名字照你给的原样，不自行发明命名。** 两版并存，互不替代：
+
+| 脚本 | 状态 | 窗口 | stdout | 关窗全关 | 关闭按钮 |
+| --- | --- | --- | --- | --- | --- |
+| `start_all.bat` | **保留，不改一个字节** | 4 个（llama / GPT-SoVITS / jarvis / status panel） | 归各自 `cmd /k` 控制台，jarvis 抓不到 | 不成立（各窗口各管自己） | 无（jarvis 不认这些 pid） |
+| `start_all_in_one.bat` | **新写** | **1 个**（jarvis） | jarvis 管道（`stdout=PIPE, stderr=STDOUT`）→ 日志中枢 G 块 | 成立：jarvis 退出按 `jarvis_child_pids.json` 只杀自起 pid | 只对自己起的 pid |
+
+**新脚本的硬要求（照现 `start_all.bat` 的实测写法，不凭记忆）**：
+
+1. 全 **ASCII + CRLF**（自曝第 52 处：我用 latin1 写中文进 bat，字节里出现控制字符 0x13 → 窗口「命令语法不正确。」）。
+2. 全 **`%~dp0` 相对路径**，不写绝对路径（现 `start_all.bat` 的 `cd /d %~dp0` 模式，迁移后不受影响）。
+3. 路径照实测：llama = `llm\llama-b12144-bin-win-vulkan-x64\llama-server.exe`（**不是** `.venv-llama\Scripts\llama-server.exe`，那个路径不存在——自曝第 52 处）；GSV = `..\.venv-gsv\Scripts\python.exe -X utf8 api_v2.py`，工作目录 `cd /d %~dp0GPT-SoVITS-main`；jarvis = `.venv\Scripts\python.exe -u -m jarvis.main`。
+4. **env 照现内容全带上**：`MPLCONFIGDIR=%~dp0.tmp\mplconfig`、`HF_ENDPOINT=https://hf-mirror.com`、`HF_HOME=%~dp0.hf-cache`、`HF_HUB_DISABLE_XET=1`、`GGML_VULKAN=1`。自曝第 48 处：我拼的 env 缺 `ALLUSERSPROFILE`，代码把 `%ALLUSERSPROFILE%` 当字面路径，在**项目根**造出 `Tencent\...\QQPCMgr\` 垃圾目录（16:xx 删过，21:45 又出现）。
+5. `-c 24576` 与其余 llama 参数照现内容**一个不动**（Q33 你授权的就是这一处，已落地 `start_all.bat`:19）。
+6. 端口检查照现 `netstat -ano | findstr ":PORT" | findstr "LISTENING"` 的语义移到 jarvis 侧：已起 = 不重复起、不杀、走「接入识别」。
+7. jarvis 起浏览器开 `/monitor`；**不最大化窗口**（照长期边界）。
+
+**验收照 §6 第 1/2/3/4/5/9 条**；「关窗全关」必须在**你的会话**实测（`CTRL_CLOSE_EVENT` 只给约 5 s，我沙箱量不了）。
+**顺带补上的取证面（HB-052 / 蓝屏 P2 等复现）**：管道里的 stdout 落 jarvis → 蓝屏前的指令文字才可能留证；旧版仍不落文件。

@@ -22,7 +22,7 @@
 - [x] 12:25 `read_page` / `find_on_page` / `click_page_text` 落地（CDP 读 DOM，只碰我起窗口，无 OCR、无视觉坐标）；轮 24/25/27 **实证中文正文读出**
 - [x] 12:38 分发层闸门：话里有「点击/找到」+「页面/页」→ 拒 `web_search`/`run_python`/`read_screen`/`find_on_screen`/`fetch_page`，指名 `find_on_page`/`click_page_text`（轮 26 FAIL → 轮 28 模型只调 `find_on_page`，没越界）
 - [x] 12:43 修我漏的花括号（外层 `for` 右括号 → JS 求值 undefined → CDP 回 `null` → `json.loads('null')=None` → `.get` 崩）+ 非 dict 防御；直测命中 `2 处「番剧」 (100,32) (204,186)`
-- [x] **HB-050 结案（2026-11-18 20:24，方案②端到端 PASS）**：`click_page_text` 点了、坐标对（矩形中心 100,32）、`elementFromPoint` 点下就是目标链接的 SPAN，**地址复读没变（导航未证实）**；方案②「取 `href` + `Page.navigate` 我自己起的窗口」待做
+- [x] **HB-050 结案（2026-11-18 20:24，方案②端到端 PASS）**：`click_page_text` 点了、坐标对（矩形中心 100,32）、`elementFromPoint` 点下就是目标链接的 SPAN，**地址复读没变（导航未证实）**；方案②「取 `href` + `Page.navigate` 我起窗口」**已端到端 PASS（轮 33，2026-11-18 20:24，`https://www.bilibili.com/` → `/anime/`、标题变「番剧 - …」）**——台账口径照此对齐；hard_bug.md 的 `status: open` 已追加结案更新（2026-11-20 22:14）
 - [ ] **Q37 待你裁决**：本机无中文 OCR（WinRT 不可用、Umi-OCR 只有 Downloads 自解压包未装、`:50015` 无监听）→ 装并常驻 Umi-OCR，还是桌面中文识别记「不做」
 
 ## P1 · 唤醒 / 训练
@@ -35,6 +35,7 @@
 ## P2 · Monitor 面板 + 自定义对象设置界面（只做 design，不开工）
 
 - [ ] design v3.0 已定（日志中枢 + 单窗口托管 + 指定关闭 + 外部接入）；开工授权等 Q31-1；自定义对象设置界面同级 P2
+- [ ] **2026-11-20 22:14 · `start_all` 改版（你定，逐字「保留原start_all,写新start_all_in_one.bat」）**：**原 `start_all.bat` 保留不动**，新写 **`start_all_in_one.bat`**（单窗口 + jarvis 作父进程接管 stdout + 关窗全关只杀自起 pid + 外部进程只识别不关）。照 v3.1：旧版 4 窗口继续可用，`start_all.bat` 起的进程 jarvis 不认 pid → 面板只识别 + 体检、不给关闭按钮。**明天开工**，开工授权照旧等 Q31-1。 (→ records/2026-11-20-22-14-46.md、design.md v3.1 §4)
 
 ## P3 · 全部挂起（你 11:01 定「P2 级以下先不管」）
 
@@ -86,8 +87,6 @@
 - [ ] 2026-11-20 13:55 姓名残留清扫（等你选范围，Q40）：照实测逐行扫 14 种扩展名，共 560 行含 楼听/u697C。代码/配置侧 366（其中旧路径 322）：openWakeWord/train_config* 112/16 文件、training/ 73/42、.tmp/ 169/99、.venv + .venv-gsv 各 4（pyvenv.cfg 的 home/executable/command + activate.bat；home 指向 AppData Python312，要消名字只能重建 venv）、_wheels/ 3 个 ps1 Set-Location、jarvis/tools/desktop.py:309 一处示例报错文本。历史 md 194（tests/ 91、records/ 32、ai_buckup/ 24、need_audio.md 39 等）—— AGENTS.md 规定只能追加，改历史内容需你逐字授权。范围未定前不动。(→ records/2026-11-20-13-44-31.md、need_user.md Q40)
 - [x] 2026-11-20 15:12 姓名残留清扫：能改相对地址的改，不行就算了（157 文件 323 处旧前缀 → 相对；venv 文本改新址；41,093 个 .pyc 删掉重建；123 个 launcher .exe + pyvenv.cfg 的 home + 历史 md + .git 对象 照「就算了」不动）(→ records/2026-11-20-15-12-16.md)
 - [x] 2026-11-20 16:26 本地起服务实测（llama :8080 / GPT-SoVITS :9880 / jarvis :7860），逐台验监听与 health，日志落 `.tmp/logs/`；不测真人呼唤 13 次 3 轮 (→ records/2026-11-20-16-26-59.md)
-- [ ] 2026-11-20 20:25 查蓝屏：系统侧 BugCheck/Kernel-Power 事件 + Minidump，项目侧这轮日志/`capture_*.wav`/`memory.db` 里的真指令，定位到哪层说到哪层 (→ records/2026-11-20-20-25-21.md)
+- [ ] 2026-11-20 20:25 查蓝屏：**降 P2、状态「等复现」**（22:14 你定）。码 0x3B SYSTEM_PTE_MISUSE 与时间线已证实，崩掉的驱动名拿不到（dump 需管理员、机器无 kd/cdb/windbg）；立案 **HB-052**，Q41 三样照旧挂着、复现时再要，我不主动查 (→ records/2026-11-20-20-25-21.md、hard_bug.md HB-052、need_user.md Q41)
 - [x] 2026-11-20 21:01 旧址改名前后的销毁前检查：计划任务/快捷方式/环境变量/Run 键查引用，新址独立起动验收（三台 + health + 真 TTS/LLM），123 个 exe 的坏清单照实；销毁旧址由你动手 (→ records/2026-11-20-21-01-37.md)
-
-
-
+- [x] **2026-11-20 22:14 台账对齐（完成）**：`hard_bug.md` 追加「HB-050 状态更新」宣布结案（不改历史条目）；本文件 :25 的「方案②待做」改为轮 33 已 PASS；立案 **HB-052 蓝屏（P2 · 等复现）** 并追加 `need_user.md` Q41 状态更新；`design.md` 升 v3.1（新增 `start_all_in_one.bat`），v3.0 归档 `ai_buckup/design.md_2026-11-20-22-14-46.md`；`tree.md` 重建。**今天不写代码**（你定「记录后停工，明天开工」）。 (→ records/2026-11-20-22-14-46.md)
