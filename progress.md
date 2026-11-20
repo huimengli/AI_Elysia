@@ -1,6 +1,7 @@
 # 进度台账
 
-<!-- 已归档于 ai_buckup/progress.md_2026-11-20-13-57-30.md（99 行全量：逐条 hash + 结论 + 自曝 + 流水）。
+<!-- 已归档于 ai_buckup/progress.md_2026-11-20-13-57-30.md（99 行全量）与
+     ai_buckup/progress.md_2026-11-20-22-14-46.md（101 行全量：逐条 hash + 结论 + 自曝 + 流水，含 22:14 条目）。
      本文件为压缩版；逐轮细节在 records/、tests/，逐条 hash 完整流水在归档。归档动作记在本台账。 -->
 
 ## 当前未结案（口径与依据见 todo.md、need_user.md、hard_bug.md）
@@ -57,28 +58,10 @@
   （两段在 3 实例下稳定越线，不是随机漂移）；你全程没说触发词。自曝：一次构造 3 实例 `bad allocation`、
   `predict(bytes)` 要 numpy 数组。
 
-## Git 提交记录（最近条目，全部已本地 commit，未 push；`git rev-list --count HEAD` = 246）
+## Git 提交记录（最近条目，全部已本地 commit，未 push；`git rev-list --count HEAD` = 256）
+- 2026-11-20 22:14 **19bb430** `docs(AI): 台账对齐 + 蓝屏降 P2 等复现（HB-052）+ design v3.1 加 start_all_in_one` —— 8 文件 +222/−23（record 22-14-46 + `ai_buckup/design.md_2026-11-20-22-14-46.md` + design v3.1 + hard_bug HB-050 状态更新/HB-052 + need_user Q41 状态更新 + todo P2 加一条 + progress P2/open bug 段 + tree.md 重建 607 文件）。照你的话逐字执行：「先对齐,今天就到这,蓝屏的问题改为等复现,p2,monitor加一条start_all改版->保留原start_all,写新start_all_in_one.bat,记录后停工,明天开工」。**今天零代码改动**（`start_all.bat` 未动一个字节，未建 `start_all_in_one.bat`）。开工授权照旧等 Q31-1。自曝第 55 处：沙箱 `process.env` 空 → `git commit` 报 `Author identity unknown`（`$HOME not set`，全局 config 读不到）；照仓库既有身份用 `git -c user.name=绘梦璃 -c user.email=2913394404@qq.com commit -F` 提交，**未改任何 config**。自曝第 56 处：第一次 `git commit -q -F` 失败我没看 stderr（`rev-list` 停在 255、HEAD 没动才发现），第二次才读到身份报错——commit 后必查 `rev-list`/`status`。 (→ records/2026-11-20-22-14-46.md)
 
-- 709d87a docs(AI): HB-051 定性成立（10 秒录音法 + HB-032 三实例），progress.md 归档压缩 —— **已本地 commit，未 push**（rev-list = 226）
-- 1505453 docs(AI): 1 小时录音法的部分分布 + 停电窗口口径 + 两条自曝 —— **已本地 commit，未 push**（rev-list = 228）
-- 3d433b0 docs(AI): HB-051 1 小时 360 段跑完 —— 越线率 2.5%、HB-032 12 段 10 True/2 False —— **已本地 commit，未 push**（rev-list = 230）
-- 242e4a3 docs(AI): 12 段越线位置表（听点已切）+ 入库规矩硬冲突摆明 —— **已本地 commit，未 push**（rev-list = 232）
-- **e083145** `feat(AI): 复训产出 aili_xiya_v0.9b（12 段真实负样本），3 轮对照铁门槛过线` —— **已本地 commit，未 push**（rev-list = 234）。
-  - **自曝（第 14 处）**：commit 信息里我用反引号包文件名，pwsh 把反引号当转义吃掉字母 → python SyntaxError、信息文件没写、
-    第一次 `git commit -F` 用了上一轮的**旧信息**（产生错位 commit `32284dc`）；改用 write 工具写信息 + `git commit --amend` 改正为
-    `e083145`（本地，未 push，`32284dc` 已被 amend 替换）。规矩复述：**md/commit 内容用 write 工具写，绝不在 `pwsh -c` 里写带反引号的文本**（第 14 次同类事故）。
-  - 结果摘要：v0.9b 产物 + 3 轮对照（真人 5/6/5 → 6/5/6 不掉基线；12 段 10/10/10 → 5/4/5；近音 6/7/9 → 3/2/1；无关 2/2/2 → 2/2/2）；
-    训练自报 Acc 0.7203 / Rec 0.5958 / FP per Hour 0.0；**现役 `config.yaml` 指向 v0.9 + 0.75 未改（照你「不改」）**。
-  - 未测照口径写：部署 13 次真呼唤 3 轮、长噪 62.83 s、环境音期望 0、到达结尾、真人 @0.85 3 轮（服务照「不重启」全停）。
-
-- **a94d591** docs(AI): 第 2 轮 1 小时录音 360 段实测（14 越线 / 346 丢弃）+ 越线位置表 + 2 处自曝 —— **已本地 commit，未 push**。
-  - 360 段 / 越线保存 14 / 丢弃 346（3.9%），节奏实测 10.0 s/段；丢弃段 peak 中位 0.441，8 段 >=0.70 按判据不能入库；14 段未入库，等你听 + 授权。
-  - 自曝第 15、16 处：越线时刻两次跑会变（2.4 s / 14 次 -> 1.4 s / 7 次），听点改用三实例交集；对照 python 有未定义变量 run（NameError，exit 1）。
-  - Q38（数据积累路线）保持 status: wait；真人件不在训练集（时长可重叠对数 0/38）。
-
-- **089c251** docs(AI): rebuild tree.md for record 2026-11-19-15-18-21 —— tree.md 重建 532 文件 / 603 行。**已本地 commit，未 push**。
-- 2026-11-19 18:46 5dbf73f test(model): 复训 v0.9c（只入三实例交集 9 段）— 3 轮逐实例真人 [5,5,4] < v0.9 [5,6,5] -> 铁门槛 FAIL，建议废 v0.9c，config.yaml 不动；v0.9b 仍是唯一过线候选。**已本地 commit，未 push**（rev-list 240，main ahead 84）。自曝第 17-24 处。
-- 2026-11-19 19:59 6fd7c1b test(model): 20 轮明确测试 v0.9c / v0.9 / v0.9b（同协议 46 件，60 条 record + opinion）。20 轮均值：真人 v0.9 4.00 / v0.9b 4.00 / v0.9c 4.05；近音 5.05 / 1.00 / 2.00；无关 1.10 / 0.00 / 0.00；旧 12 段 8.95 / 0.00 / 2.00；新 9 段 9.00 / 2.00 / 4.00；三家逐轮 PASS 均 0/20（真人判据 >=5 高于现役 20 轮水平，自曝第 28 处）。铁门槛（真人掉于基线->废）**未被违反**；v0.9b 是真人不降+压制最强；config.yaml 不动。**已本地 commit，未 push**（rev-list 241，main ahead 85）。自曝第 25-29 处。
+- **更早的 commit 条目（709d87a → 08005a5，rev-list 226→246）全量在归档 `ai_buckup/progress.md_2026-11-20-22-14-46.md`**（逐条 hash + 自曝 + 结论），本段只保留 2026-11-20 起。
 - 2026-11-20 12:33 853205 feat(wake): 换 v0.9b 启动 — config.yaml 指向 aili_xiya_v0.9b（threshold 0.75 不动，model_options 3->4）。三服务起（8080/9880/7860），health 报 model=aili_xiya_v0.9b.onnx / threshold 0.75 / asr+llm+tts online。照实写：启动时 startup greeting 因 :9880 未起完报 WinError 10061；起服务后 1 次唤醒触发（12:28:53，你未对麦克风说话，STT 无语音、max rms 0.0038）= **1 次环境 FP（期望 0，违反）**。自曝第 32 处（peak 日志不是触发，读 wake.py:175-180 纠正）。部署 3 轮仍**未测**（等你麦克风前）；@0.85 不做。**已本地 commit，未 push**（rev-list 242，main ahead 86）。
 - 2026-11-20 12:40 3084bb2 chore(services): 停掉所有服务（你要开始迁移）。停 llama 17988 / GSV 17096+17676 / jarvis 18556+10556，复验 8080/9880/7860 全 DOWN、无残留进程、health 连不上。config.yaml 仍指向 v0.9b（threshold 0.75 不动）；部署 3 轮继续**未测**；@0.85 不做。自曝第 33 处（$pid 只读自动变量坑，第一次读到的是我自己 pwsh 的 pid）。**已本地 commit，未 push**（rev-list 244，main ahead 88）。
 - 2026-11-20 13:20 迁移校验（只读，无代码改动）：全量递归 + 逐文件 SHA-256（27 GB，290 s）。原/新各 141236 文件，相对路径与大小 100% 一致，内容 0 处不一致，目录 13776/13776，符号链接 0/0，`.git`（2257 文件、13,276,709 B、HEAD/packed-refs/config/index）完全相同，`main` = 3084bb27d81d4405b49ebe0530882f897b785f6e。**新址是全量完整副本，文件零缺失**。清空前的实测阻塞点：全树 269 处硬编码旧路径（`config.yaml` 7、`.venv*/activate.bat` 各 1、`openWakeWord/train_config*` 112、`training/` 67、`tests/` 82、`.tmp/` 183 等）；`jarvis/` 与 `start.bat`/`start_all.bat`/`install.bat` 用 `%~dp0` 不受影响。自曝第 34 处（沙箱 `spawn EPERM` 跑不了 git，改用直读 `.git` 文件比对）。Q39 等你定。(→ records/2026-11-20-13-20-00.md)
@@ -93,7 +76,3 @@
 - 自曝第 48 处：我起的三台服务（env 是我拼的，缺 `ALLUSERSPROFILE`）在**项目根**造了个垃圾目录 `%ALLUSERSPROFILE%\Application Data\Tencent\QQPCMgr\`（`dr.ini` 2 B + `dr_packet.dat` 0 B，创建 16:38，正好是我第一次起服务的时刻）—— 有代码把 `%ALLUSERSPROFILE%` 当字面路径写。已整目录删掉（5 项 2 字节），未进 Git。教训：**我拼的 env 和真实会话的 env 不等价**，起服务要照 `start_all.bat` 在你的会话里起，我这边起的进程随程序结束被杀、还会留下这类残渣。
 - 2026-11-20 20:45 **蓝屏取证（照你的「start_all 起服务后执行指令后蓝屏了，查怎么回事」）** —— 证实蓝屏码 **0x0000003B SYSTEM_PTE_MISUSE**，参数 `(c0000005, fffff80480908f75, ffffbe88ad5d5fd0, 0)`，dump `C:\Windows\Minidump\112026-9859-01.dmp`（mtime 20:22:48），时间线 20:22:41 开机 / 20:22:42 Kernel-Power 41 / 20:22:51 6008（18:52:46 意外关闭）/ 20:22:52 1001；**10-17 00:29 也蓝屏过**。崩掉的驱动名拿不到：`Minidump`/`WER` 我沙箱读不了（需管理员），机器没有 kd/cdb/windbg。机器是 GPD WIN 4、集显 780M（驱动 2026-07-24）、25 GB、19045；第三方内核驱动一堆（腾讯 ACE、HoYoProtect、QQPCMgr、向日葵、虚拟声卡、inpoutx64、TweakCube 调功率、AMD 性能档）。项目侧：jarvis 18:24 起、19:04:30 最后一条 ASR「播放月增进新声明。」（`near_miss`），19:04:49 起 Chrome，之后无写入；`start_all` 窗口 stdout 不落文件，控制台文字随窗口没了。自曝第 49-51 处，need_user Q41 三样要你给（dump 拷贝授权 / 指令原话 / 内核层装了啥） (→ records/2026-11-20-20-25-21.md)
 - 2026-11-20 21:45 **改名后的销毁前检查（照「改源地址文件夹名，试启动，成功就销毁」）** —— 源地址现为 `C:\Users\楼听\Desktop\git\JarvisAi2`；全树逐文件 SHA-256：141,236 文件里 **99,900 逐字节相同**、7,632 哈希不同（7,510 是 `.pyc`；122 文本 = 101 清扫生效 + 18 无路径 + 3 追加式历史照「就算了」）、33,704 新址缺的全是 `.pyc`/Chrome 运行时/commit-graph 派生物，**不是内容缺失**；旧址仍含旧路径 483 文件 1,561 处（新址 0）。计划任务/服务/PATH/Run 键 **零引用旧址**；`.lnk` 未验（脚本两次失败）。123 个 launcher exe 改名后实测全坏，替代 `python -m pip`（pip 26.2.1 正常）。照 `start_all.bat` 权威写法实测三台齐（llama 3.4 s、GSV ~77 s、jarvis `:7860`），与你「用 start_all 好像可以启动」一致。自曝第 52-54 处（我的测试 bat 用了不存在的路径 + latin1 写中文，让你空看三个空转窗口；把残留端口当启动成功；latin1 查旧路径得出假结论） (→ records/2026-11-20-21-01-37.md)
-
-
-
-

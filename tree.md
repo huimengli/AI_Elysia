@@ -1,10 +1,10 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-20-22-14-46（台账对齐 + design v3.1 后重建）。变化：新增 `records/2026-11-20-22-14-46.md`（22:14 需求：先对齐 + 蓝屏降 P2 等复现 + Monitor 加 start_all_in_one）与 `ai_buckup/design.md_2026-11-20-22-14-46.md`（design v3.0 归档，10,772 B）；`design.md` 升 v3.1（140 行）、`hard_bug.md`（HB-050 状态更新 + HB-052，148 行）、`need_user.md`（Q41 状态更新，381 行）、`todo.md`（P2 加 start_all_in_one + 两处口径对齐，92 行）、`progress.md`（P2 段与 open bug 段随之改）。各台账未越 100 行阈值，本次不归档。上一条 tree（18:20，605 行）漏列 `records/2026-11-20-20-25-21.md` 与 `records/2026-11-20-21-01-37.md`，并仍列已删的 `%ALLUSERSPROFILE%/Application Data/Tencent/QQPCMgr/`（自曝第 48 处的垃圾目录）——本次照 ls-files 重建，照实记。
+更新时间: 2026-11-20-22-35-00（progress.md 归档后重建）。变化：新增 `ai_buckup/progress.md_2026-11-20-22-14-46.md`（101 行全量归档）；`progress.md` 压缩为 79 行、`tree.md` 上一条（22:14，607 文件）已照 ls-files 重建并补列 `records/2026-11-20-20-25-21.md`/`records/2026-11-20-21-01-37.md`、删掉已不存在的 `%ALLUSERSPROFILE%/Application Data/Tencent/QQPCMgr/`。各台账均未越 100 行阈值。
 
 结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/`、`.venv/`、`.venv-gsv/`、`openWakeWord/` 训练产物与 `train_config*.yaml`、`_wheels/` 被忽略；现役唤醒 ONNX（含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：607
+### 文件数（git ls-files --cached --others --exclude-standard）：608
 ```
 .//
   .gitignore
@@ -60,6 +60,7 @@ ai_buckup/
   progress.md_2026-11-18-12-20-10.md
   progress.md_2026-11-18-20-42-00.md
   progress.md_2026-11-20-13-57-30.md
+  progress.md_2026-11-20-22-14-46.md
   todo.md_2026-11-10-21-52-25.md
   todo.md_2026-11-12-16-58-46.md
   todo.md_2026-11-12-19-23-02.md
