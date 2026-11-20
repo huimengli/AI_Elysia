@@ -1,17 +1,16 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-17-22-20-00（语音 20 轮轮 11 落盘 + 音乐唯一性新规则 + onnx_opinion 移入根目录）。新增/变化：
-- `onnx_opinion.md`（**移入根目录**，你 21:13 定的 6 块规则：规则口径 / 版本表 / 部署 3 轮实测表 / 峰值数据表 / 结论 / 追加内容单行；每次追加前先备份到 `ai_buckup/onnx_opinion.md_<ts>.md`）；
-- `records/2026-11-17-21-13-04.md`（onnx_opinion 规则逐字）、`records/2026-11-17-20-16-55.md`（第 1-4 项顺序）、`records/2026-11-17-22-05-05.md`（**音乐唯一性**新规则 + 收尾交接）；
-- `tests/2026-11-08-20-44-17_cc/record_11.md`（语音轮 11 FAIL：转录吃尾 `[You] 播放到` → LLM 用历史「心灯明」播了之前指定的歌）+ 该批 `opinion.md`；
-- `jarvis/tools/app_control.py`（窗口计数认 jarvis 专属 profile 的 Chrome pid、`forget_pid`、`play_first_video` 改 CDP 判定去视觉点击）、`jarvis/tools/browser_cdp.py`（`kill_recorded_pid` 杀成功后忘掉 pid）；
-- `training/_t2_v11_tts.py`（TEXTS 20→38 + 跳过已合成门）、`training/_t4_full_retrain.py`（`--out`/`--config`）。
+更新时间: 2026-11-20-15-48-00（迁移校验 + config.yaml 改相对地址 + 姓名残留清扫）。新增/变化：
+- `records/2026-11-20-13-20-00.md`（全量迁移校验 + 路径引用清点，两种口径）、`records/2026-11-20-13-44-31.md`（config.yaml 改相对地址 + 真加载验证 + Q40 清点）、`records/2026-11-20-15-12-16.md`（照你「能改相对地址的改,不行就算了」的清扫）；
+- `ai_buckup/progress.md_2026-11-20-13-57-30.md`（progress.md 99 行全量归档）；
+- `config.yaml`：7 处路径标量改相对项目根（现役唤醒 `openWakeWord/output/aili_xiya_v0.9b/aili_xiya_v0.9b.onnx` + `threshold: 0.75`、sherpa `.hf-cache/sherpa-paraformer-zh`、llama `llm/models/Qwen3.5-2B-Q4_K_M.gguf`），阈值与 label 未动；
+- `training/*.py` 46 个脚本的 `ROOT` 改相对（`ROOT = r"."`）；`jarvis/tools/desktop.py` 文档示例里的姓名泛化成 `<user>`。
 
-结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/` 被忽略；现役唤醒 ONNX（v0.9 / v1.0c，含 `.onnx.data`）入 Git。
+结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/`、`.venv/`、`.venv-gsv/`、`openWakeWord/` 训练产物与 `train_config*.yaml`、`_wheels/` 被忽略；现役唤醒 ONNX（含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：598
+### 文件数（git ls-files --cached --others --exclude-standard）：602
 ```
-./
+.//
   .gitignore
   LICENSE
   README.md
@@ -63,6 +62,7 @@ ai_buckup/
   progress.md_2026-11-17-19-49-00.md
   progress.md_2026-11-18-12-20-10.md
   progress.md_2026-11-18-20-42-00.md
+  progress.md_2026-11-20-13-57-30.md
   todo.md_2026-11-10-21-52-25.md
   todo.md_2026-11-12-16-58-46.md
   todo.md_2026-11-12-19-23-02.md
@@ -218,6 +218,9 @@ records/
   2026-11-19-15-18-21.md
   2026-11-19-20-46-21.md
   2026-11-20-12-39-28.md
+  2026-11-20-13-20-00.md
+  2026-11-20-13-44-31.md
+  2026-11-20-15-12-16.md
   AI_Benchmark.md
   JARVIS_STATE.md
   PROJECT_SUMMARY.txt
