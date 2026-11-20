@@ -341,3 +341,24 @@ signed-in profile」）→ **jarvis 的 profile 没有 B 站登录 cookie**。
 
 > **口径补正（2026-11-20 13:33）**：「269 处」是狭口径（限定扩展名的 ripgrep）；逐文件扫关键目录的宽口径是 374 处。**清空后必坏的最小集合 = 3 个文件 9 处**：`config.yaml`(7) + `.venv\Scripts\activate.bat`(1) + `.venv-gsv\Scripts\activate.bat`(1)。
 
+
+## Q40 · 2026-11-20-13-55 · 问 · status: wait
+
+- 你的话（逐字）：「config.yaml 这个我早就想改了, 我的名字不应该出现在数据中的, 将其改为相对地址」
+- 已做完（照实测）：config.yaml 7 处路径标量改相对，楼听 / u697C / 旧前缀归 0；用 YAML 解析器读一遍确认解析后就是相对路径，7 条路径逐一实测存在；本地 commit c51482e（未 push，rev-list 245，main ahead 89）。
+- 照实测剩下的姓名残留 560 行（逐行扫 14 种文本扩展名，跳 site-packages / Lib / __pycache__ / .git）：
+  - 代码/配置侧 366 行（其中 322 行是旧路径 C:\Users\楼听\Desktop\git\JarvisAi）：
+    - openWakeWord/train_config*.yaml：112 行 / 16 文件（全是旧路径：output_dir、rir、background、negative 等）
+    - training/：73 行 / 42 文件（67 行旧路径，ROOT = r「C:...」写法）
+    - .tmp/：169 行 / 99 文件（135 行旧路径，一次性脚本与 _t2_smoke_config.yaml、_chk_predict_pipeline_out.txt 等产物）
+    - .venv 4 行 + .venv-gsv 4 行（pyvenv.cfg 的 home / executable / command + activate.bat 的 set VIRTUAL_ENV=）—— home 指向 AppData 的 Python312，「venv 的绝对路径没法相对化，要消名字只能重建 venv」
+    - _wheels/：3 个 ps1 的 Set-Location「C:\Users\楼听\Desktop\git\JarvisAi」
+    - jarvis/tools/desktop.py:309：文档字符串里的示例报错文本（唯一进运行代码的名字，不含旧路径）
+  - 历史 md 194 行：tests/ 91、records/ 32、ai_buckup/ 24、need_audio.md 39、need_user.md 3、todo.md 3、progress.md 1、onnx_opinion.md 1 —— AGENTS.md 规定 records/、tests/、need_user.md、hard_bug.md 只能追加，我不能改历史内容，要改必须你逐字授权。
+- 三条路（你定）：
+  1. 只清运行与训练相关：openWakeWord/train_config*（112）+ training/（73）+ _wheels/（3）+ jarvis/tools/desktop.py:309 + .venv*/activate.bat（用 %~dp0 相对化）= 189 行；pyvenv.cfg 的名字要重建 venv 才能消（要你说）；
+  2. 连 .tmp/ 一起清（再 +169 行，一次性脚本与产物）；
+  3. 历史 md 也清（194 行）：需要你逐字授权我改 records/、tests/、ai_buckup/、need_audio.md 里的历史内容（我不自行做）。
+- 顺带提醒（照实测）：清空原址后 _wheels/*.ps1 的 Set-Location、training/ 的 ROOT、openWakeWord 训练配置、两个 activate.bat 全部指向已删目录 —— 训练与 start.bat 起服务都会坏。
+
+
