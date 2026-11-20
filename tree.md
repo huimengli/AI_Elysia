@@ -1,16 +1,15 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-20-15-48-00（迁移校验 + config.yaml 改相对地址 + 姓名残留清扫）。新增/变化：
-- `records/2026-11-20-13-20-00.md`（全量迁移校验 + 路径引用清点，两种口径）、`records/2026-11-20-13-44-31.md`（config.yaml 改相对地址 + 真加载验证 + Q40 清点）、`records/2026-11-20-15-12-16.md`（照你「能改相对地址的改,不行就算了」的清扫）；
-- `ai_buckup/progress.md_2026-11-20-13-57-30.md`（progress.md 99 行全量归档）；
-- `config.yaml`：7 处路径标量改相对项目根（现役唤醒 `openWakeWord/output/aili_xiya_v0.9b/aili_xiya_v0.9b.onnx` + `threshold: 0.75`、sherpa `.hf-cache/sherpa-paraformer-zh`、llama `llm/models/Qwen3.5-2B-Q4_K_M.gguf`），阈值与 label 未动；
-- `training/*.py` 46 个脚本的 `ROOT` 改相对（`ROOT = r"."`）；`jarvis/tools/desktop.py` 文档示例里的姓名泛化成 `<user>`。
+更新时间: 2026-11-20-18-20-00（本地起服务实测后重建）。变化：新增 `records/2026-11-20-16-26-59.md`（三台服务起得来的第一手日志与探针）；`progress.md`/`todo.md` 追加本轮记录（未越 100 行阈值，暂不归档）。
 
 结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/`、`.venv/`、`.venv-gsv/`、`openWakeWord/` 训练产物与 `train_config*.yaml`、`_wheels/` 被忽略；现役唤醒 ONNX（含 `.onnx.data`）入 Git。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：602
+### 文件数（git ls-files --cached --others --exclude-standard）：605
 ```
 .//
+  jarvis_screen.png
+  jieba.cache
+  love_silvia.txt
   .gitignore
   LICENSE
   README.md
@@ -18,9 +17,6 @@
   design.md
   hard_bug.md
   install.bat
-  jarvis_screen.png
-  jieba.cache
-  love_silvia.txt
   need_audio.md
   need_user.md
   onnx_opinion.md
@@ -30,6 +26,9 @@
   start_all.bat
   todo.md
   tree.md
+%ALLUSERSPROFILE%/Application Data/Tencent/QQPCMgr/
+  dr.ini
+  dr_packet.dat
 ai_buckup/
   design.md_2026-11-17-10-24-25.md
   design.md_2026-11-17-10-44-33.md
@@ -127,6 +126,7 @@ openWakeWord/output/aili_xiya_v1.0c/
   aili_xiya_v1.0c.onnx
   aili_xiya_v1.0c.onnx.data
 records/
+  2026-11-20-16-26-59.md
   2026-10-12-12-28-30.md
   2026-10-13-11-45.md
   2026-10-13-11-55.md

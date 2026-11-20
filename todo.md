@@ -85,6 +85,7 @@
 - [x] **2026-11-20 13:44 config.yaml 改相对地址（完成）**：照你「我的名字不应该出现在数据中的, 将其改为相对地址」——删掉 6 行的 `C:\Users\楼听\Desktop\git\JarvisAi\` 前缀（:2/:9/:14/:18/:24 唤醒 ONNX、:45 sherpa model_dir、:62 llama gguf），改写成 `openWakeWord/output/<模型>/<模型>.onnx`、`.hf-cache/sherpa-paraformer-zh`、`llm/models/Qwen3.5-2B-Q4_K_M.gguf`；阈值与 label 不动。验证：config 里 `楼听` 与 `u697C` 归 0，7 个相对路径逐一实测存在。起服务复测未做（沙箱跑不了命令）。(→ records/2026-11-20-13-44-31.md)
 - [ ] 2026-11-20 13:55 姓名残留清扫（等你选范围，Q40）：照实测逐行扫 14 种扩展名，共 560 行含 楼听/u697C。代码/配置侧 366（其中旧路径 322）：openWakeWord/train_config* 112/16 文件、training/ 73/42、.tmp/ 169/99、.venv + .venv-gsv 各 4（pyvenv.cfg 的 home/executable/command + activate.bat；home 指向 AppData Python312，要消名字只能重建 venv）、_wheels/ 3 个 ps1 Set-Location、jarvis/tools/desktop.py:309 一处示例报错文本。历史 md 194（tests/ 91、records/ 32、ai_buckup/ 24、need_audio.md 39 等）—— AGENTS.md 规定只能追加，改历史内容需你逐字授权。范围未定前不动。(→ records/2026-11-20-13-44-31.md、need_user.md Q40)
 - [x] 2026-11-20 15:12 姓名残留清扫：能改相对地址的改，不行就算了（157 文件 323 处旧前缀 → 相对；venv 文本改新址；41,093 个 .pyc 删掉重建；123 个 launcher .exe + pyvenv.cfg 的 home + 历史 md + .git 对象 照「就算了」不动）(→ records/2026-11-20-15-12-16.md)
+- [x] 2026-11-20 16:26 本地起服务实测（llama :8080 / GPT-SoVITS :9880 / jarvis :7860），逐台验监听与 health，日志落 `.tmp/logs/`；不测真人呼唤 13 次 3 轮 (→ records/2026-11-20-16-26-59.md)
 
 
 
