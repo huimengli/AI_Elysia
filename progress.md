@@ -1,26 +1,9 @@
 # 进度台账
 
-<!-- 已归档于 ai_buckup/progress.md_2026-11-18-20-42-00.md（100 行全量：逐条 hash + 结论 + 自曝 + 流水）。
-     本文件为压缩版；逐轮细节在 `records/`、`tests/`，逐条 hash 完整流水在归档。归档动作同时记在本台账。 -->
+<!-- 已归档于 ai_buckup/progress.md_2026-11-20-13-57-30.md（99 行全量：逐条 hash + 结论 + 自曝 + 流水）。
+     本文件为压缩版；逐轮细节在 records/、tests/，逐条 hash 完整流水在归档。归档动作记在本台账。 -->
 
-## Git 提交记录（最近 12 条，**全部已本地 commit，未 push**；`git rev-list --count HEAD` = 225）
-
-```text
-11e34f9 docs(AI): 把 1805085 的 hash 追加到进度台账
-1805085 feat(AI): 页面点击导航走「取 href + Page.navigate 我自己起的窗口」，HB-050 结案
-2edebaa docs(AI): 把 58e8ed8 的 hash 追加到进度台账
-58e8ed8 docs(AI): 暂停落盘 —— 修正两条假数 + 记录 12:51:52 唤醒触发观察
-d6f53e0 feat(AI): 中文读取改走 CDP 读 DOM（我起窗口），加页面找字/点击闸门
-383ea5e docs(AI): 修复 here-string 反引号转义吃掉的字母，归档压缩 progress.md
-2ab1ebe feat(AI): 播放控制三项实测通过 + 站点打开与播歌唯一性收口（10:17 批次 37 轮）
-f2e6bdc docs(AI): 把 6bcb386 的 hash 追加到进度台账
-6bcb386 docs(AI): 语音轮 11 落盘（转录吃尾根因链）+ 音乐唯一性新规则
-8127a2f docs(AI): 把 0221012 的 hash 追加到进度台账
-0221012 fix(AI): 窗口计数认 jarvis profile 的 Chrome 进程，播歌判定改 CDP 证据（去视觉点击）
-b4dda29 docs(AI): onnx_opinion 按 21:13 新规矩重排进根目录，收口 v1.3 扩数据重训
-```
-
-## 当前未结案（口径与依据见 `todo.md`、`need_user.md`、`hard_bug.md`）
+## 当前未结案（口径与依据见 todo.md、need_user.md、hard_bug.md）
 
 - **等你确认（status: wait）**：**Q37**（本机有 OCR，你说「晚点找出来发你地址」；20:26 实测 Umi-OCR 窗口在跑
   pid 8232 **但无监听 50015**，需要你在 Umi-OCR 开「HTTP 服务」并告诉我端口）、**Q36**（微信登录凭据，
@@ -47,7 +30,7 @@ b4dda29 docs(AI): onnx_opinion 按 21:13 新规矩重排进根目录，收口 v1
   剪贴板先存后还；`kill_process` 只到记事本；**禁止 git push**；不自行发明命名；`onnx_opinion.md` 6 块 +
   每次追加前备份到 `ai_buckup/`；**md 内容用 write 工具写，不要把带反引号的中文塞进 `Add-Content`/`pwsh -c`**。
 
-## 最近结论（细节在 `tests/`、`records/`；全量在归档）
+## 最近结论（细节在 tests/、records/；全量在归档）
 
 - **2026-11-18 10:17-12:07（37 条记录，非语音）**：2a-2f 站点与微信只打开、播放控制三项（暂停/恢复/关闭，
   CDP 回读为证、关后我起的窗口数 0）、播歌唯一性全程 ≤1 **实测 PASS**；播歌 5 判据 ①导航 ②关弹幕
@@ -68,8 +51,7 @@ b4dda29 docs(AI): onnx_opinion 按 21:13 新规矩重排进根目录，收口 v1
   （两段在 3 实例下稳定越线，不是随机漂移）；你全程没说触发词。自曝：一次构造 3 实例 `bad allocation`、
   `predict(bytes)` 要 numpy 数组。
 
-- 11e34f9 docs(AI): 把 1805085 的 hash 追加到进度台账 —— **已本地 commit，未 push**（rev-list = 225）
-- 2026-11-18 20:42 本台账归档到 `ai_buckup/progress.md_2026-11-18-20-42-00.md` 后压缩（100 → 64 行），归档动作记在此。
+## Git 提交记录（最近条目，全部已本地 commit，未 push；`git rev-list --count HEAD` = 246）
 
 - 709d87a docs(AI): HB-051 定性成立（10 秒录音法 + HB-032 三实例），progress.md 归档压缩 —— **已本地 commit，未 push**（rev-list = 226）
 - 1505453 docs(AI): 1 小时录音法的部分分布 + 停电窗口口径 + 两条自曝 —— **已本地 commit，未 push**（rev-list = 228）
@@ -96,4 +78,4 @@ b4dda29 docs(AI): onnx_opinion 按 21:13 新规矩重排进根目录，收口 v1
 - 2026-11-20 13:20 迁移校验（只读，无代码改动）：全量递归 + 逐文件 SHA-256（27 GB，290 s）。原/新各 141236 文件，相对路径与大小 100% 一致，内容 0 处不一致，目录 13776/13776，符号链接 0/0，`.git`（2257 文件、13,276,709 B、HEAD/packed-refs/config/index）完全相同，`main` = 3084bb27d81d4405b49ebe0530882f897b785f6e。**新址是全量完整副本，文件零缺失**。清空前的实测阻塞点：全树 269 处硬编码旧路径（`config.yaml` 7、`.venv*/activate.bat` 各 1、`openWakeWord/train_config*` 112、`training/` 67、`tests/` 82、`.tmp/` 183 等）；`jarvis/` 与 `start.bat`/`start_all.bat`/`install.bat` 用 `%~dp0` 不受影响。自曝第 34 处（沙箱 `spawn EPERM` 跑不了 git，改用直读 `.git` 文件比对）。Q39 等你定。(→ records/2026-11-20-13-20-00.md)
 - 2026-11-20 13:44 **c51482e** `fix(AI): config.yaml 改相对地址（照你的话：我的名字不应出现在数据里）` —— 6 行 `C:\Users\楼听\Desktop\git\JarvisAi\` 前缀删掉（唤醒 ONNX x4、sherpa `model_dir`、llama gguf → `openWakeWord/output/<模型>/<模型>.onnx` / `.hf-cache/sherpa-paraformer-zh` / `llm/models/Qwen3.5-2B-Q4_K_M.gguf`），threshold 与 label 不动。照实测：config 里 `楼听` 0 / `u697C` 0 / 旧前缀 0；7 条相对路径逐一实测存在（onnx 13852/13735/13735/13852 B、sherpa `model.int8.onnx` 81,828,675 B + `tokens.txt`、gguf 1,280,835,840 B）；YAML 解析器读一遍确认解析后就是相对路径，`wake.py`:82 `Path(spec).exists()` 在 cwd=项目根时 true。**起服务复测未做（沙箱跑不了 python）**；自曝第 36 处（第一次替换漏吃一个反斜杠，留下前导 `\`）。**已本地 commit，未 push**（rev-list 245，main ahead 89）。(→ records/2026-11-20-13-44-31.md)
 
-
+- 2026-11-20 13:56 **08005a5** `docs(AI): config.yaml 相对路径的真加载验证 + Q40 姓名残留清点` —— 照 wake.py/stt.py 的实际调用跑 venv python（cwd=项目根，只读盘不碰麦克风）：openwakeword `Model(wakeword_models=[相对路径])` 加载成功，`m.models`=[aili_xiya_v0.9b]，predict 后 `prediction_buffer` 有 `aili_xiya_v0.9b`（wake.py:82 用的 key）→ 相对路径与改前等效；sherpa `from_paraformer` 从 `.hf-cache/sherpa-paraformer-zh` 加载成功。姓名残留 560 行清点进 Q40（代码/配置 366、历史 md 194，改历史需你逐字授权）。自曝第 37 处（查 `m.wakeword_models` 不存在）。部署 3 轮照旧未测。**已本地 commit，未 push**（rev-list 246，main ahead 90）。(→ records/2026-11-20-13-44-31.md)
