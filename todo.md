@@ -81,3 +81,7 @@
 - [x] **2026-11-19 20:46 换 v0.9b 启动（完成 2026-11-20 12:2x）**：config.yaml 指向 aili_xiya_v0.9b（threshold 0.75 不动，model_options +1 条）；三服务起（8080/9880/7860），health 报 model=aili_xiya_v0.9b.onnx / threshold 0.75；现场 1 次环境唤醒 FP（期望 0，违反），STT 无语音 (→ records/2026-11-19-20-46-21.md)
 - [ ] 2026-11-20 12:2x 部署侧 3 轮验收（13 次真呼唤 @0.75 / 长噪 62.83 s / 环境音期望 0 / 到达结尾）**仍未测**，等你在麦克风前安排时间 (→ records/2026-11-19-20-46-21.md)
 - [x] **2026-11-20 12:39 停掉所有服务（你要开始迁移）**：停 llama 17988 / GSV 17096+17676 / jarvis 18556+10556，逐端口复验 DOWN；部署 3 轮继续未测 (→ records/2026-11-20-12-39-28.md)
+- [ ] **2026-11-20 13:20 迁移完整性校验（校验完成，路径修正待你定）**：新址 F:\git\JarvisAi 与原址 C:\Users\楼听\Desktop\git\JarvisAi 全量比对——141236 文件、相对路径 100% 一致、逐文件 SHA-256 全量 0 处不一致、目录 13776/13776、`.git` 2257 文件/13,276,709 B 全同、`main` = 3084bb2。**文件零缺失**。阻塞点：全树 269 处硬编码旧路径，其中 `config.yaml`(7) + `.venv/activate.bat`/`.venv-gsv/activate.bat` 会让清空后起服务直接坏（`jarvis/` 与 3 个 .bat 用 `%~dp0` 不受影响）。Q39 等你选：只改运行必需 / 全量替换 / 不改直接清空。(→ records/2026-11-20-13-20-00.md)
+- [x] **2026-11-20 13:44 config.yaml 改相对地址（完成）**：照你「我的名字不应该出现在数据中的, 将其改为相对地址」——删掉 6 行的 `C:\Users\楼听\Desktop\git\JarvisAi\` 前缀（:2/:9/:14/:18/:24 唤醒 ONNX、:45 sherpa model_dir、:62 llama gguf），改写成 `openWakeWord/output/<模型>/<模型>.onnx`、`.hf-cache/sherpa-paraformer-zh`、`llm/models/Qwen3.5-2B-Q4_K_M.gguf`；阈值与 label 不动。验证：config 里 `楼听` 与 `u697C` 归 0，7 个相对路径逐一实测存在。起服务复测未做（沙箱跑不了命令）。(→ records/2026-11-20-13-44-31.md)
+
+

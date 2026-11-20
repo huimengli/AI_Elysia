@@ -327,3 +327,17 @@ signed-in profile」）→ **jarvis 的 profile 没有 B 站登录 cookie**。
   training/_t2_v09c_features.py（train 5 件 negx_tr_1612/1614/1616/1618/1620、test 4 件 negx_te_1613/1615/1617/1619）。
 - **仍等你的两件（照实写，我不自行做）**：起服务（jarvis :7860 + llama :8080 + GSV :9880，照「不重启」）、
   真人 @0.85 临时阈值（方案①b）。部署 13 次真呼唤 + @0.85 3 轮必须你本人说话，服务不停才测得到。
+## Q39 · 2026-11-20-13-20 · 问 · status: wait
+
+- **你的话（逐字）**：「1. 项目已经迁移,原项目在C:\Users\楼听\Desktop\git\JarvisAi 2. 看看有没有缺失的文件,没有的话我要将原地址清空了」
+- **我测完的关键事实（照实测）**：文件层面**零缺失**——原/新各 141236 文件，逐文件 SHA-256 全量比对 0 处不一致，总字节 26,990,938,870 相同，目录 13776/13776，符号链接 0/0，`.git` 逐字节相同（`main` = 3084bb27d81d4405b49ebe0530882f897b785f6e）。
+- **清空原址后一定会坏（照实测）**：`config.yaml` 7 处旧路径（现役唤醒 ONNX :2/:9/:14/:24、sherpa `model_dir` :45、LLM gguf :62）+ `.venv\Scripts\activate.bat` 与 `.venv-gsv\Scripts\activate.bat` 的 `set VIRTUAL_ENV=C:\Users\楼听\Desktop\git\JarvisAi\.venv`（`start.bat` 第 3 行 call 它）→ 起服务读不到模型、`python` 回落全局 Python312（无项目依赖）。
+- **不受影响（照实测）**：`jarvis/` 0 处旧路径；`start.bat`/`start_all.bat`/`install.bat` 全用 `%~dp0`；venv 的 `home` 指向 `AppData\Local\Programs\Python\Python312`（实测在），新址 `.venv\Scripts\python.exe` 在（270616 B）。
+- **三条路（你定，我不自行改）**：
+  1. 只改运行必需：`config.yaml`（7 处）+ 两个 `activate.bat`（各 1 处）——推荐；
+  2. 全量替换 269 处（含 `openWakeWord/train_config*.yaml` 112、`training/` 67，历史 md 文字也改）；
+  3. 不改直接清空原址（起服务必坏，不推荐）。
+- **顺带请你确认**：清空前关掉所有 Jarvis/GSV/llama 进程与占用；计划任务/快捷方式/自启里没写死旧路径（沙箱跑不了命令 `spawn EPERM`，这 3 项我核不了）。
+
+> **口径补正（2026-11-20 13:33）**：「269 处」是狭口径（限定扩展名的 ripgrep）；逐文件扫关键目录的宽口径是 374 处。**清空后必坏的最小集合 = 3 个文件 9 处**：`config.yaml`(7) + `.venv\Scripts\activate.bat`(1) + `.venv-gsv\Scripts\activate.bat`(1)。
+
