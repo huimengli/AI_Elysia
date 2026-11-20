@@ -361,4 +361,12 @@ signed-in profile」）→ **jarvis 的 profile 没有 B 站登录 cookie**。
   3. 历史 md 也清（194 行）：需要你逐字授权我改 records/、tests/、ai_buckup/、need_audio.md 里的历史内容（我不自行做）。
 - 顺带提醒（照实测）：清空原址后 _wheels/*.ps1 的 Set-Location、training/ 的 ROOT、openWakeWord 训练配置、两个 activate.bat 全部指向已删目录 —— 训练与 start.bat 起服务都会坏。
 
+## Q41（2026-11-20-20-45-00）蓝屏取证缺三样，要你给
+
+- **状态**: `status: wait`
+- **要什么**:
+  1. **把 dump 拷进工作区**（需要管理员）。用**管理员 PowerShell** 跑一行：`Copy-Item 'C:\Windows\Minidump\112026-9859-01.dmp' 'F:\git\JarvisAi\.tmp\dump.dmp'`。我的沙箱读不了 `C:\Windows\Minidump`（`Access to the path ... is denied`），拿到副本我就能自己解析 minidump 的模块表，报出**崩掉的那个驱动名**（现在只有码 0x3B 和参数地址，没有模块名）。
+  2. **你那条指令的原话**（对爱莉希雅说的那句），以及你记得它做了什么（播了声音？开了浏览器？改了音量？开了哪个程序？）。ASR 落盘的最后一条是 19:04:30 的「播放月增进新声明。」，它被记成 `near_miss`，后面的动作没有落盘。
+  3. **这台机器上装了哪些内核层的东西**：腾讯电脑管家 / AntiCheatExpert（ACE-ADVT/ACE-BASE，2026-11-16 改过）、米哈游 HoYoProtect、TAOKernel/TFsFlt（腾讯）、QQPCMgr `qmbsecx64`、向日葵（Oray 三个驱动）、虚拟声卡 `vbaudio`/`fxvad`、`inpoutx64`、**TweakCube**（GPD 功率/降频）、AMD 性能档 `AMDRyzenMasterDriver`。GPD WIN 4 + 集显 780M（驱动 2026-07-24 版）+ 这堆反作弊/杀软/远程驱动，是 `SYSTEM_PTE_MISUSE`(0x3B) 的常见嫌疑面。哪些能卸载/关闭，先关哪个，要你定。
+
 
