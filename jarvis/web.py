@@ -10,6 +10,7 @@ import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from starlette.websockets import WebSocketDisconnected
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 
 from jarvis.tts import speak_streamed, stop_speaking, is_speaking
 from jarvis import services as svc
@@ -17,6 +18,8 @@ from jarvis import services as svc
 _STATIC_DIR = Path(__file__).parent / "static"
 
 app = FastAPI(title="Jarvis")
+# 顶栏三页共用一份（design v3.2 §3-5）：`/static/tabs.css` + `/static/tabs.js`。
+app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 _clients: list[WebSocket] = []
 _loop: asyncio.AbstractEventLoop | None = None
 
@@ -353,6 +356,12 @@ async def api_health():
 
 _mon_state: dict = {}      # ws -> {"interval": int, "cursor": {name: int}}
 _mon_interval = 5          # 全局节拍 = 各客户端的最小间隔
+
+
+@app.get("/about", response_class=FileResponse)
+async def about():
+    """about（相关页面）：只写已实现的事实，不写没实现过的功能（design v3.2 §3-5）。"""
+    return FileResponse(_STATIC_DIR / "about.html")
 
 
 @app.get("/monitor", response_class=FileResponse)

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>about — 爱莉希雅</title>
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="/static/tabs.css">
+<style>
+  body{background:linear-gradient(165deg,#171021,#1d1428 58%,#150f1f);color:#F6ECF2;
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,Segoe UI,sans-serif;padding:44px 22px 22px;}
+  h1{font-size:20px;color:#F8A9C4;margin:0 0 10px;} h2{font-size:15px;color:#FFD8E8;margin:18px 0 6px;}
+  table{border-collapse:collapse;font-size:13px;margin:4px 0;} th,td{border:1px solid rgba(201,183,224,0.28);padding:4px 10px;}
+  th{color:#C9B7E0;text-align:left;} .note{color:#CDBCC8;font-size:12px;} .bad{color:#F8A9C4;}
+  code{color:#F2C9A8;}
+</style>
+</head>
+<body>
+<h1>about — 照实的项目现状（不写没实现过的功能）</h1>
+<h2>组件与端口（照实）</h2>
+<table><tr><th>组件</th><th>端口</th><th>起法</th></tr>
+<tr><td>jarvis (FastAPI)</td><td>7860</td><td>你起 / `start_all.bat` / `start_all_in_one.bat`</td></tr>
+<tr><td>llama.cpp</td><td>8080</td><td>单窗口版由 jarvis 作父进程起（`-c 24576` 未动）</td></tr>
+<tr><td>GPT-SoVITS</td><td>9880</td><td>单窗口版由 jarvis 作父进程起</td></tr>
+<tr><td>Umi-OCR</td><td>50015</td><td>外部起（面板标「外部起 · 无日志接管」，无关闭按钮）</td></tr>
+</table>
+<h2>唤醒与识别（照实）</h2>
+<table><tr><th>项</th><th>值</th></tr>
+<tr><td>唤醒模型</td><td><code>aili_xiya_v1.3.onnx</code></td></tr>
+<tr><td>阈值</td><td>0.75（<span class="bad">不可改</span>，照你定的规矩）</td></tr>
+<tr><td>STT 引擎</td><td>whisper（`stt.engine: whisper`，不可改）</td></tr>
+<tr><td>真人 20 轮判据</td><td>近音 ≤3：v1.3 真人 14-15（均 14.15，20/20 满足），近音 3、无关 0 → 判据 ≤3 <span class="bad">未达</span>；v0.9b 真人 4.00（0/20 满足）</td></tr>
+<tr><td>跨唤醒词串扰</td><td>v1.3 总 28（小度小度 26 / 16 轮触发，峰 0.797）；v0.9b 总 36（小艺 9，峰 0.799）→ Q42 照数选 v1.3；重训练不进（你的规则）</td></tr>
+</table>
+<h2>Monitor 埋点口径（照实）</h2>
+<table><tr><th>指标</th><th>口径</th></tr>
+<tr><td><code>asr_secs</code></td><td>一次转调耗时</td></tr>
+<tr><td><code>llm_secs</code> / <code>llm_chars</code></td><td>LLM 处理耗时 / 回复字数</td></tr>
+<tr><td><code>tts_secs</code></td><td>含合成与播放全程</td></tr>
+<tr><td><code>wake_peak</code></td><td>真越线时的 score</td></tr>
+<tr><td>tokens/s</td><td><span class="bad">未埋</span>（要 tokenizer），F 块记的是耗时与字数</td></tr>
+<tr><td>工具统计（E 块）</td><td>次数 / 失败 / 均耗时</td></tr>
+<tr><td>缓存 TTL（照实）</td><td>netstat 2 s、我起窗口数 5 s、探针 1 s → 监听 pid 陈旧 ≤2 s、窗口数 ≤5 s</td></tr>
+</table>
+<h2>控制授权（照实）</h2>
+<p>面板只关**本进程起的** pid（名单在 <code>.tmp/jarvis_child_pids.json</code>）；外部 pid 请求被拒（「不是本进程起的」）；taskkill 真实输出回显进日志环形缓冲（2,000 行/服务）。关窗全关走 <code>shutdown()</code>，<span class="bad">未测</span>（CTRL_CLOSE_EVENT 约 5 s 时限，沙箱不可测）。</p>
+<h2>台账位置（照实）</h2>
+<p><code>progress.md</code> 进度台账 · <code>tree.md</code> 结构快照 · <code>records/</code> 需求记录 · <code>tests/</code> 测试（每轮 record_i.md + 批次 opinion.md + 累积 tests/opinion.md） · <code>hard_bug.md</code> 阻塞问题 · <code>need_user.md</code> 需你确认的 Q · <code>design.md</code> 总设计（当前 v3.2，旧版在 <code>ai_buckup/</code>）。</p>
+<h2>照实的未测项</h2>
+<ul class="note">
+<li>真会话 1 s 节拍达标（实测中位 1.9 s，缓存后稳态快照 50→0 ms，要重启 jarvis 才生效）</li>
+<li>隐藏页降 30 s 的实际省电、日志折叠、关闭按钮 confirm、关窗全关只杀自起 pid</li>
+<li>真端到端语音（7860/8080/9880/9333 未监听时只有 50015 在听）与 20 轮轮 11-20 需你在麦克风前</li>
+</ul>
+<script src="/static/tabs.js"></script>
+</body>
+</html>

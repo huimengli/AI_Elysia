@@ -1,12 +1,12 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-21-16-45-00（Monitor 骨架与验证批 commit 后重建）。变化：新增 `jarvis/services.py`（日志中枢/授权名单/快照）、
-`jarvis/static/monitor.html`（`/monitor` 页）、`start_all_in_one.bat`（单窗口版，全 ASCII + CRLF）、
-`tests/2026-11-21-15-37-53_monitor/`（record_1-3 + opinion）与 `ai_buckup/hard_bug.md_2026-11-21-15-45-00.md`（hard_bug 全量备份 204 行）。
-结构现状：代码在 `jarvis/`（`services.py` 是 Monitor 的父进程侧，`web.py` 出 `/monitor` 与 WS 推送）；`tests/` 与 `records/` 照实按时间落盘；
-日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`jieba.cache`、`love_silvia.txt` 照实未 commit（根目录垃圾，不入库）。
+更新时间: 2026-11-21-18-40-00（分页标签批 commit 前重建）。变化：新增 `jarvis/static/tabs.css`、`jarvis/static/tabs.js`
+（三页共用顶栏）、`jarvis/static/about.html`（新页 + 新路由 `/about`）、`tests/2026-11-21-18-27-30_tabs/`（record_1-3 + opinion）、
+`ai_buckup/design.md_2026-11-21-18-27-30.md`（design v3.1 归档，现 design.md = v3.2）。
+结构现状：代码在 `jarvis/`（`web.py` 现 mount `/static` 并出 `/monitor`、`/about`）；`tests/` 与 `records/` 照实按时间落盘；
+日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`jieba.cache`、`love_silvia.txt` 照实未 commit。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：705
+### 文件数（git ls-files --cached --others --exclude-standard）：715
 ```
 .//
   .gitignore
@@ -33,6 +33,7 @@ ai_buckup/
   design.md_2026-11-17-10-24-25.md
   design.md_2026-11-17-10-44-33.md
   design.md_2026-11-20-22-14-46.md
+  design.md_2026-11-21-18-27-30.md
   hard_bug.md_2026-10-13-17-45.md
   hard_bug.md_2026-11-13-00-12-17.md
   hard_bug.md_2026-11-17-13-26-51.md
@@ -97,9 +98,12 @@ jarvis/
   watchdog.py
   web.py
 jarvis/static/
+  about.html
   favicon.ico
   index.html
   monitor.html
+  tabs.css
+  tabs.js
 jarvis/tools/
   __init__.py
   app_control.py
@@ -238,6 +242,8 @@ records/
   2026-11-21-13-05-50.md
   2026-11-21-15-11-57.md
   2026-11-21-15-37-53.md
+  2026-11-21-17-48-25.md
+  2026-11-21-18-27-30.md
   AI_Benchmark.md
   JARVIS_STATE.md
   PROJECT_SUMMARY.txt
@@ -677,6 +683,11 @@ tests/2026-11-21-15-11-57_v13/
   record_8.md
   record_9.md
 tests/2026-11-21-15-37-53_monitor/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-21-18-27-30_tabs/
   opinion.md
   record_1.md
   record_2.md

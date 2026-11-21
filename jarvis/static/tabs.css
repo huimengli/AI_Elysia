@@ -1,0 +1,8 @@
+.dsh-tabs{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;gap:8px;padding:6px 12px;
+  background:rgba(23,16,33,0.94);border-bottom:1px solid rgba(248,169,196,0.34);
+  font-family:"PingFang SC","Microsoft YaHei",system-ui,Segoe UI,sans-serif;}
+.dsh-tabs a{color:#CDBCC8;text-decoration:none;padding:4px 12px;border-radius:8px;
+  border:1px solid rgba(201,183,224,0.28);font-size:13px;letter-spacing:0.02em;}
+.dsh-tabs a:hover{color:#F6ECF2;border-color:rgba(248,169,196,0.6);}
+.dsh-tabs a.active{color:#171021;background:linear-gradient(140deg,#FFD8E8,#F8A9C4);border-color:#F8A9C4;}
+body{padding-top:38px !important;}
