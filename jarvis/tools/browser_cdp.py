@@ -85,9 +85,35 @@ PLAY_RECT_JS = """(() => {
 })()"""
 
 
+# **HB-053 修法①（2026-11-21 13:50，records/2026-11-21-13-05-50.md 第 6 条「再做①归属门禁」）**：
+# 端口 9333 是 jarvis 起窗口时自己带的 `--remote-debugging-port`（本文件顶部 §Scope）。
+# 2026-11-21 轮 21 实测：`click_page_text("")` 连上 9333 后点了**不是我起的窗口**（pid 5244）。
+# 所以**归属先验、后动**：profile 里扫不到 jarvis 的 pid（记录文件 + profile 同一口径），
+# 这个端口上的任何页面都不动，照实返回。fail-closed：扫不到 = 不动。
+_OWNERSHIP_FAIL = ""
+
+def _owner_pids(port: int = CDP_PORT) -> set[int]:
+    """pid jarvis 自己起的窗口：`PID_FILE` 记录 + jarvis 专用 profile 的进程（Q29/Q32/Q34 口径）。
+
+    Lazy import: `app_control` imports this module, so a top-level import would be a cycle.
+    In my sandbox the pid scan is blocked (piped stdio denied) -> empty set -> gate closed.
+    """
+    try:
+        from jarvis.tools.app_control import _jarvis_profile_pids, _load_pids
+        return set(_jarvis_profile_pids()) | set(_load_pids())
+    except Exception:
+        return set()
+
 def targets(port: int = CDP_PORT) -> list[dict]:
     """Page targets Chrome reports. [] when the port is not open (no window of mine was
-    launched with --remote-debugging-port)."""
+    launched with --remote-debugging-port), and [] when the endpoint is not owned by jarvis
+    (HB-053 gate)."""
+    global _OWNERSHIP_FAIL
+    _OWNERSHIP_FAIL = ""
+    if not _owner_pids(port):
+        _OWNERSHIP_FAIL = (f"CDP 端口 {port} 上**没有 jarvis 起的窗口**（记录文件与 profile 里都扫不到 pid），"
+                            "**不动任何页面**。")
+        return []
     try:
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/json", timeout=3) as r:
             return json.load(r)
@@ -175,6 +201,8 @@ def open_cdp(kw: str = "", port: int = CDP_PORT) -> tuple[CDP | None, str]:
     """Connect to one of jarvis' pages. Returns (client, "") or (None, honest reason)."""
     ts = targets(port)
     if not ts:
+        if _OWNERSHIP_FAIL:
+            return (None, _OWNERSHIP_FAIL)
         return (None, f"CDP 端口 {port} 连不上（没有我起的窗口带 --remote-debugging-port）")
     t = _pick(ts, kw)
     if t is None:

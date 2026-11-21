@@ -175,3 +175,14 @@
   2. **归因边界照实**：focus_window("") 我确实调了（返回「已聚焦」文案），**前台是否被我的调用改动没有独立证据**；你当时在玩「星之翼」，归因可能是你自己的操作。写记录的人不能替用户归因，这条照实挂在案里。
 - **优先级由你定**（建议 P1，因为这条是「动了不属于 jarvis 的东西」的通道）；本轮不修。
 - **关联**：`records/2026-11-21-12-54-47.md`、`tests/2026-11-21-10-39-00_cc/record_21.md` 追加段。
+
+## HB-053 修法落地（2026-11-21 13:56，照你的顺序「先做②空串拒绝,再做①归属门禁」）
+
+- **状态：partially closed（两条修法都落地，正面路径未测）**。
+- **修法②空串拒绝**（`jarvis/tools/router.py`）：新增 `_WILDCARD_EMPTY` = `focus_window.title` / `find_on_page.text` / `click_page_text.text` / `find_on_screen.text` / `web_search.query` / `set_clipboard.text` / `show_notification.title+message`。这批的必填字符串为空（`{}` 与显式空串两种形态都测）→ 分发层**直接拒、不执行**，文案写明「空标题 = 匹配任意窗口；空文本 = indexOf("") 命中第一个元素；空 query = 开空搜索页；空文本 = 清空剪贴板」。其余工具照旧走「灌空串的如实分支」（`open_url`/`navigate_url`/`open_site`/`power_command`/`kill_process` 等，实测行为未变）。
+- **修法①归属门禁**（`jarvis/tools/browser_cdp.py` + `jarvis/tools/desktop.py`）：`targets()` 是所有 CDP 动作的入口（`open_cdp` / `evaluate` / `pages` 都经它），先验归属：pid 必须来自 `PID_FILE` 记录 + jarvis 专用 profile（Q29/Q32/Q34 同一口径），扫不到 = **fail-closed，不动任何页面**；`focus_window` 同样只认自起窗口，非自起窗口照实拒绝（「要动它需要你明确授权」）。
+- **验证 3 + 3 轮全 PASS**（`tests/2026-11-21-13-05-50_cc/record_5.md … record_10.md`）：② 12 项/轮全拒、0 执行、窗口清单前后逐字相同、剪贴板全程未碰、气泡没弹；① `focus_window` 对 pid 5244（DSH 窗口）**拒绝执行**（正是轮 21 越界的堵法），3 项页面工具照实返回 9333 连不上，`navigate_url` 照旧「你的窗口我不聚焦、不输入」。
+- **未测照实**：**正面路径**（9333 上真有 jarvis 自起窗口时只动它）在**你的会话**里未测——我沙箱里 jarvis 起的窗口随驱动进程一起没，只验到拒绝路径。
+- **照实更正一条**：我此前记「沙箱里 profile pid 扫不出来、返回空集合」只在 **node spawn（piped stdio 被拒）** 里成立；由 pwsh 起的 python 里进程扫描能用，本次扫到 45 个 profile pid。门禁两种环境都按设计走（扫不到 = 拒，扫到 = 只认自起）。
+- **新增需你确认（Q43）**：`focus_window` 现在只聚焦 jarvis 自起窗口。要聚焦你起的窗口（记事本/游戏/你自己的浏览器）需要你明确授权——**要不要开这个口子**。
+- **关联**：`records/2026-11-21-13-05-50.md` 第 6 条、`tests/2026-11-21-13-05-50_cc/`、`need_user.md` Q43。

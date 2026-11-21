@@ -437,6 +437,29 @@ _SCHEMA_PARAMS = {s["function"]["name"]: s["function"].get("parameters", {}).get
 _SCHEMA_REQUIRED = {s["function"]["name"]: set(s["function"].get("parameters", {}).get("required", []))
                     for s in TOOL_SCHEMAS}
 
+# **HB-053 修法②（2026-11-21 13:46，records/2026-11-21-13-05-50.md 第 6 条「先做②空串拒绝」）**：
+# 上面「必填字符串缺 → 灌 ""」对大多数工具是对的（open_url("") → 「输入里没有 URL」，如实分支）。
+# 但有一批工具的空参数**不是如实分支，是通配或真实副作用**（2026-11-21 轮 21 实测）：
+#   - `focus_window("")`：空标题 = **匹配任意窗口**（`indexOf("") == 0` 恒真），实测把「星之翼」聚焦了
+#     （前台是否被改动**未证实**，你当时在玩游戏 —— 归因照实挂案）。
+#   - `find_on_page("")` / `click_page_text("")`：空文本 = `indexOf("") == 0` → **命中页面第一个元素**，
+#     实测点掉第一处「图片」并把那个窗口导航到了必应。
+#   - `find_on_screen("")`：实测「已找到「」位于 (237,10)」= 空串在 OCR 文本里也是通配。
+#   - `web_search("")`：实测**起了一个 jarvis 窗口**并开空搜索页（真实副作用，不是「没做任何事」）。
+#   - `set_clipboard("")`：**清空剪贴板**（真副作用，Q18 的先存后还原则靠它）。
+#   - `show_notification("")`：空标题/空内容 = 弹一个空气泡（Q19 未肉眼确认，照实不测）。
+# 这批工具的空参数在分发层**直接拒、不执行**；其余工具照旧走灌 "" 的如实分支。
+_WILDCARD_EMPTY = {
+    "focus_window": ["title"],
+    "find_on_page": ["text"],
+    "click_page_text": ["text"],
+    "find_on_screen": ["text"],
+    "web_search": ["query"],
+    "set_clipboard": ["text"],
+    "show_notification": ["title", "message"],
+}
+
+
 
 def _coerce(tool_name: str, tool_args: dict) -> dict:
     """Force tool arguments to the types the schema declares.
@@ -494,6 +517,14 @@ def dispatch(tool_name: str, tool_args: dict) -> str:
     if missing:
         return (f"工具「{tool_label(tool_name)}」缺必填参数 {missing}（不是字符串，灌 0 就是真实副作用："
                 f"音量/亮度/鼠标坐标会被真的改掉），**没有执行任何动作**。")
+    # HB-053 修法②：这批工具的空参数是通配/真实副作用，直接拒，不执行
+    blanks = [k for k in _WILDCARD_EMPTY.get(tool_name, ())
+              if str(tool_args.get(k, "")).strip() == ""]
+    if blanks:
+        return (f"工具「{tool_label(tool_name)}」的空参数 {blanks} 是**通配或真实副作用**"
+                f"（空标题 = 匹配任意窗口；空文本 = indexOf(\"\") 命中第一个元素；"
+                f"空 query = 开一个空搜索页；空文本 = 清空剪贴板），"
+                f"**没有执行任何动作**。请给出真实参数。")
     try:
         return str(fn(_coerce(tool_name, tool_args)))
     except Exception as e:
