@@ -1,19 +1,13 @@
-<!-- 已归档于 ai_buckup/hard_bug.md_2026-11-17-13-26-51.md（全量备份，含 HB-047 立案结案、11-06 更正、HB-040 结案）；本文件只保留结案摘要 -->
+<!-- 已归档于 ai_buckup/hard_bug.md_2026-11-21-15-45-00.md（全量备份 204 行，含 HB-047 结案摘要、HB-050 结案依据、各条追加段与优先级追加段）；已结案压成一行结论，open 项照实截留，历史内容不删 -->
 
-# hard_bug（compact，已解决）
+# hard_bug（compact）
 
-- **影响**：模型省略可选参数时，播报/行为用**空串**而不是函数的中文默认值（`set_timer` 定时提醒不播报文案）
-- **现象**：`dispatch('set_timer', {'seconds':3600})` → 「已设置 1小时 0分 后的提醒：**（空）**」
-- **尝试**：只读 `_coerce` 与 schema，确认 schema 里 `message` **没有** `default` 字段，函数默认值是唯一来源
-- **根因**：`jarvis/tools/router.py::_coerce` 遍历**所有** schema 属性写值，`out.get(key)` 缺席时得 `None`
-  → 被写成 `""`，且**键存在于 dict** → `set_timer(seconds, message="定时到了！")` 收到 `""`，默认值被架空
-- **方案**：`if key not in out: continue`（模型没传就不注入，函数默认值生效）；显式 `null` 仍 coerce（防 `NoneType` 崩）。
-  **不改 schema 文案、不增删工具**（工具面 token 不变）
-- **验证**：**3 轮全 PASS**（`tests/2026-11-17-13-25-00_coerce/record_1..3.md` + `opinion.md`），附加 `click_at` 缺省 `button` 生效
-- **关联**：`records/2026-11-17-13-25-00.md`、`records/2026-11-13-*`（立案）、`events.db` 242/245（当年崩溃源）
-- **归档**：本条结案后 `hard_bug.md`（HB-047 立案结案 + 11-06 更正 + 本条）全量备份到
-  `ai_buckup/hard_bug.md_2026-11-17-{ts_tail}.md`，原文件 compact + 顶部归档注记（§3）
+## 已结案（一行结论，全量见备份）
 
+- **HB-047** · 2026-11-17 · **已修 + 3 轮全 PASS**：`_coerce` 只灌模型传来的键（`if key not in out: continue`）→ 函数中文默认值生效；显式 `null` 仍 coerce（防 `NoneType` 崩）；不改 schema 文案、不增删工具（工具面 token 不变）。
+- **HB-050** · 2026-11-18-12-44 立案 → 2026-11-20 22:14 **closed**：`click_page_text` 导航改「取 `href` + CDP `Page.navigate` 我起的窗口」（轮 33 端到端 PASS，第一手 progress.md:24 / todo.md:25）；SPA 受信点击触发导航**未证实**，不承诺。
+
+## 截留照实（open 项全文保留）
 
 ## HB-048 — 2026-11-17 22:05 · 状态：**未修（open）** · 语音整句被「吃尾」，LLM 用对话历史关键词播了之前指定的歌
 
@@ -62,32 +56,6 @@
   3. 每轮驱动在 WS 连不上时**如实记 FAIL 并查 health**，不把连不上算成模型失败。
 - **关联需求/测试**：records/2026-11-18-10-17-23.md、tests/2026-11-18-10-17-23_cc/record_9.md、
   HB-047（chrome 崩溃，wontfix，Q31）、Q22（8 GB 分页不动）。
-
-## HB-050 · 2026-11-18-12-44 · 状态：open（我暂停落盘时未结案）
-- **编号/时间**：HB-050，2026-11-18 12:40-12:44（jarvis20，WS 文本，无语音）。
-- **影响**：`click_page_text`（我起窗口里的页面点击）能否真的导航**未证实**；「页面里找字并点击」
-  这条能力现在只能记「命中坐标 + 点下元素 = 目标链接」。
-- **现象**：直测 `find_page_text("番剧", click=True)` 报「已用 CDP 受信点击『番剧』 @(x=100,y=32)」，
-  点击后复读 标题「哔哩哔哩 (゜-゜)つロ 干杯~-bilibili」 地址 `https://www.bilibili.com/` —— **地址没变**。
-  轮 28 用户话「点击页面上的番剧」，模型只调 `find_on_page`（闸门生效），工具崩在我自己的代码上。
-- **尝试与实测**：
-  1. 复现崩因：`c.ev` 返回 `'null'` → `json.loads('null')` = `None` → `.get` 崩（`'NoneType' object has no attribute 'get'`）；
-     **根因是我拼接 JS 字符串时漏了外层 `for` 的右花括号**（`if(hits.length>=5) break; }` 只闭合 `if`），
-     `return` 落进 for 体、函数体未闭合 → 表达式求值 undefined → CDP 回 `null`；补 ` }` 后立刻命中
-     `{"命中":[{"文本":"番剧","x":100,"y":32,"href":"https://www.bilibili.com/anime/"},…]}`；已加防御（非 dict 如实报）。
-  2. 坐标核对：`a[href="https://www.bilibili.com/anime/"]` 矩形 `x=86,y=0,w=28,h=64` → 中心 (100,32)；
-     `document.elementFromPoint(100,32)` → `{"点下元素":"SPAN","文本":"番剧","祖先a":"…/anime/"}`，点下就是目标链接。
-  3. 对照：DOM `a.click()`（不可信事件）同页面不导航；且同一页面两次查询该 href，一次列出 3 个、一次返回「没有该链接」
-     —— **同一页面查询不一致，原因未证实**。
-- **根因**：**未证实**。可能方向（都未验证，不写成结论）：SPA 路由对 CDP 事件的响应需要额外的 pointer/时间序列；
-  我的 `real_click` 序列（mouseMoved → 250 ms → mousePressed → 80 ms → mouseReleased）在这类导航链接上
-  是否被页面识别为一次有效点击，没有证据；我的查询语句在 SPA 重渲染后的时序敏感也可能造成「没有该链接」。
-- **方案（下一步，未开工）**：①在同一个 CDP 会话里做「点击前后连续读 `location.href` + 记录 DOM 快照」的
-  最小实验，判定是事件没被识别还是页面在点击后立刻重渲染；②若事件路线不稳，改用「找到元素后取 `href`，
-  用 `Page.navigate` 导航我自己起的窗口」（丙方案精神：无视觉、无坐标，导航成功以地址复读为证）；
-  ③`click_page_text` 在实验结论出来前，回复里必须如实说「点了、地址没变」，不承诺导航成功。
-- **关联**：tests/2026-11-18-10-17-23_cc/record_10.md、record_11.md、need_user.md Q37、progress.md P1②。
-
 # HB-051（2026-11-18 20:21，status: open）播放中的视频音频触发唤醒（你确认没说话）
 
 - **编号/时间/状态**：HB-051，2026-11-18 20:21，**open**（等你选方案，我不自行推进）。
@@ -128,12 +96,6 @@
 - **方案（数字摆出，等你选，我不动阈值/onnx）**：①a 播放期间门住麦克风（这 9 段全不触发，代价=播放中真人打断失效）；①b 播放期间临时 0.85（9 段 live 全 <0.85，离线最高 0.861；真人「爱莉希雅」@0.85 检出 3 轮**未测**，改阈值需 3 轮验收）；③ 不改、写使用须知（接受 2.5%/10 s）。恢复边界照你的话「**播放过程中Chrome崩溃,不恢复**」。
 
 
-## HB-050 状态更新（2026-11-20 22:14，追加，不改历史条目）：状态对齐为 **closed**
-
-- **状态**：`open`（`hard_bug.md`:66 原写「我暂停落盘时未结案」）→ **closed**。
-- **结案依据（照第一手，progress.md:24 与 todo.md:25 早记，本文件的状态行当时未同步）**：方案②「取 `href` + CDP `Page.navigate` 我自己起的窗口」端到端 PASS（轮 33，2026-11-18 20:24）——`https://www.bilibili.com/` → `https://www.bilibili.com/anime/`，标题变「番剧 - …」，回复同时写两条事实；轮 33 工具链全由 2B 自选，我起窗口数 1（pid 15124）。
-- **保留的诚实边界（照实，不承诺）**：`click_page_text` 的受信点击在这类 SPA 导航链接上**仍未证实触发导航**（坐标对、`elementFromPoint` 点下就是目标 SPAN、地址复读不变）；同一页面两次查同一 href 结果不一致，原因未证实。所以「页面里找字并点击」这条能力照 **取 href + Page.navigate** 口径，不照「我点到了」口径。
-- **关联**：records/2026-11-20-22-14-46.md（对齐动作）、tests/2026-11-18-10-17-23_cc/record_12.md、progress.md「最近结论」11-18 20:21-20:26 条。
 
 ## HB-052 · 2026-11-20 22:14 · 状态：**open · 等复现** · 蓝屏 0x3B SYSTEM_PTE_MISUSE（你定 P2）
 
