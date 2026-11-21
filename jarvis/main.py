@@ -3,6 +3,8 @@ import json
 import re
 import sys
 import time
+import os
+import atexit
 import threading
 import msvcrt
 from datetime import datetime
@@ -32,6 +34,27 @@ from jarvis.tools.router import TOOL_SCHEMAS, dispatch, tool_label
 
 _MAX_TOOL_LOOPS = 3
 _CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
+
+
+def register_clean_exit_hook() -> None:
+    """HB-049（records/2026-11-21-10-39-00.md 第 1 项）。
+
+    `JARVIS_TAG` 存在时写 `.tmp/<tag>.clean_exit`，让看门狗的判据成立：**码 0 且标记在 = jarvis
+    自己收尾；码 0 且标记不在 = 被外部终止**（不是正常收尾）。`atexit` 覆盖 sys.exit 与异常退出；
+    被 `TerminateProcess` 杀掉的进程**不会**跑 atexit，所以标记必然不在 —— 这正是「被杀」的第一手。
+    """
+    tag = os.environ.get("JARVIS_TAG")
+    if not tag:
+        return
+    path = Path(__file__).parent.parent / ".tmp" / (tag + ".clean_exit")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    def _write() -> None:
+        try:
+            path.write_text(time.strftime("%Y-%m-%d %H:%M:%S") + " clean_exit（atexit）", encoding="utf-8")
+        except Exception:
+            pass
+    atexit.register(_write)
+    print(f"[watchdog] clean_exit marker armed: {path}")
 
 # Global abort — Esc sets this, stops everything (speech + tool loop + follow-up)
 _abort = threading.Event()
@@ -855,6 +878,7 @@ def main() -> None:
     print("[爱莉希雅] Starting up...")
     print("[爱莉希雅] Keys: Esc = stop | F2 = type | INSERT = mute/unmute")
 
+    register_clean_exit_hook()  # HB-049：看门狗要的第一手证据
     start_web_background(port=7860)
     print("[爱莉希雅] Web UI: http://localhost:7860")
 
