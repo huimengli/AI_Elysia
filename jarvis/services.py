@@ -78,16 +78,31 @@ def port_open(port: int) -> bool:
 
 
 def listen_pids(ports):
-    """端口 -> 占用 pid（iphlpapi 的扩展 TCP 表，进程内查，不 shell）。"""
-    class Entry(ctypes.Structure):
-        _fields_ = [("bpid", ctypes.c_uint), ("dwState", ctypes.c_uint),
-                      ("dwLocalAddr", ctypes.c_uint), ("dwLocalPort", ctypes.c_uint)]
-    size = ctypes.c_ulong(0)
-    iphlpapi = ctypes.windll.iphlpapi
-    if iphlpapi.GetExtendedTcpTable(None, ctypes.byref(size), False, 2, 4, 0) != 0:
-        return {}
-    buf = ctypes.create_string_buffer(size.value)
-    if iphlpapi.GetExtendedTcpTable(buf, ctypes.byref(size), False, 2, 4, 0) != 0:
+    """端口 -> 占用 pid。第 111 处自曝：ctypes 的 AF_INET 扩展表连踩 4 次（结构字段顺序、
+    bOwner、把返回码 122=ERROR_INSUFFICIENT_BUFFER 当失败、行距 24 不是 16），而且绑通配/IPv6
+    的行不在 IPv4 表里，50015（Umi 在监听）都查不出来。改用与 start_all.bat 同语义的
+    `netstat -ano`：权威、含 IPv6，一次进程内解析（单拍多花 0.2-0.4 s，记进 record）。"""
+    out = {}
+    try:
+        r = subprocess.run(["netstat", "-ano"], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", shell=False)
+        wanted = {int(p) for p in ports}
+        for line in r.stdout.splitlines():
+            f = line.split()
+            if len(f) >= 5 and f[0] == "TCP" and f[3] == "LISTENING":
+                local = f[1]
+                i = local.rfind(":")
+                try:
+                    port = int(local[i + 1:].strip("[]"))
+                except ValueError:
+                    continue
+                if port in wanted:
+                    out[port] = int(f[4])
+    except Exception as e:
+        _log("monitor", "listen_pids 失败: " + repr(e))
+    return out
+    if rc2 != 0:
+        _log("monitor", "listen_pids 第二次调用 rc=" + str(rc2))
         return {}
     n = int.from_bytes(buf[0:4], "little")
     out = {}

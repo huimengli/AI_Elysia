@@ -456,6 +456,7 @@ async def websocket_endpoint(ws: WebSocket):
             elif msg.get("type") == "monitor_config":
                 # 间隔前端可调（Q30-3：最低 1 s）；页面隐藏时前端设 30 s 省 CPU
                 iv = max(1, min(30, int(msg.get("interval", 5))))
+                global _mon_interval  # 第 105 处自曝：少了 global，赋值变局部变量，节拍永远停在 5
                 st = _mon_state.get(ws)
                 _mon_state[ws] = {"interval": iv,
                                       "cursor": (st or {}).get("cursor", {})}
