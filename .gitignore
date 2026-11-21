@@ -61,3 +61,8 @@ openWakeWord/output/aili_xiya_v0.9b/*
 openWakeWord/output/aili_xiya_v0.9c/*
 !openWakeWord/output/aili_xiya_v0.9c/aili_xiya_v0.9c.onnx
 !openWakeWord/output/aili_xiya_v0.9c/aili_xiya_v0.9c.onnx.data
+# 2026-11-21 15:37（你的话「先将OCR加入.gitignore」）：Umi-OCR 的整份副本不入库。
+# 照实记：`Umi-OCR.exe` 早被 `*.exe` 排除；`UmiOCR-data/` 的 py_src/qml/site-packages 先前**非忽略**、
+# 被 tree.md 计入 2445 个的大头，本版起整目录排除（副本已在项目内，Umi 服务跑 50015 不需要入库）。
+# 照实：Umi 文件从未被跟踪（`git ls-files -- Umi-OCR_Paddle_v2.1.5/` = 0），所以只加规则、不需要 git rm。
+Umi-OCR_Paddle_v2.1.5/
