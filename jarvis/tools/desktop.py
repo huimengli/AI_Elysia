@@ -130,8 +130,48 @@ def read_screen() -> str:
     return _ocr_image(tmp)
 
 
+# **Q37（2026-11-21 13:58，records/2026-11-21-13-05-50.md 第 5 条「OCR已经拷贝到项目地址内」）**：
+# 你机器上的 Umi-OCR 已在 `50015` 提供 HTTP 服务（`/api/ocr`，POST base64）。
+# `options["data.format"] = "dict"` 返回 `[{text, box(4 角), score, end}, …]`——**带坐标**，
+# 这正是 `read_screen` / `find_on_screen` 要的（老实现用 WinRT OCR，中文识别弱，
+# 且 `TryCreateFromUserProfileLanguages` 依赖系统语言）。返回格式照旧 `文本 | x,y`（中心点），
+# `find_on_screen` 不用改。WinRT 那条**保留作兜底**：Umi 连不上/超时/返回空时用。
+OCR_API = "http://127.0.0.1:50015/api/ocr"
+
+def _ocr_via_umi(image_path: str) -> str:
+    """Umi-OCR HTTP API：返回 `文本 | cx,cy`（box 4 角取中心），失败返回空串（走兜底）。"""
+    import base64
+    import json
+    import urllib.request
+    try:
+        with open(image_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode()
+        body = json.dumps({"base64": b64, "options": {"data.format": "dict"}}).encode()
+        req = urllib.request.Request(OCR_API, data=body,
+                                     headers={"Content-Type": "application/json"})
+        res = json.loads(urllib.request.urlopen(req, timeout=120).read().decode("utf-8"))
+        if res.get("code") != 100:
+            return ""
+        out = []
+        for b in res.get("data") or []:
+            if not isinstance(b, dict):
+                continue
+            t = str(b.get("text") or "").strip()
+            box = b.get("box") or []
+            if not t or len(box) < 4:
+                continue
+            cx = int(sum(pt[0] for pt in box) / len(box))
+            cy = int(sum(pt[1] for pt in box) / len(box))
+            out.append(t + " | " + str(cx) + "," + str(cy))
+        return "\n".join(out)
+    except Exception:
+        return ""
+
 def _ocr_image(image_path: str) -> str:
-    """Run Windows OCR on an image file, return text with positions."""
+    """OCR 一个图片文件，返回带位置的文本。先走 Umi-OCR（中文 + 坐标），再兜底 WinRT。"""
+    umi = _ocr_via_umi(image_path)
+    if umi:
+        return umi
     ps = f"""
 [Console]::OutputEncoding=[System.Text.Encoding]::UTF8
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
