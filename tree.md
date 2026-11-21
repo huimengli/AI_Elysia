@@ -1,10 +1,9 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-20-22-35-00（progress.md 归档后重建）。变化：新增 `ai_buckup/progress.md_2026-11-20-22-14-46.md`（101 行全量归档）；`progress.md` 压缩为 79 行、`tree.md` 上一条（22:14，607 文件）已照 ls-files 重建并补列 `records/2026-11-20-20-25-21.md`/`records/2026-11-20-21-01-37.md`、删掉已不存在的 `%ALLUSERSPROFILE%/Application Data/Tencent/QQPCMgr/`。各台账均未越 100 行阈值。
+更新时间: 2026-11-21-12-05-00（P1 无你参与批次收口后重建）。变化：新增 `jarvis/watchdog.py`；新增 `records/2026-11-21-10-39-00.md`；新增 `tests/2026-11-21-10-39-00_cc/`（22 件 record + `opinion.md`）；新增 `ai_buckup/todo.md_2026-11-21-12-00-00.md`（todo.md 101 行归档）。
+结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main` 与 venv（`.venv-gsv`）不在跟踪面。
 
-结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main/`、`llm/models/*.gguf`、`llm/llama-b12144-*/`、`.venv/`、`.venv-gsv/`、`openWakeWord/` 训练产物与 `train_config*.yaml`、`_wheels/` 被忽略；现役唤醒 ONNX（含 `.onnx.data`）入 Git。
-
-### 文件数（git ls-files --cached --others --exclude-standard）：608
+### 文件数（git ls-files --cached --others --exclude-standard）：635
 ```
 .//
   .gitignore
@@ -71,6 +70,7 @@ ai_buckup/
   todo.md_2026-11-17-13-47-31.md
   todo.md_2026-11-17-15-51-09.md
   todo.md_2026-11-18-12-52-45.md
+  todo.md_2026-11-21-12-00-00.md
   tree.md_2026-11-11-21-15-00.md
   tree.md_2026-11-12-11-20-31.md
 dsh-my-presets/
@@ -87,6 +87,7 @@ jarvis/
   stt.py
   tts.py
   wake.py
+  watchdog.py
   web.py
 jarvis/static/
   favicon.ico
@@ -223,6 +224,8 @@ records/
   2026-11-20-20-25-21.md
   2026-11-20-21-01-37.md
   2026-11-20-22-14-46.md
+  2026-11-21-10-13-16.md
+  2026-11-21-10-39-00.md
   AI_Benchmark.md
   JARVIS_STATE.md
   PROJECT_SUMMARY.txt
@@ -571,6 +574,30 @@ tests/2026-11-19-19-10-10_v09c/
   record_19.md
   record_2.md
   record_20.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-21-10-39-00_cc/
+  opinion.md
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_21.md
+  record_22.md
   record_3.md
   record_4.md
   record_5.md

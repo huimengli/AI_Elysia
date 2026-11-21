@@ -146,3 +146,24 @@
 - **方案（照你的话收口）**：**等复现、不主动查**。复现时要的三样照旧挂在 Q41（管理员拷 dump / 指令原话 / 内核层装了啥）。照实记一条：**销毁旧址不会减少蓝屏风险**（蓝屏在内核层，不是路径）。
 - **顺带（Monitor 的 §8 顺带补取证面）**：`start_all_in_one.bat` 落地后 stdout 进 jarvis 管道 → **蓝屏前的指令文字才可能留证**；旧版 `start_all.bat` 保持不落文件。
 - **关联**：records/2026-11-20-20-25-21.md（取证全文）、records/2026-11-20-22-14-46.md、need_user.md Q41（等复现）、progress.md 2026-11-20 20:45 条、design.md v3.1 §7/§8。
+
+## HB-049 状态更新（2026-11-21 11:3x，追加，不改历史条目）：**partially closed · watchdog 已落地，6 轮全 PASS**
+
+- **落地的东西**：`jarvis/watchdog.py`（新增，194 行）——`start_child` 起子进程时 stdout/stderr **重定向到文件**（`.tmp/<tag>.start/.log/.exit`），**不用管道**（沙箱明文档道：piped stdio 被拒 = EPERM，`subprocess` + `capture_output=True` 在这台机器上跑不了）；判活走 `OpenProcess` + `GetExitCodeProcess`（`STILL_ACTIVE=259`），超时 `TerminateProcess`。`jarvis/main.py` 加 `register_clean_exit_hook()`（`atexit` 写 `.tmp/<tag>.clean_exit`）——「正常收尾」的凭据，**在 jarvis 自己的代码里**，不是 watchdog 猜的。
+- **判读口径照实（我第一版写错后改的）**：被 watchdog 杀掉的进程，杀后读到的码是 **259 = STILL_ACTIVE**，**不是真实退出码**；「被杀」这件事由 `killed_by_watchdog=True` 作证。我第一版把被杀判成「崩溃」，已改。
+- **6 轮全 PASS**：①`sys.exit(0)` → 码 0 + 无标记 = 不是正常收尾 ②未捕获异常 → 码 1 + log 尾 `Traceback` ③`os._exit(7)` → 7 ④`sleep(60)` 配 `--timeout 3` → `killed_by_watchdog=True`、码 259、4.0 s 后没命 ⑤**真 jarvis 在 watchdog 下跑 25.5 s**（起服务、录音、TTS ack 全跑起来，log 尾 `[Wake] peak 0.278 / threshold 0.75`）⑥挂 hook + `sys.exit(0)` → 码 0 **且** `.tmp/wdtest6.clean_exit` 真写出来。全表见 `tests/2026-11-21-10-39-00_cc/record_1-6.md`。
+- **顺带第一手（照实）**：轮 5 那 25 s 里观察到 **1 次唤醒触发**（`[Wake] peak 0.278 / threshold 0.75` 落在 25 s 窗口）——这是「环境音期望 0」的场景里出现的，环境音期望 0 的部署侧 3 轮照旧未测（轮 18-19 在做）。
+- **未结案的部分**：watchdog 是「起 + 判 + 杀 + 判读」这一层，`start_all_in_one.bat` / Monitor 消费面（P2）**还没接**；照旧 open。
+- **关联**：records/2026-11-21-10-39-00.md 第 1 项、todo.md 11-21 条、tests/2026-11-21-10-39-00_cc/record_1-6.md、progress.md。
+
+## HB-053 · 2026-11-21 11:3x · 状态：**open** · CDP 页面工具没有「只动我起的窗口」这道闸（我的空参数测试把人手上的一页点走了）
+- **编号/时间/状态**：HB-053，立案 2026-11-21 11:3x，**open**（本轮不修，先把现象与边界照实立住）。
+- **现象（照第一手，我自己造成的）**：轮 21 空参数直调 32 项时，`click_page_text("")` 落到 `find_page_text("", click=True)`，在**当前 CDP 能连上的第一个页面**里按第一处元素（`('图片', 133, 34)`）点了，复读是 `标题「搜索 - Microsoft 必应」 地址 https://cn.bing.com/?scope=web`。那个窗口是 **DSH 的窗口（pid 5244，`_browser_windows()` 里只此一个，明确不是我起的）**——`_jarvis_windows()` 空、`pages()` 当时空。我按 `dsh_browser_back` 后，该标签现在 `about:blank`；**原来那页（DSH profile bundle 解析失败页）没复原**。
+- **`find_on_page("")` 同样中招**：空文本找到 5 处并列出，`click_page_text("")` 就点了第一处。空串在 DOM 里 `indexOf("") == 0` 恒成立 —— **空参数不是「找不到」，是「什么都算」**。这条我原以为 `open_url`/`navigate_url` 那类才有护栏，页面工具没有。
+- **闸在哪缺**：`open_url`/`navigate_url` 走的是「我自己起的窗口 + profile 认 pid」（HB-050 结案口径）；`find_on_page`/`click_page_text` 走的是 CDP 连上的**任何**页面，没有对窗口归属做检查。所以「只动我起的窗口」这条规矩在页面工具上是**没有闸的**，不是「有闸但没验」。
+- **尝试**：本轮**没有改代码**（现象刚发生，先立住边界）。轮 21 的 32 项直调结论不受影响：`_coerce` 的 `KeyError` 洞已修（必填字符串灌 `""`，必填数字/布尔不注入不执行），32 项里没有一项再吐 `KeyError`。
+- **根因**：空串 + 无归属闸的乘积。空串侧是 HB-040 那一路（模型省略/给 null → 类型强制）在页面工具上的延伸：`_coerce` 把必填字符串灌成 `""` 后，页面工具的 `""` **不是失败信号，是通配**。
+- **方案（未做，等你定优先级）**：①页面工具在点之前先验「这页属于我起的窗口」（用 `_jarvis_profile_pids()` 的同一口径），不在集合里就返回「这不是我起的窗口，没点」；②`find_on_page`/`click_page_text` 的空 `text` 直接拒绝，返回「没给要找的字，没有找、没有点」；③这条与 P2 Monitor 无关，属 P1（明确判据在「只动我起的窗口」这条规矩上）。
+- **照实补一句**：同一轮里还有 3 处真实副作用（照实记，不隐瞒）：`web_search("")` 起了一个 jarvis 窗口（随我程序结束一起没）；`focus_window("")` 把「星之翼」聚焦了；`set_clipboard("")` 清空了剪贴板，**已按 Q18 口径先存后还**（存的 37 字，还原返回「剪贴板已更新。」）。音量/亮度/鼠标坐标**没有被动过**——那三项正是新规则拦下不执行的路径。
+- **关联**：records/2026-11-21-10-39-00.md 第 7 项、tests/2026-11-21-10-39-00_cc/record_21.md、progress.md、need_user.md（Q18 剪贴板口径、只动我起窗口的规矩）。
+

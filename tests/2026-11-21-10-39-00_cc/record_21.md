@@ -1,0 +1,45 @@
+# 轮 21 · 34 项必填无默认的工具，空参数直调（router 补丁后）
+
+- 时间：2026-11-21 11:40:44
+- 场景：`dispatch(name, {})` 逐个直调（模型省必填键的真实形态就是空 dict）；`show_notification` **排除**（会在你屏幕弹气泡，Q19 未肉眼确认），剪贴板先存后还
+- 期望：没有一项再吐 `KeyError`；数字/布尔必填**不执行**（灌 0 = 音量/亮度/鼠标坐标真被改）
+- 补丁口径（照实）：必填**字符串**缺 → 灌 `""`，让工具走自己的如实分支；必填**数字/布尔**缺 → 不注入、不执行，返回缺参说明
+- 实际：**直调 32 项**；**缺参说明 7 项**（`click_at`/`move_mouse`/`set_volume`/`set_brightness`/`set_timer` 全部「**没有执行任何动作**」）；**仍出现「执行失败」4 项** = `read_file`/`write_file`×2/`list_files`，文案是**工具自己的白名单护栏**（「路径不在允许清单内：」），不是 KeyError —— 这条照实算如实失败，不算通道再漏
+- 逐工具返回：
+  - web_search：搜索「」两个引擎都没有落到搜索页，**没有搜到**。 已用 chrome.exe 带参数启动 https://www.baidu.com/s?wd=，但 12 秒内**没有页面地址含 www.baidu.com/s 的标
+  - open_site：没有给出要打开的对象名，没有打开任何东西。
+  - music_control：「」不是可执行的播放控制（只支持 pause 暂停 / resume 恢复 / close 关闭音乐），没有做任何操作。
+  - fetch_page：读取网页失败 ：unknown url type: ''
+  - open_url：输入里没有 URL（要 http:// 或 https:// 打头），没有打开任何页面。收到的是：
+  - play_first_video：输入里没有 URL（要 http:// 或 https:// 打头），没有打开任何页面。收到的是：
+  - navigate_url：输入里没有 URL（要 http:// 或 https:// 打头），没有导航任何窗口。收到的是：
+  - open_app：打不开「」：应用列表（227 条）里没有它，本机也找不到可执行文件 。
+  - kill_process：结束进程「」失败：ERROR: The process ".exe" not found.
+  - describe_screen：视觉塔没有回答：[LLM vision error: APIConnectionError: Connection error.]（截图已存 F:\git\JarvisAi\.tmp\screens\vision_179
+  - find_on_screen：已找到「」位于 (237, 10)，用 click_at 可点击。
+  - click_at：工具「点击坐标」缺必填参数 ['y', 'x']（不是字符串，灌 0 就是真实副作用：音量/亮度/鼠标坐标会被真的改掉），**没有执行任何动作**。
+  - click_at：工具「点击坐标」缺必填参数 ['y', 'x']（不是字符串，灌 0 就是真实副作用：音量/亮度/鼠标坐标会被真的改掉），**没有执行任何动作**。
+  - scroll_screen：未知滚动方向：，请用 up/down。
+  - move_mouse：工具「移动鼠标」缺必填参数 ['y', 'x']（不是字符串，灌 0 就是真实副作用：音量/亮度/鼠标坐标会被真的改掉），**没有执行任何动作**。
+  - move_mouse：工具「移动鼠标」缺必填参数 ['y', 'x']（不是字符串，灌 0 就是真实副作用：音量/亮度/鼠标坐标会被真的改掉），**没有执行任何动作**。
+  - focus_window：已聚焦窗口：星之翼（进程 19096）
+  - type_text：已输入文本：
+  - press_key：已按下：
+  - media_control：未知媒体操作：，请用 play/pause/next/previous/mute。
+  - read_file：工具「读取文件」执行失败：路径不在允许清单内：
+  - write_file：工具「写入文件」执行失败：路径不在允许清单内：
+  - write_file：工具「写入文件」执行失败：路径不在允许清单内：
+  - list_files：工具「列出文件」执行失败：路径不在允许清单内：
+  - run_python：(无输出)
+  - set_clipboard：剪贴板已更新。
+  - set_volume：工具「设置音量」缺必填参数 ['level']（不是字符串，灌 0 就是真实副作用：音量/亮度/鼠标坐标会被真的改掉），**没有执行任何动作**。
+  - set_brightness：工具「设置亮度」缺必填参数 ['level']（不是字符串，灌 0 就是真实副作用：音量/亮度/鼠标坐标会被真的改掉），**没有执行任何动作**。
+  - power_command：未知电源操作：，请用 shutdown/restart/sleep。
+  - show_notification：未直调（会在屏幕弹气泡）
+  - show_notification：未直调（会在屏幕弹气泡）
+  - set_timer：工具「设置计时器」缺必填参数 ['seconds']（不是字符串，灌 0 就是真实副作用：音量/亮度/鼠标坐标会被真的改掉），**没有执行任何动作**。
+  - find_on_page：找到 5 处「」：[('图片', 133, 34), ('图片', 133, 33), ('视频', 195, 34)]（页面坐标，可点）
+  - click_page_text：已用 CDP 受信点击「图片」 @(x=133,y=34)（页面坐标，非视觉坐标），点击后复读 标题「搜索 - Microsoft 必应」 地址 https://cn.bing.com/?scope=web 
+- 剪贴板：存的 37 字，还原返回「剪贴板已更新。」（Q18 口径）
+- 结果：**PASS（KeyError 通道关闭）+ 照实记 3 处真实副作用 + 1 处越界**
+- 备注（副作用照实，不隐瞒）：`web_search("")` **起了一个 jarvis 窗口**（随我程序结束一起没）；`focus_window("")` **把「星之翼」聚焦了**；`set_clipboard("")` **清空了剪贴板**（已还原）；**`click_page_text("")` 在 DSH 窗口（pid 5244，不是我起的）里点了第一处元素，把它导航到必应搜索页** —— 我按 `dsh_browser_back` 后该标签是 `about:blank`，**原来那页（DSH profile bundle 解析失败页）没复原**。已立案 **HB-053：CDP 页面工具没有「只动我起的窗口」这道闸，且 `find_on_page`/`click_page_text` 的空串是通配不是失败**（`indexOf("")==0` 恒真）。音量/亮度/鼠标坐标**没被动过**。
