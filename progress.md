@@ -90,3 +90,4 @@
   复测（共用浏览器真页）：无语法错、`ws.readyState 1`、真数据渲染全对（`jarvis 起 pid 8440/1516`、提交 MB 1060/3、`log_lines 13/19`、四灯全 online、我起窗口 1/3、F 块 `wake 0.75 · ASR 0.03 s`、日志 2 面板）→ `C:\Users\楼听\Downloads\monitor_after.png`。
   真机节拍（设 1 s，29 拍）：中位 1.9 s / 均值 1.8 s / 最小 1.4 / 最大 2.0；逐段计时坐实瓶颈是窗口计数 1688 ms（不是 netstat 67 ms）；加缓存后稳态 50→0 ms。1 s 节拍达标 **未测**（要重启 jarvis 生效）。
   **本批自曝第 113-127 处（15 处）**：113 `dsh_browser_state` 传空参被拒；114 探针写多语句被当表达式拒；115 逐行前缀扫描对截断必然报错（方法无效）；116 `new Function` 只给「Invalid or unexpected token」，靠塞进 `<script>` 才拿到行号列号；117 用字符串拼接躲转义把 TS 解析器炸了；118 快照实测 1998 ms；119 推送「一阵就停」根因（pop 过早）；120 我的计数挂在旧 socket 上读到 0 拍（假象），逐段计时才定准瓶颈；121 探针在 `try` 里直返，TTL 缓存写不进去；122 删死代码时把 `def listen_pids` 一起带走（`NameError`）；123 凭记忆写锚点没命中（`命中 1/0`）；124 netstat TTL 1 s 在 1 s 节拍全 miss；125 `all(p in cache)` 让缓存形同虚设；126 窗口计数每拍 1688 ms 才是真瓶颈。
+- 2026-11-21 18:24 **Monitor 前端与节拍修复 commit 4e40a24**（`feature/AI_monitor`，`rev-list --count` = 280）；本条的 hash 照规则在下一批补记。未 push。
