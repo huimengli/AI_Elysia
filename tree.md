@@ -1,15 +1,478 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-21-14-45-00（Q37 你把 Umi-OCR 拷进项目内 + OCR 接线后重建）。变化：新增目录 `Umi-OCR_Paddle_v2.1.5/`（`Umi-OCR.exe` 被 `.gitignore` 的 `*.exe` 排除，不进本表；`UmiOCR-data/` 下的 py_src/qml/plugin 文件非忽略，进表）；新增 `records/2026-11-21-13-05-50.md`、`tests/2026-11-21-13-05-50_cc/record_1-15.md`、`ai_buckup/progress.md_2026-11-21-14-42-00.md`。
-结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；OCR 副本在 `Umi-OCR_Paddle_v2.1.5/`；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 为未跟踪的非忽略文件（照实列出）。
+更新时间: 2026-11-21-15-38-00（真人 20 轮离线表在 v1.3 重跑后重建）。变化：新增 `tests/2026-11-21-15-11-57_v13/`（record_1-20.md + opinion.md）、`records/2026-11-21-15-11-57.md`、`ai_buckup/progress.md_2026-11-21-14-42-00.md`；上一版已含 `Umi-OCR_Paddle_v2.1.5/`（`Umi-OCR.exe` 被 `*.exe` 排除，不进本表）。
+结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略，含 `hb51_audio/` 的分段音频）；OCR 副本在 `Umi-OCR_Paddle_v2.1.5/`；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 为未跟踪的非忽略文件（照实列出）。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：632
+### 文件数（git ls-files --cached --others --exclude-standard）：2445
 ```
+"Umi-OCR_Paddle_v2.1.5/UmiOCR-data/
+  Help \345\270\256\345\212\251.txt"
+.//
+  .gitignore
+  LICENSE
+  README.md
+  config.yaml
+  design.md
+  hard_bug.md
+  install.bat
+  jarvis_screen.png
+  jieba.cache
+  love_silvia.txt
+  need_audio.md
+  need_user.md
+  onnx_opinion.md
+  progress.md
+  requirements.txt
+  start.bat
+  start_all.bat
+  todo.md
+  tree.md
 Umi-OCR_Paddle_v2.1.5/UmiOCR-data/
+  .pre_settings
+  .settings
+  about.json
+  main.py
   themes.json
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/i18n/
+  en_US.qm
+  ja_JP.qm
+  pt.qm
+  ru_RU.qm
+  ta.qm
+  zh_TW.qm
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/logs/
+  log_2026-11-21.jsonl.txt
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/plugins/win7_x64_PaddleOCR-json/
+  PPOCR_api.py
+  PPOCR_config.py
+  PPOCR_umi.py
+  README.md
+  __init__.py
+  i18n.csv
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/plugins/win7_x64_PaddleOCR-json/models/
+  config_chinese.txt
+  config_chinese_cht.txt
+  config_cyrillic.txt
+  config_en.txt
+  config_japan.txt
+  config_korean.txt
+  configs.txt
+  dict_chinese.txt
+  dict_chinese_cht.txt
+  dict_cyrillic.txt
+  dict_en.txt
+  dict_japan.txt
+  dict_korean.txt
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/plugins/win7_x64_PaddleOCR-json/models/ch_PP-OCRv3_det_infer/
+  inference.pdiparams
+  inference.pdiparams.info
+  inference.pdmodel
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/plugins/win7_x64_PaddleOCR-json/models/ch_PP-OCRv3_rec_infer/
+  inference.pdiparams
+  inference.pdiparams.info
+  inference.pdmodel
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/plugins/win7_x64_PaddleOCR-json/models/ch_ppocr_mobile_v2.0_cls_infer/
+  inference.pdiparams
+  inference.pdiparams.info
+  inference.pdmodel
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/plugins/win7_x64_PaddleOCR-json/models/chinese_cht_mobile_v2.0_rec_infer/
+  inference.pdiparams
+  inference.pdiparams.info
+  inference.pdmodel
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/plugins/win7_x64_PaddleOCR-json/models/cyrillic_PP-OCRv3_rec_infer/
+  inference.pdiparams
+  inference.pdiparams.info
+  inference.pdmodel
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/plugins/win7_x64_PaddleOCR-json/models/en_PP-OCRv3_rec_infer/
+  inference.pdiparams
+  inference.pdiparams.info
+  inference.pdmodel
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/plugins/win7_x64_PaddleOCR-json/models/japan_PP-OCRv3_rec_infer/
+  inference.pdiparams
+  inference.pdiparams.info
+  inference.pdmodel
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/plugins/win7_x64_PaddleOCR-json/models/korean_PP-OCRv3_rec_infer/
+  inference.pdiparams
+  inference.pdiparams.info
+  inference.pdmodel
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/
+  run.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/event_bus/
+  pubsub_connector.py
+  pubsub_service.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/event_bus/key_mouse/
+  key_mouse_connector.py
+  keyboard.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/image_controller/
+  ImageQt.py
+  image_connector.py
+  image_provider.py
+  screenshot_controller.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/imports/
+  call_func.py
+  plugin_i18n.py
+  umi_about.py
+  umi_log.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/mission/
+  doc_preview_connector.py
+  mission.py
+  mission_connector.py
+  mission_doc.py
+  mission_ocr.py
+  mission_qrcode.py
+  mission_queue.py
+  simple_mission.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/ocr/api/
+  __init__.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/ocr/output/
+  __init__.py
+  output.py
+  output_csv.py
+  output_jsonl.py
+  output_md.py
+  output_pdf_layered.py
+  output_pdf_one_layer.py
+  output_txt.py
+  output_txt_individual.py
+  output_txt_plain.py
+  tools.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/ocr/tbpu/
+  __init__.py
+  ignore_area.py
+  parser_multi_line.py
+  parser_multi_none.py
+  parser_multi_para.py
+  parser_none.py
+  parser_single_code.py
+  parser_single_line.py
+  parser_single_none.py
+  parser_single_para.py
+  tbpu.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/ocr/tbpu/parser_tools/
+  __init__.py
+  gap_tree.py
+  line_preprocessing.py
+  paragraph_parse.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/platform/
+  __init__.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/platform/linux/
+  __init__.py
+  linux_api.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/platform/win32/
+  __init__.py
+  key_translator.py
+  win32_api.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/plugins_controller/
+  plugins_connector.py
+  plugins_controller.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/server/
+  bottle.py
+  cmd_client.py
+  cmd_server.py
+  doc_server.py
+  ocr_server.py
+  qrcode_server.py
+  web_server.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/tag_pages/
+  BatchDOC.py
+  BatchOCR.py
+  QRCode.py
+  ScreenshotOCR.py
+  page.py
+  tag_pages_connector.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/py_src/utils/
+  __init__.py
+  app_opengl.py
+  call_func.py
+  file_finder.py
+  global_configs_connector.py
+  i18n_configs.py
+  pre_configs.py
+  theme_connector.py
+  thread_pool.py
+  utils.py
+  utils_connector.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/images/
+  Umi-OCR_logo_full.png
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/images/icons/
+  add.svg
+  arrow_to_center.svg
+  arrow_to_left.svg
+  bell.svg
+  clear.svg
+  dango_right.png
+  dash.svg
+  down.svg
+  folder.svg
+  full_screen.svg
+  line_feed.svg
+  lock.svg
+  menu.svg
+  no.svg
+  one_to_one.svg
+  open_image.svg
+  paste.svg
+  pause.svg
+  pin.svg
+  run.svg
+  save.svg
+  screenshot.svg
+  split_view.svg
+  stop.svg
+  umiocr.ico
+  wait.svg
+  warning.svg
+  yes.svg
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/
+  Main.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/ApiManager/
+  OcrManager.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/Configs/
+  ConfigItemComp.qml
+  Configs.qml
+  GlobalConfigs.qml
+  Settings_.qml
+  UtilsConfigDicts.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/EventBus/
+  PubSub.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/ImageManager/
+  ImageManager.qml
+  ScreenshotManager.qml
+  ScreenshotWindowComp.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/MainWindow/
+  AsynFilesLoader.qml
+  MainWindowManager.qml
+  Size_.qml
+  SystemTray.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/Popup_/
+  MaskLayer.qml
+  MessageBox.qml
+  MessageBoxWin.qml
+  MessageSimple.qml
+  MessageSimpleComp.qml
+  PopupManager.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/TabBar_/
+  BarManager.qml
+  HTabBar.qml
+  TabButton_.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/TabPages/
+  PagesManager.qml
+  TabPage.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/TabPages/About/
+  About.qml
+  SplitLine.qml
+  UrlButton.qml
+  UrlList.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/TabPages/BatchDOC/
+  BatchDOC.qml
+  BatchDOCConfigs.qml
+  PreviewDoc.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/TabPages/BatchOCR/
+  BatchOCR.qml
+  BatchOCRConfigs.qml
+  PreviewImage.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/TabPages/GlobalConfigsPage/
+  FontPanel.qml
+  GlobalConfigsPage.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/TabPages/Navigation/
+  Navigation.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/TabPages/QRCode/
+  QRCode.qml
+  QRCodeConfigs.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/TabPages/ScreenshotOCR/
+  ScreenshotOCR.qml
+  ScreenshotOcrConfigs.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/TabView_/
+  TabViewManager.qml
+  TabView_.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/Themes/
+  Theme.qml
+  ThemeManager.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/Widgets/
+  Button_.qml
+  CheckBox_.qml
+  CheckButton.qml
+  DefaultTips.qml
+  DoubleColumnLayout.qml
+  DoubleRowLayout.qml
+  DoubleSwitchableLayout.qml
+  DropArea_.qml
+  FileDialog_.qml
+  FilesTableView.qml
+  FramelessWindow.qml
+  HProgressBar.qml
+  IconButton.qml
+  IconButtonBar.qml
+  IconTextButton.qml
+  Icon_.qml
+  Image_.qml
+  Loading.qml
+  MarkdownView.qml
+  Menu_.qml
+  MissionCtrlPanel.qml
+  ModalLayer.qml
+  MouseAreaBackgroud.qml
+  Panel.qml
+  TabPanel.qml
+  TextEdit_.qml
+  TextField_.qml
+  TextInput_.qml
+  Text_.qml
+  ToolTip_.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/Widgets/IgnoreArea/
+  IgnoreArea.qml
+  ImageWithIgnore.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/Widgets/ImageViewer/
+  ImageScale.qml
+  ImageWithText.qml
+  TextBox.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/qt_res/qml/Widgets/ResultLayout/
+  ResultTextContainer.qml
+  ResultsTableView.qml
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/runtime/
+  LICENSE.txt
+  _asyncio.pyd
+  _bz2.pyd
+  _ctypes.pyd
+  _decimal.pyd
+  _elementtree.pyd
+  _hashlib.pyd
+  _lzma.pyd
+  _msi.pyd
+  _multiprocessing.pyd
+  _overlapped.pyd
+  _queue.pyd
+  _socket.pyd
+  _sqlite3.pyd
+  _ssl.pyd
+  pyexpat.pyd
+  python.cat
+  python38._pth
+  python38.zip
+  select.pyd
+  unicodedata.pyd
+  winsound.pyd
 Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/
   six.py
   zxingcpp.cp38-win_amd64.pyd
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PIL/
+  BdfFontFile.py
+  BlpImagePlugin.py
+  BmpImagePlugin.py
+  BufrStubImagePlugin.py
+  ContainerIO.py
+  CurImagePlugin.py
+  DcxImagePlugin.py
+  DdsImagePlugin.py
+  EpsImagePlugin.py
+  ExifTags.py
+  FitsImagePlugin.py
+  FliImagePlugin.py
+  FontFile.py
+  FpxImagePlugin.py
+  FtexImagePlugin.py
+  GbrImagePlugin.py
+  GdImageFile.py
+  GifImagePlugin.py
+  GimpGradientFile.py
+  GimpPaletteFile.py
+  GribStubImagePlugin.py
+  Hdf5StubImagePlugin.py
+  IcnsImagePlugin.py
+  IcoImagePlugin.py
+  ImImagePlugin.py
+  Image.py
+  ImageChops.py
+  ImageCms.py
+  ImageColor.py
+  ImageDraw.py
+  ImageDraw2.py
+  ImageEnhance.py
+  ImageFile.py
+  ImageFilter.py
+  ImageFont.py
+  ImageGrab.py
+  ImageMath.py
+  ImageMode.py
+  ImageMorph.py
+  ImageOps.py
+  ImagePalette.py
+  ImagePath.py
+  ImageQt.py
+  ImageSequence.py
+  ImageShow.py
+  ImageStat.py
+  ImageTk.py
+  ImageTransform.py
+  ImageWin.py
+  ImtImagePlugin.py
+  IptcImagePlugin.py
+  Jpeg2KImagePlugin.py
+  JpegImagePlugin.py
+  JpegPresets.py
+  McIdasImagePlugin.py
+  MicImagePlugin.py
+  MpegImagePlugin.py
+  MpoImagePlugin.py
+  MspImagePlugin.py
+  PSDraw.py
+  PaletteFile.py
+  PalmImagePlugin.py
+  PcdImagePlugin.py
+  PcfFontFile.py
+  PcxImagePlugin.py
+  PdfImagePlugin.py
+  PdfParser.py
+  PixarImagePlugin.py
+  PngImagePlugin.py
+  PpmImagePlugin.py
+  PsdImagePlugin.py
+  PyAccess.py
+  QoiImagePlugin.py
+  SgiImagePlugin.py
+  SpiderImagePlugin.py
+  SunImagePlugin.py
+  TarIO.py
+  TgaImagePlugin.py
+  TiffImagePlugin.py
+  TiffTags.py
+  WalImageFile.py
+  WebPImagePlugin.py
+  WmfImagePlugin.py
+  XVThumbImagePlugin.py
+  XbmImagePlugin.py
+  XpmImagePlugin.py
+  __init__.py
+  __main__.py
+  _binary.py
+  _deprecate.py
+  _imaging.cp38-win_amd64.pyd
+  _imaging.pyi
+  _imagingcms.cp38-win_amd64.pyd
+  _imagingcms.pyi
+  _imagingft.cp38-win_amd64.pyd
+  _imagingft.pyi
+  _imagingmath.cp38-win_amd64.pyd
+  _imagingmath.pyi
+  _imagingmorph.cp38-win_amd64.pyd
+  _imagingmorph.pyi
+  _imagingtk.cp38-win_amd64.pyd
+  _tkinter_finder.py
+  _typing.py
+  _util.py
+  _version.py
+  _webp.cp38-win_amd64.pyd
+  _webp.pyi
+  features.py
+  py.typed
+  report.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PyMuPDF-1.24.11.dist-info/
+  COPYING
+  METADATA
+  README.md
+  RECORD
+  WHEEL
+  entry_points.txt
 Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/
   QtAxContainer.pyi
   QtConcurrent.pyi
@@ -33,7 +496,117 @@ Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/
   QtSvg.pyi
   QtWebSockets.pyi
   QtWinExtras.pyi
+  __init__.py
+  _config.py
+  _git_pyside_version.py
+  py.typed
+  pyside2.abi3.lib
   qt.conf
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/Qt/WebSockets/
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/Qt/labs/animation/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/Qt/labs/calendar/
+  DayOfWeekRow.qml
+  DayOfWeekRow.qmlc
+  MonthGrid.qml
+  MonthGrid.qmlc
+  WeekNumberColumn.qml
+  WeekNumberColumn.qmlc
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/Qt/labs/folderlistmodel/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/Qt/labs/location/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/Qt/labs/lottieqt/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/Qt/labs/platform/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/Qt/labs/qmlmodels/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/Qt/labs/settings/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/Qt/labs/sharedimage/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/Qt/labs/wavefrontmesh/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/Qt/test/qtestroot/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtGraphicalEffects/
+  Blend.qml
+  BrightnessContrast.qml
+  ColorOverlay.qml
+  Colorize.qml
+  ConicalGradient.qml
+  Desaturate.qml
+  DirectionalBlur.qml
+  Displace.qml
+  DropShadow.qml
+  FastBlur.qml
+  GammaAdjust.qml
+  GaussianBlur.qml
+  Glow.qml
+  HueSaturation.qml
+  InnerShadow.qml
+  LevelAdjust.qml
+  LinearGradient.qml
+  MaskedBlur.qml
+  OpacityMask.qml
+  RadialBlur.qml
+  RadialGradient.qml
+  RectangularGlow.qml
+  RecursiveBlur.qml
+  ThresholdMask.qml
+  ZoomBlur.qml
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtGraphicalEffects/private/
+  DropShadowBase.qml
+  DropShadowBase.qmlc
+  FastGlow.qml
+  FastGlow.qmlc
+  FastInnerShadow.qml
+  FastInnerShadow.qmlc
+  FastMaskedBlur.qml
+  FastMaskedBlur.qmlc
+  GaussianDirectionalBlur.qml
+  GaussianDirectionalBlur.qmlc
+  GaussianGlow.qml
+  GaussianGlow.qmlc
+  GaussianInnerShadow.qml
+  GaussianInnerShadow.qmlc
+  GaussianMaskedBlur.qml
+  GaussianMaskedBlur.qmlc
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQml/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQml/Models.2/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQml/RemoteObjects/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQml/StateMachine/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQml/WorkerScript.2/
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick.2/
+  plugins.qmltypes
+  qmldir
 Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/Controls/
   ApplicationWindow.qml
   ApplicationWindow.qmlc
@@ -98,6 +671,26 @@ Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/Controls/
   plugins.qmltypes
   qmldir
 Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/Controls.2/
+  AbstractButton.qml
+  Action.qml
+  ActionGroup.qml
+  ApplicationWindow.qml
+  BusyIndicator.qml
+  Button.qml
+  ButtonGroup.qml
+  CheckBox.qml
+  CheckDelegate.qml
+  ComboBox.qml
+  Container.qml
+  Control.qml
+  DelayButton.qml
+  Dial.qml
+  Dialog.qml
+  DialogButtonBox.qml
+  Drawer.qml
+  Frame.qml
+  GroupBox.qml
+  HorizontalHeaderView.qml
   ItemDelegate.qml
   Label.qml
   Menu.qml
@@ -137,11 +730,114 @@ Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/Controls.2/
   VerticalHeaderView.qml
   plugins.qmltypes
   qmldir
-Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/Controls.2/Imagine/
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/Controls.2/Fusion/
+  ApplicationWindow.qml
+  BusyIndicator.qml
+  Button.qml
+  ButtonPanel.qml
+  CheckBox.qml
+  CheckDelegate.qml
+  CheckIndicator.qml
+  ComboBox.qml
+  DelayButton.qml
+  Dial.qml
+  Dialog.qml
+  DialogButtonBox.qml
+  Drawer.qml
+  Frame.qml
+  GroupBox.qml
+  HorizontalHeaderView.qml
+  ItemDelegate.qml
+  Label.qml
+  Menu.qml
+  MenuBar.qml
+  MenuBarItem.qml
+  MenuItem.qml
+  MenuSeparator.qml
+  Page.qml
+  PageIndicator.qml
+  Pane.qml
+  Popup.qml
+  ProgressBar.qml
+  RadioButton.qml
+  RadioDelegate.qml
+  RadioIndicator.qml
+  RangeSlider.qml
+  RoundButton.qml
+  ScrollBar.qml
+  ScrollIndicator.qml
+  Slider.qml
+  SliderGroove.qml
+  SliderHandle.qml
+  SpinBox.qml
+  SplitView.qml
+  SwipeDelegate.qml
+  Switch.qml
+  SwitchDelegate.qml
+  SwitchIndicator.qml
+  TabBar.qml
+  TabButton.qml
+  TextArea.qml
+  TextField.qml
+  ToolBar.qml
+  ToolButton.qml
   ToolSeparator.qml
   ToolTip.qml
   Tumbler.qml
   VerticalHeaderView.qml
+  plugins.qmltypes
+  qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/Controls.2/Imagine/
+  ApplicationWindow.qml
+  BusyIndicator.qml
+  Button.qml
+  CheckBox.qml
+  CheckDelegate.qml
+  ComboBox.qml
+  DelayButton.qml
+  Dial.qml
+  Dialog.qml
+  DialogButtonBox.qml
+  Drawer.qml
+  Frame.qml
+  GroupBox.qml
+  HorizontalHeaderView.qml
+  ItemDelegate.qml
+  Label.qml
+  Menu.qml
+  MenuItem.qml
+  MenuSeparator.qml
+  Page.qml
+  PageIndicator.qml
+  Pane.qml
+  Popup.qml
+  ProgressBar.qml
+  RadioButton.qml
+  RadioDelegate.qml
+  RangeSlider.qml
+  RoundButton.qml
+  ScrollBar.qml
+  ScrollIndicator.qml
+  Slider.qml
+  SpinBox.qml
+  SplitView.qml
+  StackView.qml
+  SwipeDelegate.qml
+  SwipeView.qml
+  Switch.qml
+  SwitchDelegate.qml
+  TabBar.qml
+  TabButton.qml
+  TextArea.qml
+  TextField.qml
+  ToolBar.qml
+  ToolButton.qml
+  ToolSeparator.qml
+  ToolTip.qml
+  Tumbler.qml
+  VerticalHeaderView.qml
+  plugins.qmltypes
+  qmldir
 Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/Controls.2/Material/
   ApplicationWindow.qml
   BoxShadow.qml
@@ -258,6 +954,141 @@ Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/Controls.2/U
   VerticalHeaderView.qml
   plugins.qmltypes
   qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/Controls.2/designer/
+  AbstractButtonSection.qml
+  BusyIndicatorSpecifics.qml
+  ButtonSection.qml
+  ButtonSpecifics.qml
+  CheckBoxSpecifics.qml
+  CheckDelegateSpecifics.qml
+  CheckSection.qml
+  ComboBoxSpecifics.qml
+  ContainerSection.qml
+  ControlSection.qml
+  ControlSpecifics.qml
+  DelayButtonSpecifics.qml
+  DialSpecifics.qml
+  FrameSpecifics.qml
+  GroupBoxSpecifics.qml
+  InsetSection.qml
+  ItemDelegateSection.qml
+  ItemDelegateSpecifics.qml
+  LabelSpecifics.qml
+  PaddingSection.qml
+  PageIndicatorSpecifics.qml
+  PageSpecifics.qml
+  PaneSection.qml
+  PaneSpecifics.qml
+  ProgressBarSpecifics.qml
+  RadioButtonSpecifics.qml
+  RadioDelegateSpecifics.qml
+  RangeSliderSpecifics.qml
+  RoundButtonSpecifics.qml
+  ScrollViewSpecifics.qml
+  SliderSpecifics.qml
+  SpinBoxSpecifics.qml
+  StackViewSpecifics.qml
+  SwipeDelegateSpecifics.qml
+  SwipeViewSpecifics.qml
+  SwitchDelegateSpecifics.qml
+  SwitchSpecifics.qml
+  TabBarSpecifics.qml
+  TabButtonSpecifics.qml
+  TextAreaSpecifics.qml
+  TextFieldSpecifics.qml
+  ToolBarSpecifics.qml
+  ToolButtonSpecifics.qml
+  ToolSeparatorSpecifics.qml
+  TumblerSpecifics.qml
+  qtquickcontrols2.metainfo
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/Controls.2/designer/images/
+  busyindicator-icon.png
+  busyindicator-icon16.png
+  busyindicator-icon@2x.png
+  button-icon.png
+  button-icon16.png
+  button-icon@2x.png
+  checkbox-icon.png
+  checkbox-icon16.png
+  checkbox-icon@2x.png
+  combobox-icon.png
+  combobox-icon16.png
+  combobox-icon@2x.png
+  delaybutton-icon.png
+  delaybutton-icon16.png
+  delaybutton-icon@2x.png
+  dial-icon.png
+  dial-icon16.png
+  dial-icon@2x.png
+  frame-icon.png
+  frame-icon16.png
+  frame-icon@2x.png
+  groupbox-icon.png
+  groupbox-icon16.png
+  groupbox-icon@2x.png
+  itemdelegate-icon.png
+  itemdelegate-icon16.png
+  itemdelegate-icon@2x.png
+  label-icon.png
+  label-icon16.png
+  label-icon@2x.png
+  page-icon.png
+  page-icon16.png
+  page-icon@2x.png
+  pageindicator-icon.png
+  pageindicator-icon16.png
+  pageindicator-icon@2x.png
+  pane-icon.png
+  pane-icon16.png
+  pane-icon@2x.png
+  progressbar-icon.png
+  progressbar-icon16.png
+  progressbar-icon@2x.png
+  radiobutton-icon.png
+  radiobutton-icon16.png
+  radiobutton-icon@2x.png
+  rangeslider-icon.png
+  rangeslider-icon16.png
+  rangeslider-icon@2x.png
+  roundbutton-icon.png
+  roundbutton-icon16.png
+  roundbutton-icon@2x.png
+  scrollview-icon.png
+  scrollview-icon16.png
+  scrollview-icon@2x.png
+  slider-icon.png
+  slider-icon16.png
+  slider-icon@2x.png
+  spinbox-icon.png
+  spinbox-icon16.png
+  spinbox-icon@2x.png
+  stackview-icon.png
+  stackview-icon16.png
+  stackview-icon@2x.png
+  swipeview-icon.png
+  swipeview-icon16.png
+  swipeview-icon@2x.png
+  switch-icon.png
+  switch-icon16.png
+  switch-icon@2x.png
+  textarea-icon.png
+  textarea-icon16.png
+  textarea-icon@2x.png
+  textfield-icon.png
+  textfield-icon16.png
+  textfield-icon@2x.png
+  toolbar-icon.png
+  toolbar-icon16.png
+  toolbar-icon@2x.png
+  toolbutton-icon.png
+  toolbutton-icon16.png
+  toolbutton-icon@2x.png
+  toolseparator-icon.png
+  toolseparator-icon16.png
+  toolseparator-icon@2x.png
+  tumbler-icon.png
+  tumbler-icon16.png
+  tumbler-icon@2x.png
 Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/Controls/Private/
   AbstractCheckable.qml
   AbstractCheckable.qmlc
@@ -660,6 +1491,431 @@ Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/Window.2/
 Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/PySide2/qml/QtQuick/XmlListModel/
   plugins.qmltypes
   qmldir
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fitz/
+  __init__.py
+  table.py
+  utils.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/
+  __init__.py
+  __main__.py
+  afmLib.py
+  agl.py
+  fontBuilder.py
+  help.py
+  tfmLib.py
+  ttx.py
+  unicode.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/cffLib/
+  CFF2ToCFF.py
+  CFFToCFF2.py
+  __init__.py
+  specializer.py
+  transforms.py
+  width.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/colorLib/
+  __init__.py
+  builder.py
+  errors.py
+  geometry.py
+  table_builder.py
+  unbuilder.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/config/
+  __init__.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/cu2qu/
+  __init__.py
+  __main__.py
+  benchmark.py
+  cli.py
+  cu2qu.cp38-win_amd64.pyd
+  cu2qu.py
+  errors.py
+  ufo.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/designspaceLib/
+  __init__.py
+  __main__.py
+  split.py
+  statNames.py
+  types.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/encodings/
+  MacRoman.py
+  StandardEncoding.py
+  __init__.py
+  codecs.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/feaLib/
+  __init__.py
+  __main__.py
+  ast.py
+  builder.py
+  error.py
+  lexer.cp38-win_amd64.pyd
+  lexer.py
+  location.py
+  lookupDebugInfo.py
+  parser.py
+  variableScalar.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/merge/
+  __init__.py
+  __main__.py
+  base.py
+  cmap.py
+  layout.py
+  options.py
+  tables.py
+  unicode.py
+  util.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/misc/
+  __init__.py
+  arrayTools.py
+  bezierTools.cp38-win_amd64.pyd
+  bezierTools.py
+  classifyTools.py
+  cliTools.py
+  configTools.py
+  cython.py
+  dictTools.py
+  eexec.py
+  encodingTools.py
+  etree.py
+  filenames.py
+  fixedTools.py
+  intTools.py
+  iterTools.py
+  lazyTools.py
+  loggingTools.py
+  macCreatorType.py
+  macRes.py
+  psCharStrings.py
+  psLib.py
+  psOperators.py
+  py23.py
+  roundTools.py
+  sstruct.py
+  symfont.py
+  testTools.py
+  textTools.py
+  timeTools.py
+  transform.py
+  treeTools.py
+  vector.py
+  visitor.py
+  xmlReader.py
+  xmlWriter.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/misc/plistlib/
+  __init__.py
+  py.typed
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/mtiLib/
+  __init__.py
+  __main__.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/otlLib/
+  __init__.py
+  builder.py
+  error.py
+  maxContextCalc.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/otlLib/optimize/
+  __init__.py
+  __main__.py
+  gpos.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/pens/
+  __init__.py
+  areaPen.py
+  basePen.py
+  boundsPen.py
+  cairoPen.py
+  cocoaPen.py
+  cu2quPen.py
+  explicitClosingLinePen.py
+  filterPen.py
+  freetypePen.py
+  hashPointPen.py
+  momentsPen.cp38-win_amd64.pyd
+  momentsPen.py
+  perimeterPen.py
+  pointInsidePen.py
+  pointPen.py
+  qtPen.py
+  qu2cuPen.py
+  quartzPen.py
+  recordingPen.py
+  reportLabPen.py
+  reverseContourPen.py
+  roundingPen.py
+  statisticsPen.py
+  svgPathPen.py
+  t2CharStringPen.py
+  teePen.py
+  transformPen.py
+  ttGlyphPen.py
+  wxPen.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/qu2cu/
+  __init__.py
+  __main__.py
+  benchmark.py
+  cli.py
+  qu2cu.cp38-win_amd64.pyd
+  qu2cu.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/subset/
+  __init__.py
+  __main__.py
+  cff.py
+  svg.py
+  util.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/svgLib/
+  __init__.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/svgLib/path/
+  __init__.py
+  arc.py
+  parser.py
+  shapes.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/t1Lib/
+  __init__.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/ttLib/
+  __init__.py
+  __main__.py
+  macUtils.py
+  removeOverlaps.py
+  reorderGlyphs.py
+  scaleUpem.py
+  sfnt.py
+  standardGlyphOrder.py
+  ttCollection.py
+  ttFont.py
+  ttGlyphSet.py
+  ttVisitor.py
+  woff2.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/ttLib/tables/
+  B_A_S_E_.py
+  BitmapGlyphMetrics.py
+  C_B_D_T_.py
+  C_B_L_C_.py
+  C_F_F_.py
+  C_F_F__2.py
+  C_O_L_R_.py
+  C_P_A_L_.py
+  D_S_I_G_.py
+  D__e_b_g.py
+  DefaultTable.py
+  E_B_D_T_.py
+  E_B_L_C_.py
+  F_F_T_M_.py
+  F__e_a_t.py
+  G_D_E_F_.py
+  G_M_A_P_.py
+  G_P_K_G_.py
+  G_P_O_S_.py
+  G_S_U_B_.py
+  G__l_a_t.py
+  G__l_o_c.py
+  H_V_A_R_.py
+  J_S_T_F_.py
+  L_T_S_H_.py
+  M_A_T_H_.py
+  M_E_T_A_.py
+  M_V_A_R_.py
+  O_S_2f_2.py
+  S_I_N_G_.py
+  S_T_A_T_.py
+  S_V_G_.py
+  S__i_l_f.py
+  S__i_l_l.py
+  T_S_I_B_.py
+  T_S_I_C_.py
+  T_S_I_D_.py
+  T_S_I_J_.py
+  T_S_I_P_.py
+  T_S_I_S_.py
+  T_S_I_V_.py
+  T_S_I__0.py
+  T_S_I__1.py
+  T_S_I__2.py
+  T_S_I__3.py
+  T_S_I__5.py
+  T_T_F_A_.py
+  TupleVariation.py
+  V_A_R_C_.py
+  V_D_M_X_.py
+  V_O_R_G_.py
+  V_V_A_R_.py
+  __init__.py
+  _a_n_k_r.py
+  _a_v_a_r.py
+  _b_s_l_n.py
+  _c_i_d_g.py
+  _c_m_a_p.py
+  _c_v_a_r.py
+  _c_v_t.py
+  _f_e_a_t.py
+  _f_p_g_m.py
+  _f_v_a_r.py
+  _g_a_s_p.py
+  _g_c_i_d.py
+  _g_l_y_f.py
+  _g_v_a_r.py
+  _h_d_m_x.py
+  _h_e_a_d.py
+  _h_h_e_a.py
+  _h_m_t_x.py
+  _k_e_r_n.py
+  _l_c_a_r.py
+  _l_o_c_a.py
+  _l_t_a_g.py
+  _m_a_x_p.py
+  _m_e_t_a.py
+  _m_o_r_t.py
+  _m_o_r_x.py
+  _n_a_m_e.py
+  _o_p_b_d.py
+  _p_o_s_t.py
+  _p_r_e_p.py
+  _p_r_o_p.py
+  _s_b_i_x.py
+  _t_r_a_k.py
+  _v_h_e_a.py
+  _v_m_t_x.py
+  asciiTable.py
+  grUtils.py
+  otBase.py
+  otConverters.py
+  otData.py
+  otTables.py
+  otTraverse.py
+  sbixGlyph.py
+  sbixStrike.py
+  table_API_readme.txt
+  ttProgram.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/ufoLib/
+  __init__.py
+  converters.py
+  errors.py
+  etree.py
+  filenames.py
+  glifLib.py
+  kerning.py
+  plistlib.py
+  pointPen.py
+  utils.py
+  validators.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/unicodedata/
+  Blocks.py
+  OTTags.py
+  ScriptExtensions.py
+  Scripts.py
+  __init__.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/varLib/
+  __init__.py
+  __main__.py
+  avar.py
+  avarPlanner.py
+  builder.py
+  cff.py
+  errors.py
+  featureVars.py
+  interpolatable.py
+  interpolatableHelpers.py
+  interpolatablePlot.py
+  interpolatableTestContourOrder.py
+  interpolatableTestStartingPoint.py
+  interpolate_layout.py
+  iup.cp38-win_amd64.pyd
+  iup.py
+  merger.py
+  models.py
+  multiVarStore.py
+  mutator.py
+  mvar.py
+  plot.py
+  stat.py
+  varStore.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/varLib/instancer/
+  __init__.py
+  __main__.py
+  featureVars.py
+  names.py
+  solver.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fontTools/voltLib/
+  __init__.py
+  ast.py
+  error.py
+  lexer.py
+  parser.py
+  voltToFea.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/fonttools-4.56.0.dist-info/
+  LICENSE
+  METADATA
+  RECORD
+  WHEEL
+  entry_points.txt
+  top_level.txt
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/pillow-10.4.0.dist-info/
+  LICENSE
+  METADATA
+  RECORD
+  WHEEL
+  top_level.txt
+  zip-safe
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/psutil/
+  __init__.py
+  _common.py
+  _psaix.py
+  _psbsd.py
+  _pslinux.py
+  _psosx.py
+  _psposix.py
+  _pssunos.py
+  _psutil_windows.pyd
+  _pswindows.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/psutil-7.0.0.dist-info/
+  LICENSE
+  METADATA
+  RECORD
+  WHEEL
+  top_level.txt
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/pymupdf/
+  __init__.py
+  __main__.py
+  _apply_pages.py
+  _build.py
+  _extra.pyd
+  _mupdf.pyd
+  extra.py
+  mupdf.py
+  pymupdf.py
+  table.py
+  utils.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/pynput/
+  __init__.py
+  _info.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/pynput-1.8.0.dist-info/
+  COPYING.LGPL
+  METADATA
+  RECORD
+  WHEEL
+  pbr.json
+  top_level.txt
+  zip-safe
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/pynput/_util/
+  __init__.py
+  darwin.py
+  darwin_vks.py
+  uinput.py
+  win32.py
+  win32_vks.py
+  xorg.py
+  xorg_keysyms.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/pynput/keyboard/
+  __init__.py
+  _base.py
+  _darwin.py
+  _dummy.py
+  _uinput.py
+  _win32.py
+  _xorg.py
+Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/pynput/mouse/
+  __init__.py
+  _base.py
+  _darwin.py
+  _dummy.py
+  _win32.py
+  _xorg.py
 Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/shiboken2/
   __init__.py
   _config.py
@@ -677,6 +1933,744 @@ Umi-OCR_Paddle_v2.1.5/UmiOCR-data/site-packages/zxing_cpp-2.2.0.dist-info/
   RECORD
   WHEEL
   top_level.txt
-tQuick/Controls.2/Imagine/
-  ToolButton.qml
+ai_buckup/
+  design.md_2026-11-17-10-24-25.md
+  design.md_2026-11-17-10-44-33.md
+  design.md_2026-11-20-22-14-46.md
+  hard_bug.md_2026-10-13-17-45.md
+  hard_bug.md_2026-11-13-00-12-17.md
+  hard_bug.md_2026-11-17-13-26-51.md
+  need_user.md_2026-10-13-09-56-54.md
+  need_user.md_2026-10-13-17-45.md
+  need_user.md_2026-10-13-21-12-19.md
+  need_user.md_2026-11-12-12-20-21.md
+  need_user.md_2026-11-12-21-40-35.md
+  need_user.md_2026-11-12-22-11-29.md
+  need_user.md_2026-11-12-22-30-00.md
+  need_user.md_2026-11-12-22-51-09.md
+  onnx_opinion.md_2026-11-17-21-13-04.md
+  onnx_opinion.md_2026-11-17-21-41-17.md
+  onnx_opinion.md_2026-11-19-14-41-00.md
+  progress.md_2026-10-15-13-49-00.md
+  progress.md_2026-11-08-12-40-22.md
+  progress.md_2026-11-08-18-48.md
+  progress.md_2026-11-08-20-14.md
+  progress.md_2026-11-09-17-25-00.md
+  progress.md_2026-11-10-16-56-00.md
+  progress.md_2026-11-10-21-50-17.md
+  progress.md_2026-11-10-23-00-30.md
+  progress.md_2026-11-12-12-25-50.md
+  progress.md_2026-11-17-11-58-00.md
+  progress.md_2026-11-17-17-40-11.md
+  progress.md_2026-11-17-18-17-41.md
+  progress.md_2026-11-17-19-49-00.md
+  progress.md_2026-11-18-12-20-10.md
+  progress.md_2026-11-18-20-42-00.md
+  progress.md_2026-11-20-13-57-30.md
+  progress.md_2026-11-20-22-14-46.md
+  progress.md_2026-11-21-14-42-00.md
+  todo.md_2026-11-10-21-52-25.md
+  todo.md_2026-11-12-16-58-46.md
+  todo.md_2026-11-12-19-23-02.md
+  todo.md_2026-11-13-00-12-17.md
+  todo.md_2026-11-13-14-22-30.md
+  todo.md_2026-11-16-15-27-00.md
+  todo.md_2026-11-17-13-11-17.md
+  todo.md_2026-11-17-13-47-31.md
+  todo.md_2026-11-17-15-51-09.md
+  todo.md_2026-11-18-12-52-45.md
+  todo.md_2026-11-21-12-00-00.md
+  tree.md_2026-11-11-21-15-00.md
+  tree.md_2026-11-12-11-20-31.md
+dsh-my-presets/
+  cordis.patch.yml
+  package.json
+jarvis/
+  __init__.py
+  apps.py
+  context.py
+  events.py
+  llm.py
+  main.py
+  memory.py
+  stt.py
+  tts.py
+  wake.py
+  watchdog.py
+  web.py
+jarvis/static/
+  favicon.ico
+  index.html
+jarvis/tools/
+  __init__.py
+  app_control.py
+  browser_cdp.py
+  code_exec.py
+  desktop.py
+  file_ops.py
+  router.py
+  subagent.py
+  system.py
+  vision.py
+  web_search.py
+llm/
+  startLlama.ps1
+  startLlamaCpu.ps1
+  startLlamaVulkanTest.ps1
+openWakeWord/
+  generate_samples.py
+openWakeWord/output/aili_xiya_v0.3/
+  aili_xiya_v0.3.onnx
+  aili_xiya_v0.3.onnx.data
+openWakeWord/output/aili_xiya_v0.9/
+  aili_xiya_v0.9.onnx
+  aili_xiya_v0.9.onnx.data
+openWakeWord/output/aili_xiya_v0.9b/
+  aili_xiya_v0.9b.onnx
+  aili_xiya_v0.9b.onnx.data
+openWakeWord/output/aili_xiya_v0.9c/
+  aili_xiya_v0.9c.onnx
+  aili_xiya_v0.9c.onnx.data
+openWakeWord/output/aili_xiya_v1.0c/
+  aili_xiya_v1.0c.onnx
+  aili_xiya_v1.0c.onnx.data
+records/
+  2026-10-12-12-28-30.md
+  2026-10-13-11-45.md
+  2026-10-13-11-55.md
+  2026-10-13-21-38-01.md
+  2026-10-14-22-23-49.md
+  2026-10-15-21-05-48.md
+  2026-10-17-17-16-41.md
+  2026-10-17-19-11-07.md
+  2026-10-17-19-52-00.md
+  2026-11-08-12-08-49.md
+  2026-11-08-12-19-15.md
+  2026-11-08-12-29-18.md
+  2026-11-08-12-40-22.md
+  2026-11-08-12-51-25.md
+  2026-11-08-13-04-48.md
+  2026-11-08-13-29-56.md
+  2026-11-08-14-12-32.md
+  2026-11-08-15-16-18.md
+  2026-11-08-17-29-39.md
+  2026-11-08-17-53-00.md
+  2026-11-08-18-16-33.md
+  2026-11-08-18-39-40.md
+  2026-11-08-18-54-18.md
+  2026-11-08-19-25-48.md
+  2026-11-08-19-52-59.md
+  2026-11-08-20-22-00.md
+  2026-11-08-20-44-17.md
+  2026-11-09-15-37-58.md
+  2026-11-09-19-45-46.md
+  2026-11-09-20-35-43.md
+  2026-11-09-21-19-29.md
+  2026-11-09-21-55-14.md
+  2026-11-10-17-31-10.md
+  2026-11-10-17-43-08.md
+  2026-11-10-21-02-16.md
+  2026-11-10-22-17-39.md
+  2026-11-10-22-48-24.md
+  2026-11-11-19-45-46.md
+  2026-11-11-20-34-04.md
+  2026-11-11-21-36-30.md
+  2026-11-12-12-12-28.md
+  2026-11-12-16-58-46.md
+  2026-11-12-17-22-40.md
+  2026-11-12-18-49-50.md
+  2026-11-12-19-23-02.md
+  2026-11-12-20-03-41.md
+  2026-11-12-20-47-51.md
+  2026-11-12-21-40-35.md
+  2026-11-12-22-11-29.md
+  2026-11-12-22-30-00.md
+  2026-11-12-22-51-09.md
+  2026-11-12-23-08-34.md
+  2026-11-12-23-08-35.md
+  2026-11-12-23-58-00.md
+  2026-11-13-00-12-17.md
+  2026-11-13-11-12-00.md
+  2026-11-13-12-59-10.md
+  2026-11-13-13-46-12.md
+  2026-11-16-11-46-56.md
+  2026-11-16-12-18-00.md
+  2026-11-16-12-33-59.md
+  2026-11-16-19-47-00.md
+  2026-11-16-20-19-08.md
+  2026-11-17-10-24-25.md
+  2026-11-17-10-44-33.md
+  2026-11-17-10-52-00.md
+  2026-11-17-11-01-00.md
+  2026-11-17-11-48-00.md
+  2026-11-17-12-01-00.md
+  2026-11-17-12-20-00.md
+  2026-11-17-13-00-51.md
+  2026-11-17-13-20-00.md
+  2026-11-17-13-25-00.md
+  2026-11-17-13-56-00.md
+  2026-11-17-14-01-00.md
+  2026-11-17-14-08-00.md
+  2026-11-17-15-48-00.md
+  2026-11-17-17-55-00.md
+  2026-11-17-18-30-00.md
+  2026-11-17-18-46-00.md
+  2026-11-17-20-16-55.md
+  2026-11-17-21-13-04.md
+  2026-11-17-22-05-05.md
+  2026-11-18-10-17-23.md
+  2026-11-18-20-21-00.md
+  2026-11-18-20-31-00.md
+  2026-11-19-10-23-00.md
+  2026-11-19-13-10-55.md
+  2026-11-19-15-18-21.md
+  2026-11-19-20-46-21.md
+  2026-11-20-12-39-28.md
+  2026-11-20-13-20-00.md
+  2026-11-20-13-44-31.md
+  2026-11-20-15-12-16.md
+  2026-11-20-16-26-59.md
+  2026-11-20-20-25-21.md
+  2026-11-20-21-01-37.md
+  2026-11-20-22-14-46.md
+  2026-11-21-10-13-16.md
+  2026-11-21-10-39-00.md
+  2026-11-21-12-54-47.md
+  2026-11-21-13-05-50.md
+  2026-11-21-15-11-57.md
+  AI_Benchmark.md
+  JARVIS_STATE.md
+  PROJECT_SUMMARY.txt
+tests/
+  __init__.py
+  opinion.md
+  test_context.py
+  test_llm.py
+  test_memory.py
+  test_stt.py
+  test_tools.py
+  test_tts.py
+tests/2026-11-08-14-12-32_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-15-16-18_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+tests/2026-11-08-17-29-39_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-17-53-00_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-18-16-33_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-18-39-40_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-18-54-18_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-19-25-48_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-19-52-59_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-20-22-00_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-08-20-44-17_cc/
+  opinion.md
+  record_1.md
+  record_10.md
+  record_11.md
+  record_2.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-09-15-37-58_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-09-20-35-43_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-09-21-19-29_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-09-21-55-14_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_4.md
+tests/2026-11-10-17-31-10_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-10-17-43-08_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-10-21-02-16_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-10-22-17-39_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-11-19-45-46_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-11-20-34-04_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+tests/2026-11-12-10-35-29_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-17-22-40_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-20-03-41_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-21-40-35_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-22-11-29_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-22-30-00_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-22-51-09_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-23-08-34_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-23-08-35_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-12-23-58-00_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-13-00-12-17_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-13-12-25-43_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-13-12-59-10_cc/
+  opinion.md
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_21.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-13-13-46-12_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+tests/2026-11-16-11-46-56_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+tests/2026-11-16-12-18-00_music_cc/
+  opinion.md
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-16-12-33-59_vision_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-17-13-25-00_coerce/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_3_extra_click_at.md
+tests/2026-11-17-18-46-00_cc/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+  record_4.md
+tests/2026-11-18-10-17-23_cc/
+  opinion.md
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_2.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-19-14-26-09_v09b/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-19-19-10-10_v09/
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-19-19-10-10_v09b/
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-19-19-10-10_v09c/
+  opinion.md
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-21-10-39-00_cc/
+  opinion.md
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_21.md
+  record_22.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-21-13-05-50_cc/
+  opinion.md
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_21.md
+  record_22.md
+  record_23.md
+  record_24.md
+  record_25.md
+  record_26.md
+  record_27.md
+  record_28.md
+  record_29.md
+  record_3.md
+  record_30.md
+  record_31.md
+  record_32.md
+  record_33.md
+  record_34.md
+  record_35.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+tests/2026-11-21-15-11-57_v13/
+  opinion.md
+  record_1.md
+  record_10.md
+  record_11.md
+  record_12.md
+  record_13.md
+  record_14.md
+  record_15.md
+  record_16.md
+  record_17.md
+  record_18.md
+  record_19.md
+  record_2.md
+  record_20.md
+  record_3.md
+  record_4.md
+  record_5.md
+  record_6.md
+  record_7.md
+  record_8.md
+  record_9.md
+training/
+  _chk_feat_stats.py
+  _chk_jieba_fast.py
+  _chk_mirror.py
+  _chk_onnx_probe.py
+  _chk_predict_pipeline.py
+  _chk_torchcodec.py
+  _cn_adv_test.py
+  _cn_test.py
+  _diag_onnx.py
+  _diag_onnx2.py
+  _diag_onnx3.py
+  _diag_train_mini.py
+  _dl_batch2.py
+  _dl_numpy.py
+  _dl_onnx.py
+  _dl_scipy.py
+  _dl_wheels.py
+  _dump_line.py
+  _extract_ar.py
+  _fetch_ar.py
+  _fetch_oww.py
+  _fix_records.py
+  _gen_ack_wavs.py
+  _inspect_ar.py
+  _list_tags.py
+  _llm_probe.py
+  _llm_quick.py
+  _llm_tools_probe.py
+  _probe_gsv.py
+  _probe_mirror.py
+  _probe_onnx_v02.py
+  _probe_pandas.py
+  _probe_rows.py
+  _probe_scipy.py
+  _probe_scipy2.py
+  _probe_scipy3.py
+  _route_check.py
+  _setup_gsv.py
+  _setup_gsv2.py
+  _setup_gsv3.py
+  _setup_gsv4.py
+  _smoke_check.py
+  _smoke_ws.py
+  _sync_repo.py
+  _t2_ack_play_probe.py
+  _t2_asr_ab_gate.py
+  _t2_augment_dryrun.py
+  _t2_diag_v02b.py
+  _t2_exp_stream_vs_batch.py
+  _t2_hot_bias_ab.py
+  _t2_hot_export.py
+  _t2_make_val_fp_v02.py
+  _t2_miya_score_curve.py
+  _t2_newaudio_probe.py
+  _t2_smoke_stream.py
+  _t2_stream_features_v02.py
+  _t2_synth_neg.py
+  _t2_train_cn.py
+  _t2_transform_v02.py
+  _t2_v03_fix_features.py
+  _t2_v03_negadv_feat.py
+  _t2_v03_stage.py
+  _t2_v03b_stage.py
+  _t2_v03c_data.py
+  _t2_v03c_feat.py
+  _t2_v04_features.py
+  _t2_v04_noisy_clips.py
+  _t2_v04_real_clips.py
+  _t2_v05_features.py
+  _t2_v06_clips.py
+  _t2_v06_features.py
+  _t2_v06_noisy_clips.py
+  _t2_v09b_features.py
+  _t2_v09c_features.py
+  _t2_v10_clips.py
+  _t2_v10_features.py
+  _t2_v10b_features.py
+  _t2_v10c_features.py
+  _t2_v11_clips.py
+  _t2_v11_features.py
+  _t2_v11_score.py
+  _t2_v11_tts.py
+  _t2_verify_onnx.py
+  _t2_wake_empty_probe.py
+  _t3_temp_probe.py
+  _t4_full_retrain.py
+  _t4_round7_8.py
+  _t4_round8_9.py
+  _t4_round8_formal.py
+  _t4_rounds_13_19.py
+  _t4_rounds_6_12.py
+  _t4_title_evidence.py
+  _tts_400.py
+  _tts_api_test.py
+  _tts_direct_test.py
+  _ws_probe.py
 ```
