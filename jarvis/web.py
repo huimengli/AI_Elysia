@@ -12,6 +12,7 @@ from starlette.websockets import WebSocketDisconnected
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 
 from jarvis.tts import speak_streamed, stop_speaking, is_speaking
+from jarvis import services as svc
 
 _STATIC_DIR = Path(__file__).parent / "static"
 
@@ -27,6 +28,7 @@ async def _capture_loop():
     global _loop
     _loop = asyncio.get_running_loop()
     print("[Web] Event loop captured — WebSocket broadcast ready.")
+    asyncio.create_task(_monitor_loop())
 
 
 # ─── Thread-safe broadcast ───
@@ -335,6 +337,72 @@ async def api_health():
 # ─── WebSocket ───
 
 
+# ─── Monitor（design v3.1 §3/§4/§5，Q30 的 G/F/A/B/C/E 块）───
+
+_mon_state: dict = {}      # ws -> {"interval": int, "cursor": {name: int}}
+_mon_interval = 5          # 全局节拍 = 各客户端的最小间隔
+
+
+@app.get("/monitor", response_class=FileResponse)
+async def monitor_page():
+    """独立页 /monitor（Q30-2 选定，1080p 起）。"""
+    return FileResponse(_STATIC_DIR / "monitor.html")
+
+
+@app.get("/api/monitor")
+async def api_monitor():
+    snap = await asyncio.to_thread(svc.snapshot)
+    # B 块四灯在快照里也要有（轮 1 自曝：只有 WS 推送带，/api/monitor 空）
+    snap["lamps"] = await asyncio.to_thread(_health_snapshot)
+    return JSONResponse(snap)
+
+
+@app.post("/api/service/stop")
+async def api_service_stop(req: Request):
+    """关闭按钮只认 jarvis 自起的 pid（design §5）；外部 pid 拒绝并回显 taskkill 真实输出。"""
+    body = await req.json()
+    name = str(body.get("name", ""));
+    pid = int(body.get("pid", 0));
+    out = svc.stop_service(name, pid)
+    return JSONResponse({"name": name, "pid": pid, "result": out,
+                           "refused": out.startswith("拒绝")})
+
+
+async def _monitor_loop():
+    """服务端采样与推送同一节拍（Q30-3：最低 1 s）；日志每轮最多 20 行。"""
+    while True:
+        try:
+            t0 = time.time()
+            if not _mon_state:
+                # 没有监控客户端时也要 sleep：旧写法 `continue` 空转，白烧 CPU（第 104 处自曝一并修）
+                await asyncio.sleep(1)
+                continue
+            snap = await asyncio.to_thread(svc.snapshot)
+            # B 块四灯（唤醒/语音识别/LLM/TTS）复用现成的 /api/health 探针，不新写
+            snap["lamps"] = await asyncio.to_thread(_health_snapshot)
+            for ws in list(_mon_state.keys()):
+                st = _mon_state.get(ws)
+                if st is None:
+                    continue
+                batch = []
+                for name in svc.SERVICES:
+                    part, new = svc.logs_since(name, st["cursor"].get(name, 0));
+                    st["cursor"][name] = new;
+                    if part:
+                        batch.append([name, part])
+                payload = {"type": "monitor", "data": snap, "logs": batch}
+                try:
+                    await ws.send_text(json.dumps(payload))
+                except Exception:
+                    _mon_state.pop(ws, None)
+            # 节拍补偿（轮 2 自曝：单拍采样 8-9 s，只 sleep(1) 会漂到 8-9 s 一拍）
+            await asyncio.sleep(max(0.0, max(1, _mon_interval) - (time.time() - t0)))
+        except Exception as e:
+            # 推送循环不能因一次采样/发送崩掉：记到日志区，下一拍继续
+            svc._log("monitor", "推送循环异常: " + repr(e))
+            await asyncio.sleep(1)
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
     await ws.accept()
@@ -385,10 +453,20 @@ async def websocket_endpoint(ws: WebSocket):
                 from jarvis.main import abort_all
                 abort_all()
 
+            elif msg.get("type") == "monitor_config":
+                # 间隔前端可调（Q30-3：最低 1 s）；页面隐藏时前端设 30 s 省 CPU
+                iv = max(1, min(30, int(msg.get("interval", 5))))
+                st = _mon_state.get(ws)
+                _mon_state[ws] = {"interval": iv,
+                                      "cursor": (st or {}).get("cursor", {})}
+                _mon_interval = min(v["interval"] for v in _mon_state.values())
+
     except WebSocketDisconnect:
         if ws in _clients:
             _clients.remove(ws)
+        _mon_state.pop(ws, None)
     except WebSocketDisconnected:
+        _mon_state.pop(ws, None)  # 断连也要退出监控节拍（不留死客户端）
         # 11:56 自曝（record_9.md 轮 21-23）：驱动断开后 `ws.receive_text()` 抛的是
         # starlette 的 `WebSocketDisconnected`（「WebSocket is not connected. Need to call
         # "accept" first.」），不是 `WebSocketDisconnect`，这条 catch 接不住，每条断连

@@ -616,10 +616,18 @@ def _exec_tool_with_retry(name: str, args: dict) -> str:
         if u and not any(v in u for v in _DANGER_WORDS):
             return (f"没有执行「{tool_label(name)}」：这句话里没有锁屏/关机/重启的意思"
                     f"（原文「{u[:40]}」）。这类操作只在你明确说「锁屏/关机/重启」时才做。")
+    t0 = time.time()
     result = dispatch(name, args)
-    if "执行失败：" in result and result.startswith("工具「"):
+    ok = not ("执行失败：" in result and result.startswith("工具「"))
+    if not ok:
         time.sleep(0.5)
         result = dispatch(name, args)
+    # E 块（design §2）：工具调用次数/耗时/失败率的埋点
+    try:
+        from jarvis import services as svc
+        svc.tool_stat(name, ok, time.time() - t0)
+    except Exception:
+        pass
     return result
 
 
@@ -724,7 +732,14 @@ def _handle_wake_body() -> None:
         resume_wake_mic()  # Always resume wake word detection
     _check_abort()
     print(f"[爱莉希雅] Recorded {len(audio)/16000:.1f}s of audio, transcribing...")
+    t_asr = time.time()
     user_text = transcribe_audio(audio)
+    # F 块埋点（照实记耗时；tokens/s 未埋，那要 tokenizer）
+    try:
+        from jarvis import services as svc
+        svc.metric("asr_secs", round(time.time() - t_asr, 2))
+    except Exception:
+        pass
     if not user_text.strip():
         print("[爱莉希雅] Transcription empty — didn't catch anything.")
         event_log.log("system", "Wake: no voice recognized", "voice")
@@ -751,12 +766,25 @@ def _handle_wake_body() -> None:
         print("[爱莉希雅] Stopped. (voice)")
         raise _Aborted()
 
+    t_llm = time.time()
     response_text = _process_request(user_text)
     _check_abort()
+    try:
+        from jarvis import services as svc
+        svc.metric("llm_secs", round(time.time() - t_llm, 2))
+        svc.metric("llm_chars", len(response_text))
+    except Exception:
+        pass
 
     print(f"[爱莉希雅] {response_text}")
     _broadcast({"type": "status", "message": "正在说话…"})
+    t_tts = time.time()
     _speak_streamed_if_unmuted(response_text)
+    try:
+        from jarvis import services as svc
+        svc.metric("tts_secs", round(time.time() - t_tts, 2))  # 照实：含合成与播放全程
+    except Exception:
+        pass
 
 
 def _process_request(user_text: str, source: str = "voice") -> str:
@@ -879,6 +907,14 @@ def main() -> None:
     print("[爱莉希雅] Keys: Esc = stop | F2 = type | INSERT = mute/unmute")
 
     register_clean_exit_hook()  # HB-049：看门狗要的第一手证据
+    # 单窗口模式（start_all_in_one.bat 设 JARVIS_ONE_WINDOW=1）：jarvis 作父进程起子服务，
+    # 管道归 jarvis（design §1：只有父进程抓得到 stdout）。端口已占用 = 外部起，走接入识别，
+    # 不重复起、不杀。旧版 start_all.bat 不设这个变量，行为与今天完全一致（§8 两版并存）。
+    if os.environ.get("JARVIS_ONE_WINDOW") == "1":
+        from jarvis.services import arm_shutdown, launch
+        for _name in ("llama", "tts"):
+            print("[Monitor] " + json.dumps(launch(_name), ensure_ascii=False))
+        arm_shutdown()
     start_web_background(port=7860)
     print("[爱莉希雅] Web UI: http://localhost:7860")
 
@@ -888,7 +924,16 @@ def main() -> None:
     # faster-whisper try to reach huggingface.co and die with ConnectError 10054.
     threading.Thread(target=_warm_stt, daemon=True).start()
 
-    webbrowser.open("http://localhost:7860")
+    if os.environ.get("JARVIS_ONE_WINDOW") == "1":
+        # design §7 第 7 条：jarvis 起自己的浏览器窗口开 /monitor（不最大化，窗口数走同一条口径）
+        try:
+            from jarvis.tools.app_control import open_url
+            print("[Monitor] " + open_url("http://127.0.0.1:7860/monitor"))
+        except Exception as e:
+            print(f"[Monitor] 自起窗口打不开（{e!r}）— 退回默认浏览器，照实不假装成功")
+            webbrowser.open("http://localhost:7860/monitor")
+    else:
+        webbrowser.open("http://localhost:7860")
 
     event_log.log("system", "爱莉希雅 online", "startup")
     # Warm the wake-ack path before the first turn: cached PCM + one open output

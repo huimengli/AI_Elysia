@@ -185,6 +185,12 @@ def listen_for_wake_word(callback) -> None:
             oww.reset()
             now = time.time()
             state["last_detect"] = now
+            # F 块埋点（design §2）：真越线时的 score，供 /monitor 的 wake 曲线
+            try:
+                from jarvis import services as svc
+                svc.metric("wake_peak", round(float(score), 3))
+            except Exception:
+                pass
 
             # Skip if in cooldown window (prevents echo re-trigger)
             if now < _ignore_until[0]:
