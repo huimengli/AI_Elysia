@@ -233,16 +233,28 @@ def _split_hostport(url: str) -> tuple[str, int]:
     return (p.hostname or "", int(port))
 
 
+_probe_cache: dict = {}
+
+
 def _tcp_probe(host: str, port: int, timeout: float = 0.8) -> bool:
     """True when something is listening on host:port (loopback probes are cheap)."""
     if not host or port <= 0:
         return False
+    key = (host, port)
+    hit = _probe_cache.get(key)
+    # 节拍实测 1.8 s/拍（第 120 处自曝后量得），掉线探针每次要等 0.8 s；同一秒内共用一次结果。
+    if hit and time.time() - hit[0] < 1.0:
+        return hit[1]
     import socket
+    # 第 121 处自曝：原先在 try 里直返 True/False，TTL 缓存写不进去（缓存形同虚设）。
+    ok = False
     try:
         with socket.create_connection((host, port), timeout=timeout):
-            return True
+            ok = True
     except Exception:
-        return False
+        ok = False
+    _probe_cache[key] = (time.time(), ok)
+    return ok
 
 
 def _health_snapshot() -> dict:
@@ -394,7 +406,10 @@ async def _monitor_loop():
                 try:
                     await ws.send_text(json.dumps(payload))
                 except Exception:
-                    _mon_state.pop(ws, None)
+                    # 第 119 处自曝（截图实测「一阵就停」）：原先 send 抛异常就把客户端 pop 出监控表，
+                    # 而页面只在 open 与改间隔时发 monitor_config，一次瞬时失败后页面永久静默。只在真断开时摘。
+                    if getattr(ws, "client_state", None) == 2:  # Disconnected
+                        _mon_state.pop(ws, None)
             # 节拍补偿（轮 2 自曝：单拍采样 8-9 s，只 sleep(1) 会漂到 8-9 s 一拍）
             await asyncio.sleep(max(0.0, max(1, _mon_interval) - (time.time() - t0)))
         except Exception as e:

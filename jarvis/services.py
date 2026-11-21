@@ -15,6 +15,8 @@ REPO = Path(__file__).parent.parent
 PID_FILE = REPO / ".tmp" / "jarvis_child_pids.json"
 SHUT_LOG = REPO / ".tmp" / "jarvis_shutdown.log"
 RING = 2000  # 每服务环形 2,000 行（design §2 G 块，防内存涨）
+_net_cache = {"t": 0, "d": {}}  # netstat 扫描缓存（TTL 2 s）
+_win_cache = {"t": 0, "v": None}  # 我起的窗口数缓存（TTL 5 s，第 126 处自曝：逐段计时实测每拍 1688 ms）
 
 # 服务定义照 start_all.bat 的实测写法（路径、参数、env 一个不发明）：
 #  - llama = llm\llama-b12144-bin-win-vulkan-x64\llama-server.exe（不是 .venv-llama，那个不存在）
@@ -77,16 +79,20 @@ def port_open(port: int) -> bool:
         s.close()
 
 
-def listen_pids(ports):
-    """端口 -> 占用 pid。第 111 处自曝：ctypes 的 AF_INET 扩展表连踩 4 次（结构字段顺序、
-    bOwner、把返回码 122=ERROR_INSUFFICIENT_BUFFER 当失败、行距 24 不是 16），而且绑通配/IPv6
-    的行不在 IPv4 表里，50015（Umi 在监听）都查不出来。改用与 start_all.bat 同语义的
-    `netstat -ano`：权威、含 IPv6，一次进程内解析（单拍多花 0.2-0.4 s，记进 record）。"""
+def listen_pids(ports: list) -> dict:
+    """端口 → 监听它的 pid（第 111 处自曝后定稿：用 `netstat -ano` 解析，第 107-110 处的 ctypes
+    表系列连踩 4 次：字段顺序、bOwner、返回码 122 当失败、行距 24 且 IPv4 表不含通配/IPv6 行）。"""
+    # 节拍实测 1.8 s/拍（第 120 处自曝后量得：设 1 s，中位 1.9 s，一次快照 1998 ms），瓶颈是每拍跑一次
+    # `netstat -ano`。TTL 2 s（照实：监听 pid 陈旧 ≤2 s，提交内存/物理%/CPU 每拍仍新鲜；第 124 处自曝：
+    # TTL 1 s 在 1 s 节拍下几乎全 miss，第 2/3 拍仍 1.89/1.86 s，节拍压不下去）。
+    # 第 125 处自曝：我写了 `all(p in cache)`，没监听的端口（8080/9880 没起时）永远缺位 → 每拍重扫，缓存形同虚设。
+    # 缓存的是全量扫描，所以只按 TTL 放行；未监听的端口照实从缓存里查不到（陈旧 ≤2 s）。
+    if _net_cache["t"] and time.time() - _net_cache["t"] < 2.0:
+        return {p: _net_cache["d"][p] for p in ports}
     out = {}
     try:
         r = subprocess.run(["netstat", "-ano"], capture_output=True, text=True,
                            encoding="utf-8", errors="replace", shell=False)
-        wanted = {int(p) for p in ports}
         for line in r.stdout.splitlines():
             f = line.split()
             if len(f) >= 5 and f[0] == "TCP" and f[3] == "LISTENING":
@@ -96,21 +102,11 @@ def listen_pids(ports):
                     port = int(local[i + 1:].strip("[]"))
                 except ValueError:
                     continue
-                if port in wanted:
-                    out[port] = int(f[4])
+                out[port] = int(f[4])
+        _net_cache["t"] = time.time(); _net_cache["d"] = out
     except Exception as e:
         _log("monitor", "listen_pids 失败: " + repr(e))
-    return out
-    if rc2 != 0:
-        _log("monitor", "listen_pids 第二次调用 rc=" + str(rc2))
-        return {}
-    n = int.from_bytes(buf[0:4], "little")
-    out = {}
-    for i in range(n):
-        e = Entry.from_buffer_copy(buf, 4 + i * ctypes.sizeof(Entry));
-        if e.dwState == 2:  # LISTENING
-            out[socket.ntohl(e.dwLocalPort) & 0xFFFF] = e.bpid
-    return out
+    return {p: out[p] for p in ports if p in out}
 
 
 def _reader(name: str, stream) -> None:
@@ -262,11 +258,18 @@ def snapshot() -> dict:
                        "mem_mb": _mem_mb(pid) if pid else -1,
                        "log_lines": len(_rings.get(name, ()))});
     mine = 0
-    try:
-        from jarvis.tools.app_control import _jarvis_windows
-        mine = len(_jarvis_windows())
-    except Exception:
-        mine = None  # 照实：读不到就写 null，不猜窗口数
+    # 第 126 处自曝后逐段计时坐实：这一段每拍 1688 ms（`app_control` 首建 243 项索引 + 枚举窗口），
+    # 是节拍真瓶颈（os_stats 0 ms、listen_pids 冷 67 ms / 缓存 0 ms）。窗口计数变化慢，缓存 5 s
+    # （照实：「我起窗口 n/3」陈旧 ≤5 s；读不到照实写 null，不猜）。
+    if _win_cache["v"] is not None and time.time() - _win_cache["t"] < 5.0:
+        mine = _win_cache["v"]
+    else:
+        try:
+            from jarvis.tools.app_control import _jarvis_windows
+            mine = len(_jarvis_windows())
+            _win_cache["t"] = time.time(); _win_cache["v"] = mine
+        except Exception:
+            mine = None  # 照实：读不到就写 null，不猜窗口数
     return {"time": time.strftime("%Y-%m-%d %H:%M:%S"), "os": os_stats(),
             "services": rows, "jarvis_windows": mine,
             "metrics": {k: list(v) for k, v in _metrics.items()},
