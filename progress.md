@@ -94,3 +94,4 @@
 - 2026-11-21 18:40 **分页标签（主界面 / monitor / about）开工并验证 3 轮全 PASS**：三页共用一份顶栏（`tabs.css`+`tabs.js`，当前页高亮由 `location.pathname` 决定），新页 `about.html` + 新路由 `@app.get("/about")`，`web.py` 新增 `app.mount("/static", StaticFiles(...))`；design v3.1 → **v3.2**（先归档 `ai_buckup/design.md_2026-11-21-18-27-30.md`），§6 补第 10 条「必须真开浏览器看渲染与 console」。
   3 轮证据照实：轮 1 `顶栏第1子节点=true`+三标签+主界面高亮+padding 38px+console 无 error（主界面排版未压坏）；轮 2 `URL=/monitor`+高亮跟着+资源条填上（提交 25815·已用 22559·可用 3255·物理 54%·CPU 3.5%）+服务行 3；轮 3 `URL=/about`+表 5/6/8 行+未测条 3+`tokens/s 未埋`在场+回切 `URL=/` 高亮回主界面。截图 `C:\Users\楼听\Downloads\tabs_index.png`、`tabs_about.png`。
   **本批自曝第 128-130 处**：128 凭 grep 摘要拼长锚点，头部替换命中 0（改成按行索引替换才成）；129 重犯第 120 处——计数器挂在推送开始之后，读到 0 拍是假象；130 往不存在的目录写文件（ENOENT）。
+- 2026-11-21 18:41 **分页标签 commit ac65d39**（`feature/AI_monitor`，`rev-list --count` = 282，tree.md 715 文件同步重建）。本条 hash 照规则下一批补记。未 push。
