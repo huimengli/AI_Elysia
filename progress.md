@@ -88,3 +88,5 @@
 - **a66fad7** `fix(AI): 必填参数缺失不再吐 KeyError 灌回模型` —— `jarvis/tools/router.py`：`_SCHEMA_REQUIRED` 两档规则（字符串灌 `""`、数字/布尔不注入不执行）。32 项空参数直调无 KeyError。
 - **65691d1** `test(AI): P1 无你参与批次 22 轮收口 + 立案 HB-053 + Q42` —— 22 件 record + 批次 `opinion.md`（含笔误更正）+ `tests/opinion.md` 累积 + `records/2026-11-21-10-39-00.md` 完成状态 + `hard_bug.md`（HB-049 状态更新、HB-053）+ `need_user.md` Q42 + `todo.md` 归档压缩 + `tree.md` 重建（635 文件）。
 - `git rev-list --count HEAD` = **261**（上次 257）。`git status` 干净，只剩 3 个照旧不 commit 的根目录垃圾（`jarvis_screen.png`、`jieba.cache`、`love_silvia.txt`）。**已本地 commit，未 push。**
+
+- 2026-11-21 12:54 **归因更正（照你的话「' + fw + ' 聚焦了「星之翼」，可能是我的问题，我在玩游戏」）** —— 我确实发了聚焦调用（返回「已聚焦」文案），**前台是否被我的调用改动无独立证据**（当时没采前台窗口序列、没做时间对齐）。照实改成「归因未证实，可能是你自己的操作」。顺带照实：**空串通配同样命中窗口工具族**（空标题 = 匹配任意窗口），追加进 HB-053；DSH 窗口被点那条的独立证据链不受影响（back 后已复原）。→ records/2026-11-21-12-54-47.md、record_21.md 追加段、hard_bug.md HB-053 追加段。已本地 commit，未 push。

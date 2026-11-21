@@ -1,9 +1,9 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-21-12-05-00（P1 无你参与批次收口后重建）。变化：新增 `jarvis/watchdog.py`；新增 `records/2026-11-21-10-39-00.md`；新增 `tests/2026-11-21-10-39-00_cc/`（22 件 record + `opinion.md`）；新增 `ai_buckup/todo.md_2026-11-21-12-00-00.md`（todo.md 101 行归档）。
+更新时间: 2026-11-21-12-57-00（归因更正 + 事项表落盘后重建）。变化：新增 `records/2026-11-21-12-54-47.md`（需要我参与的事项表）；`record_21.md`/`hard_bug.md`/`progress.md` 追加段。
 结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 留在根目录（未跟踪，不 commit）；`GPT-SoVITS-main` 与 venv（`.venv-gsv`）不在跟踪面。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：635
+### 文件数（git ls-files --cached --others --exclude-standard）：636
 ```
 .//
   .gitignore
@@ -226,6 +226,7 @@ records/
   2026-11-20-22-14-46.md
   2026-11-21-10-13-16.md
   2026-11-21-10-39-00.md
+  2026-11-21-12-54-47.md
   AI_Benchmark.md
   JARVIS_STATE.md
   PROJECT_SUMMARY.txt
