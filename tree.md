@@ -1,12 +1,12 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-21-18-40-00（分页标签批 commit 前重建）。变化：新增 `jarvis/static/tabs.css`、`jarvis/static/tabs.js`
-（三页共用顶栏）、`jarvis/static/about.html`（新页 + 新路由 `/about`）、`tests/2026-11-21-18-27-30_tabs/`（record_1-3 + opinion）、
-`ai_buckup/design.md_2026-11-21-18-27-30.md`（design v3.1 归档，现 design.md = v3.2）。
-结构现状：代码在 `jarvis/`（`web.py` 现 mount `/static` 并出 `/monitor`、`/about`）；`tests/` 与 `records/` 照实按时间落盘；
+更新时间: 2026-11-21-19-08-00（仿 Chrome 标签页批 commit 前重建）。变化：`jarvis/static/tabs.css`、`jarvis/static/tabs.js`
+（标签全中文 + 仿 Chrome 外观重写）、`jarvis/static/about.html`（标题全中文）、`tests/2026-11-21-18-59-49_chrome_tabs/`
+（record_1-3 + opinion）、`ai_buckup/design.md_2026-11-21-18-59-49.md`（design v3.2 归档，现 design.md = v3.3）。
+结构现状：代码在 `jarvis/`（`web.py` mount `/static` 并出 `/`、`/monitor`、`/about`）；`tests/` 与 `records/` 照实按时间落盘；
 日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`jieba.cache`、`love_silvia.txt` 照实未 commit。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：715
+### 文件数（git ls-files --cached --others --exclude-standard）：721
 ```
 .//
   .gitignore
@@ -34,6 +34,7 @@ ai_buckup/
   design.md_2026-11-17-10-44-33.md
   design.md_2026-11-20-22-14-46.md
   design.md_2026-11-21-18-27-30.md
+  design.md_2026-11-21-18-59-49.md
   hard_bug.md_2026-10-13-17-45.md
   hard_bug.md_2026-11-13-00-12-17.md
   hard_bug.md_2026-11-17-13-26-51.md
@@ -244,6 +245,7 @@ records/
   2026-11-21-15-37-53.md
   2026-11-21-17-48-25.md
   2026-11-21-18-27-30.md
+  2026-11-21-18-59-49.md
   AI_Benchmark.md
   JARVIS_STATE.md
   PROJECT_SUMMARY.txt
@@ -688,6 +690,11 @@ tests/2026-11-21-15-37-53_monitor/
   record_2.md
   record_3.md
 tests/2026-11-21-18-27-30_tabs/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
+tests/2026-11-21-18-59-49_chrome_tabs/
   opinion.md
   record_1.md
   record_2.md
