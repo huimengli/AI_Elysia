@@ -81,3 +81,10 @@
 - 2026-11-21 10:39 **P1 · 不需要你参与的批次收口（22 轮，18 PASS / 1 FAIL / 3 照实未达）** —— `jarvis/watchdog.py`（194 行，起子进程用**文件重定向**不用管道、pid 判活 + `GetExitCodeProcess`、超时 `TerminateProcess`）+ `jarvis/main.py` 的 `register_clean_exit_hook()`（atexit 写 `.tmp/<tag>.clean_exit`）6 轮全 PASS；真 jarvis 在监督下跑 25.5 s（顺带看到 1 次唤醒触发，`[Wake] peak 0.278 / threshold 0.75`）。到达结尾：轮 12 FAIL（我 `max_wait` 定小）、轮 13 PASS（505.2/505.166）、轮 14 **PASS（到达结尾 + `taskkill` 关掉自己起的 pid 3584 + 关后 0 + profile pids 全 0）**。搜索兜底 3 轮齐（真机 baidu + `cn.bing.com/search` + 打桩路径，真机反爬照旧未测）。能量门 3 轮：span+0.015 → 1/6、concat → 1/6（空/乱码 4）、**span+0.008 → 2/6 与无门持平、空/乱码 0**；whisper 3/6 → 引擎与阈值不动。部署侧 3 轮：**环境音全 0 PASS**、**长噪 3 轮里 2 轮 1 次（峰 0.771）、键盘 3 轮全出现（峰 0.809）、13 次件稳定 3（期望 13）** → 与 v0.9b 召回轴一致，Q42 交你。`_coerce` 42 工具审计干净，**挖出 `TOOL_MAP` 直取键 → `KeyError` 洞并修**（字符串必填灌 `""`、数字/布尔必填不注入不执行），32 项空参数直调无 KeyError。**立案 HB-053：CDP 页面工具没有「只动我起的窗口」闸 + 空串是通配**（我的空参数测试把 DSH 窗口点到必应，back 后已复原）。自曝第 57-69 处。→ records/2026-11-21-10-39-00.md、tests/2026-11-21-10-39-00_cc/（22 轮 + opinion）、hard_bug.md、need_user.md Q42。
 - 自曝第 64 处（照实）：**我把「规则说明」当裸中文行写进 `router.py`**（不是注释也不是字符串）→ `SyntaxError: invalid character '，'`，import 全废；修成 `#` 注释才通。写文档串/注释要连引号一起写，不能只写文字。
 - 台账动作：`tree.md` 重建（632 非忽略文件，新增 `jarvis/watchdog.py` + 22 件 record + opinion + `ai_buckup/todo.md_2026-11-21-12-00-00.md`）；`todo.md` 101 → 61 行（归档先落）。commit hash 见下条（提交后补记）。
+
+## Git 提交记录（2026-11-21 12:17 追加，提交后补记 hash）
+
+- **e1989cb** `feat(AI): watchdog 子进程监督 + 退出码与收尾标记落盘` —— `jarvis/watchdog.py` 新增 194 行 + `jarvis/main.py` 的 `register_clean_exit_hook()`。6 轮全 PASS。
+- **a66fad7** `fix(AI): 必填参数缺失不再吐 KeyError 灌回模型` —— `jarvis/tools/router.py`：`_SCHEMA_REQUIRED` 两档规则（字符串灌 `""`、数字/布尔不注入不执行）。32 项空参数直调无 KeyError。
+- **65691d1** `test(AI): P1 无你参与批次 22 轮收口 + 立案 HB-053 + Q42` —— 22 件 record + 批次 `opinion.md`（含笔误更正）+ `tests/opinion.md` 累积 + `records/2026-11-21-10-39-00.md` 完成状态 + `hard_bug.md`（HB-049 状态更新、HB-053）+ `need_user.md` Q42 + `todo.md` 归档压缩 + `tree.md` 重建（635 文件）。
+- `git rev-list --count HEAD` = **261**（上次 257）。`git status` 干净，只剩 3 个照旧不 commit 的根目录垃圾（`jarvis_screen.png`、`jieba.cache`、`love_silvia.txt`）。**已本地 commit，未 push。**
