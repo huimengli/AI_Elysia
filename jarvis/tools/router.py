@@ -426,6 +426,18 @@ _SCHEMA_PARAMS = {s["function"]["name"]: s["function"].get("parameters", {}).get
                    for s in TOOL_SCHEMAS}
 
 
+# HB-040 收尾（records/2026-11-21-10-39-00.md 第 8 项，轮 20 审计）：TOOL_MAP 是 lambda
+# 直取键（`lambda a: f(a["url"])`），模型省略必填键时 `a["url"]` 直接 KeyError → 「执行失败」
+# 灌回模型（2026-11-08 关掉的幻觉通道又从这条缝漏）。规则照实分两档：
+#   - 必填**字符串**缺：灌 ""，让工具走自己的如实分支（power_command("") → 未知电源操作；
+#     kill_process("") → taskkill 失败；open_url("") → 「输入里没有 URL」）。
+#   - 必填**数字/布尔**缺（click_at 的 x/y、move_mouse、set_volume、set_brightness、
+#     set_timer 的 seconds）：**不注入、不执行**，返回缺参说明。灌 0 会把音量/亮度真的调成
+#     0、把鼠标真的挪到 (0,0) —— 那是真实副作用，不是「让工具跑起来」。
+_SCHEMA_REQUIRED = {s["function"]["name"]: set(s["function"].get("parameters", {}).get("required", []))
+                    for s in TOOL_SCHEMAS}
+
+
 def _coerce(tool_name: str, tool_args: dict) -> dict:
     """Force tool arguments to the types the schema declares.
 
@@ -445,6 +457,10 @@ def _coerce(tool_name: str, tool_args: dict) -> dict:
     """
     props = _SCHEMA_PARAMS.get(tool_name, {})
     out = dict(tool_args) if isinstance(tool_args, dict) else {}
+    # 必填字符串缺：灌 ""（让工具走自己的如实分支），见上方规则
+    for key in _SCHEMA_REQUIRED.get(tool_name, ()):  
+        if key not in out and props.get(key, {}).get("type") == "string":
+            out[key] = ""
     for key, spec in props.items():
         if key not in out:
             continue  # model omitted it: keep the function's own default, do not inject
@@ -472,6 +488,12 @@ def dispatch(tool_name: str, tool_args: dict) -> str:
     fn = TOOL_MAP.get(tool_name)
     if fn is None:
         return f"未知工具：{tool_label(tool_name)}"
+    # 必填数字/布尔缺：**不执行**（灌 0 是真实副作用），把缺参事实直说给模型
+    missing = [k for k in _SCHEMA_REQUIRED.get(tool_name, ())
+               if k not in tool_args and _SCHEMA_PARAMS.get(tool_name, {}).get(k, {}).get("type") != "string"]
+    if missing:
+        return (f"工具「{tool_label(tool_name)}」缺必填参数 {missing}（不是字符串，灌 0 就是真实副作用："
+                f"音量/亮度/鼠标坐标会被真的改掉），**没有执行任何动作**。")
     try:
         return str(fn(_coerce(tool_name, tool_args)))
     except Exception as e:
