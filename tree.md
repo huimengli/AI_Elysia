@@ -1,9 +1,12 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-21-15-45-00（OCR 进 .gitignore 后重建）。变化：`Umi-OCR_Paddle_v2.1.5/` 整目录照你的话排除（先前 tree 里的 2445 个文件里，Umi 副本占大头 → 本版 **2445 → 697）。先前两版（12:57 / 14:45）的 636 / 632 是 pwsh 截尾 stdout 的不完整表（`tests/` 整段丢了），自曝第 92 处，本版改成把 `git ls-files` 写进 `.tmp/filelist.txt` 再读。
-结构现状：可复用脚本在 `training/`；日志与探针产物在 `.tmp/`（被忽略，含 `hb51_audio/` 的分段音频）；`jarvis_screen.png`、`love_silvia.txt`、`jieba.cache` 为未跟踪的非忽略文件（照实列出）。
+更新时间: 2026-11-21-16-45-00（Monitor 骨架与验证批 commit 后重建）。变化：新增 `jarvis/services.py`（日志中枢/授权名单/快照）、
+`jarvis/static/monitor.html`（`/monitor` 页）、`start_all_in_one.bat`（单窗口版，全 ASCII + CRLF）、
+`tests/2026-11-21-15-37-53_monitor/`（record_1-3 + opinion）与 `ai_buckup/hard_bug.md_2026-11-21-15-45-00.md`（hard_bug 全量备份 204 行）。
+结构现状：代码在 `jarvis/`（`services.py` 是 Monitor 的父进程侧，`web.py` 出 `/monitor` 与 WS 推送）；`tests/` 与 `records/` 照实按时间落盘；
+日志与探针产物在 `.tmp/`（被忽略）；`jarvis_screen.png`、`jieba.cache`、`love_silvia.txt` 照实未 commit（根目录垃圾，不入库）。
 
-### 文件数（git ls-files --cached --others --exclude-standard）：697
+### 文件数（git ls-files --cached --others --exclude-standard）：705
 ```
 .//
   .gitignore
@@ -23,6 +26,7 @@
   requirements.txt
   start.bat
   start_all.bat
+  start_all_in_one.bat
   todo.md
   tree.md
 ai_buckup/
@@ -32,6 +36,7 @@ ai_buckup/
   hard_bug.md_2026-10-13-17-45.md
   hard_bug.md_2026-11-13-00-12-17.md
   hard_bug.md_2026-11-17-13-26-51.md
+  hard_bug.md_2026-11-21-15-45-00.md
   need_user.md_2026-10-13-09-56-54.md
   need_user.md_2026-10-13-17-45.md
   need_user.md_2026-10-13-21-12-19.md
@@ -85,6 +90,7 @@ jarvis/
   llm.py
   main.py
   memory.py
+  services.py
   stt.py
   tts.py
   wake.py
@@ -93,6 +99,7 @@ jarvis/
 jarvis/static/
   favicon.ico
   index.html
+  monitor.html
 jarvis/tools/
   __init__.py
   app_control.py
@@ -669,6 +676,11 @@ tests/2026-11-21-15-11-57_v13/
   record_7.md
   record_8.md
   record_9.md
+tests/2026-11-21-15-37-53_monitor/
+  opinion.md
+  record_1.md
+  record_2.md
+  record_3.md
 training/
   _chk_feat_stats.py
   _chk_jieba_fast.py
