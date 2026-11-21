@@ -85,3 +85,4 @@
 - 2026-11-21 16:40 **Monitor 验证 3 轮跑完**：轮 1 PASS 5/5（含外部 pid 关闭被拒）、轮 2 **部分 PASS**（协议全对，1 s 节拍未达：实测 4.26-4.66 s/拍、首拍 14.87 s，根因单拍采样耗时）、轮 3 PASS 4/4 + 外部起追加段 PASS（pid 与 `netstat` 真值一致，外部服务没被杀）。5 项未测照实（真机节拍、隐藏页省电、前端渲染、关窗全关 5 s 时限、`/monitor` 窗口不最大化 + 窗口数口径）。
 - 本批自曝 **第 98-111 共 14 处**，最贵的是 ctypes 查监听 pid 连踩 4 次（结构字段顺序、bOwner、把返回码 122 当失败、行距 24 且 IPv4 表不含通配/IPv6 行），最后改用 `netstat -ano`；另有 四灯没进 `/api/monitor`、`_mon_interval` 少 `global`、`windll.psapi` 查不到 `K32GetProcessMemoryInfo`、`ws.onclose = ws.onclose` 自赋值、驱动没设超时 16 分钟不出结果、JS 写出 null 字节。
 - 2026-11-21 16:44 **Monitor 验证批收尾 commit f7c444d**（`git rev-list --count HEAD` = 276）。第 112 处自曝：我先写了 `commit -F .tmp/commit_msg18.txt` 却没建这个文件，commit 没发生（当时 hash/count 都停在 0439033 / 275），补写消息文件才提交上。
+- 2026-11-21 16:38 **tree.md 照实重建并 commit（8644b3e，705 文件 / 65 目录）**；随后 progress 补 hash 的 commit **3836875**（`rev-list --count` = 278）。`git status` 只剩照旧不 commit 的 3 个根目录垃圾。本条的 hash（3836875 的后续 commit）照规则只能在下一批补记。
