@@ -68,3 +68,7 @@
 - [x] **2026-11-21 13:56 · HB-053 修法②空串拒绝 + ①归属门禁（顺序照你的话）**：`router._WILDCARD_EMPTY` 8 项空参直接拒；`browser_cdp.targets()` 归属先验 fail-closed + `focus_window` 只认自起窗口；验证 3+3 轮全 PASS（`record_5-10.md`）；正面路径未测（在你会话）→ hard_bug.md HB-053 追加段、`need_user.md` Q43
 - [ ] **2026-11-21 13:56 · Q37 OCR（你已把 Umi-OCR 拷进项目内）**：接 `_ocr_image()` 走 Umi-OCR 的 HTTP API，验收 = 真屏幕找到中文条目 + 坐标，跑 3 轮
 - [ ] **2026-11-21 13:56 · Q38 路线 3（你已录，放在录音文件夹）**：扫新录音 → 切 10 s 件 → 逐件 3 实例打分 → ≥0.70 的列给你确认再入库
+
+- [x] **2026-11-21 14:42 · Q37 OCR 接 Umi-OCR HTTP API**：`desktop._ocr_image` 走 50015（`data.format=dict` 带坐标），WinRT 兜底；验证 3 轮 PASS（`record_11-13.md`）；`click_at` 真点验未测
+- [x] **2026-11-21 14:42 · Q38 路线 3 前 2 轮：你新录 4 件在 v1.3 @0.75 打分**：`小度小度` 真唤醒（峰值 0.766），其余 0 检出 → hard_bug.md HB-054、need_user.md Q44（入不入训练表你定）
+- [ ] **2026-11-21 14:42 · 双模型同尺 20 轮（v1.3 vs v0.9b，新录 4 件）**：轮 16-35 在跑，落 `record_16.md` 起；照数回答 Q42 的跨唤醒词轴
