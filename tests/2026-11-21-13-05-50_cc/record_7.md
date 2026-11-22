@@ -6,4 +6,4 @@
 - 实际：**拒绝 12 / 12，执行了 0**；窗口清单前 5 行与后 5 行逐字相同。
 - 对照组照旧（`open_url`/`navigate_url`/`open_site`/`power_command`/`kill_process`/`type_text`/`press_key` 的如实文案 + `click_at`/`set_volume` 的缺参说明，行为与补丁前一致）。
 - 结果：**PASS**
-- 备注：psutil 缺失照实（前值 -1），窗口面用清单逐字比对；剪贴板全程未碰。
+- 备注：psutil 缺失（前值 -1），窗口面用清单逐字比对；剪贴板全程未碰。

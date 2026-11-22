@@ -315,8 +315,8 @@ def focus_window(title: str) -> str:
     hwnd, pid, t = hit[0]
 # **HB-053 修法①（2026-11-21 13:50）**：聚焦 = 把你的前台交给别的窗口，属于「动你的东西」。
 # 2026-11-21 轮 21：`focus_window("")` 空标题匹配任意窗口，把「星之翼」聚焦了（前台是否被改动
-# 未证实 —— 你当时在玩游戏，归因照实挂案）。所以只动 jarvis 自起窗口：pid 不在记录文件/profile
-# 里 = 不聚焦，照实返回，要动需要你明确授权（Q24 口径）。fail-closed。
+# 未证实 —— 你当时在玩游戏，归因挂案）。所以只动 jarvis 自起窗口：pid 不在记录文件/profile
+# 里 = 不聚焦，返回，要动需要你明确授权（Q24 口径）。fail-closed。
     try:
         from jarvis.tools.app_control import _jarvis_windows
         mine = {w[1] for w in _jarvis_windows()}

@@ -12,6 +12,6 @@ baidu 落不到搜索页（标题「百度安全验证」），换 bing 兜底
 - 结果：**PASS**
 - 备注：打桩轮只验代码路径；真机反爬出现时机照旧未测（轮 7 真机 baidu 落到了搜索页）
 
-打桩口径照实：本轮**不是真机反爬**，是把 `open_url` / `evaluate` 换成桩，验代码路径：baidu 落 wappass 验证页 → 返回里出现「换 bing 兜底」+ 调用序列第二条是 bing URL。
+打桩口径：本轮**不是真机反爬**，是把 `open_url` / `evaluate` 换成桩，验代码路径：baidu 落 wappass 验证页 → 返回里出现「换 bing 兜底」+ 调用序列第二条是 bing URL。
 
 证据：`.tmp/logs/search_rounds.json`；驱动 `.tmp/search_test.py`（轮 7-8 真机部分）与 `.tmp/search_test2.py`（轮 9-11，stub 返回 (json, err) 二元组——第一版返回单串被 `s, e = evaluate(...)` 解包炸，第 61 处自曝）。

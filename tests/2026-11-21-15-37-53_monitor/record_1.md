@@ -9,7 +9,7 @@
 4. `POST /api/service/stop` 对 **不是 jarvis 起的 pid**（999999）必须拒绝，`refused=true`。
 5. `/monitor` 200，页面含标题与 `/api/service/stop`（关闭按钮接线）。
 
-实际（16:12 复跑，逐字照实）：
+实际（16:12 复跑，逐字）：
 ```
 [Web] Event loop captured — WebSocket broadcast ready.
 [Apps] {'added': 0, 'skipped_existing': 243, 'no_target_skipped': 5, 'pinyin_filled': 227, 'total': 227}
@@ -23,8 +23,8 @@
 ```
 
 结果：**PASS（5/5）**。第 1 遍（16:03）四灯键是 `[]`，第 100 处自曝：四灯只在 WS 推送里加，`/api/monitor` 的快照没带；补上后复跑才有 4 个键。
-备注（照实）：
+备注：
 - `cpu: null` 是第 1 次采样（`GetSystemTimes` 要两次采样才有差值），不是故障。
 - `[Apps]` 那行是 `app_control` 首次导入建的 243 项应用索引：快照第一次调用要付这个成本，后面缓存（轮 2 的节拍问题根因之一，见 record_2）。
-- 关闭闸门在沙箱内可测（拒绝外部 pid 这条测到了）；**真关自起 pid 的 taskkill 走轮 3**。「关窗全关」的 CTRL_CLOSE_EVENT 5 s 时限在沙箱不可测，照实留未测。
-- 真机三件套（jarvis 起 /monitor 窗口、不最大化、窗口数 ≤3 口径一致）需要你在会话里看，照实记未测。
+- 关闭闸门在沙箱内可测（拒绝外部 pid 这条测到了）；**真关自起 pid 的 taskkill 走轮 3**。「关窗全关」的 CTRL_CLOSE_EVENT 5 s 时限在沙箱不可测，留未测。
+- 真机三件套（jarvis 起 /monitor 窗口、不最大化、窗口数 ≤3 口径一致）需要你在会话里看，记未测。

@@ -428,7 +428,7 @@ _SCHEMA_PARAMS = {s["function"]["name"]: s["function"].get("parameters", {}).get
 
 # HB-040 收尾（records/2026-11-21-10-39-00.md 第 8 项，轮 20 审计）：TOOL_MAP 是 lambda
 # 直取键（`lambda a: f(a["url"])`），模型省略必填键时 `a["url"]` 直接 KeyError → 「执行失败」
-# 灌回模型（2026-11-08 关掉的幻觉通道又从这条缝漏）。规则照实分两档：
+# 灌回模型（2026-11-08 关掉的幻觉通道又从这条缝漏）。规则分两档：
 #   - 必填**字符串**缺：灌 ""，让工具走自己的如实分支（power_command("") → 未知电源操作；
 #     kill_process("") → taskkill 失败；open_url("") → 「输入里没有 URL」）。
 #   - 必填**数字/布尔**缺（click_at 的 x/y、move_mouse、set_volume、set_brightness、
@@ -441,13 +441,13 @@ _SCHEMA_REQUIRED = {s["function"]["name"]: set(s["function"].get("parameters", {
 # 上面「必填字符串缺 → 灌 ""」对大多数工具是对的（open_url("") → 「输入里没有 URL」，如实分支）。
 # 但有一批工具的空参数**不是如实分支，是通配或真实副作用**（2026-11-21 轮 21 实测）：
 #   - `focus_window("")`：空标题 = **匹配任意窗口**（`indexOf("") == 0` 恒真），实测把「星之翼」聚焦了
-#     （前台是否被改动**未证实**，你当时在玩游戏 —— 归因照实挂案）。
+#     （前台是否被改动**未证实**，你当时在玩游戏 —— 归因挂案）。
 #   - `find_on_page("")` / `click_page_text("")`：空文本 = `indexOf("") == 0` → **命中页面第一个元素**，
 #     实测点掉第一处「图片」并把那个窗口导航到了必应。
 #   - `find_on_screen("")`：实测「已找到「」位于 (237,10)」= 空串在 OCR 文本里也是通配。
 #   - `web_search("")`：实测**起了一个 jarvis 窗口**并开空搜索页（真实副作用，不是「没做任何事」）。
 #   - `set_clipboard("")`：**清空剪贴板**（真副作用，Q18 的先存后还原则靠它）。
-#   - `show_notification("")`：空标题/空内容 = 弹一个空气泡（Q19 未肉眼确认，照实不测）。
+#   - `show_notification("")`：空标题/空内容 = 弹一个空气泡（Q19 未肉眼确认，不测）。
 # 这批工具的空参数在分发层**直接拒、不执行**；其余工具照旧走灌 "" 的如实分支。
 _WILDCARD_EMPTY = {
     "focus_window": ["title"],

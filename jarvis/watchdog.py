@@ -18,7 +18,7 @@
     python -m jarvis.watchdog verdict <tag>
 
 子进程侧配合（jarvis/main.py 已挂）：环境变量 JARVIS_TAG 存在时，jarvis 正常收尾会写
-.tmp/<tag>.clean_exit。exit 文件里的 clean_exit_marker 就是判据照实：码 0 且标记在 = 正常收尾；
+.tmp/<tag>.clean_exit。exit 文件里的 clean_exit_marker 就是判据：码 0 且标记在 = 正常收尾；
 码 0 且标记不在 = 不是正常收尾（被外部终止的表现之一）；码非 0 = 崩溃/异常退出。
 按 pid 轮询探活（不持管道、不持 Popen 对象，跨命令调用留不住对象）。
 """
@@ -131,7 +131,7 @@ def verdict(tag):
     code = ex["exit_code"]
     clean = ex["clean_exit_marker"]
     if ex["killed_by_watchdog"]:
-        kind = ("被 watchdog 杀掉。码 " + str(code) + " 照实记：**259 = STILL_ACTIVE，杀后读到的值不是真实退出码**；"
+        kind = ("被 watchdog 杀掉。码 " + str(code) + " 记：**259 = STILL_ACTIVE，杀后读到的值不是真实退出码**；"
                 "被杀这件事由 killed_by_watchdog=True 作证，不靠码")
     elif code == 0 and clean:
         kind = "正常收尾（子进程自己写了 clean_exit 标记）"

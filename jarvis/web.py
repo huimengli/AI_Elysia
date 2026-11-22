@@ -2,7 +2,7 @@
 from __future__ import annotations
 import asyncio
 import json
-from fastapi import Response  # 第 181 处自曝后照实补：页面禁缓存（jarvis 起的窗口被 Chrome 启发式缓存喂旧版，第 1/4/5/6 条的前端改动进不去）
+from fastapi import Response  # 第 181 处自曝后补：页面禁缓存（jarvis 起的窗口被 Chrome 启发式缓存喂旧版，第 1/4/5/6 条的前端改动进不去）
 import threading
 import time
 from pathlib import Path
@@ -367,7 +367,7 @@ async def about():
 
 
 
-# 第 181 处自曝（照实坐实）：jarvis 起的窗口拿到的是 Chrome 启发式缓存里的旧页 —— `FileResponse`
+# 第 181 处自曝（坐实）：jarvis 起的窗口拿到的是 Chrome 启发式缓存里的旧页 —— `FileResponse`
 # 不发缓存头，前端改动（样式/滚动/200 行上限/每拍一次赋值）在真会话里不生效。这里显式 no-store。
 _NO_STORE = {"Cache-Control": "no-store, must-revalidated", "Pragma": "no-cache"}
 
@@ -420,7 +420,7 @@ def _batch_lines(st: dict) -> list:
 async def _log_flush_loop():
     """第 5 条（照你 13:48 逐字「log推送似乎有点慢，不能通过ws实时推送吗」）：100 ms 节流的即时推送。
     只发日志增量（type:"logchunk"），不重发整份快照 —— 快照照旧每拍 1 s（采样含 netstat/探针，每 100 ms
-    做一次会白烧 CPU，照实写进 design §7）。游标与逐客户端隔离沿用同一条口径，所以即时推送与 1 s 拍
+    做一次会白烧 CPU，写进 design §7）。游标与逐客户端隔离沿用同一条口径，所以即时推送与 1 s 拍
     不会重复发同一行。量出延迟与消耗后再决定留不留（tests 批次）。"""
     while True:
         try:
@@ -462,7 +462,7 @@ async def _monitor_loop():
                 if st is None:
                     continue
                 # 第 156-158 处：逐客户端隔离 —— 一个客户端处理/发送失败不饿死后面的（第 156 处实测我的客户端 cur 永远 0）；
-                # 每 10 拍记谁被处理，好照实看清「谁在收、谁被跳过」。
+                # 每 10 拍记谁被处理，好看清「谁在收、谁被跳过」。
                 beat = globals().get("_mon_beat", 0) + 1
                 globals()["_mon_beat"] = beat
                 if beat % 10 == 1:

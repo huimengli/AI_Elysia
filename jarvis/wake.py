@@ -188,7 +188,7 @@ def listen_for_wake_word(callback) -> None:
             state["last_detect"] = now
             # F 块埋点（design §2）：真越线时的 score，供 /monitor 的 wake 曲线
             try:
-                pass  # 第 175 处自曝后照实删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
+                pass  # 第 175 处自曝后删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
                 svc.metric("wake_peak", round(float(score), 3))
             except Exception:
                 pass

@@ -89,7 +89,7 @@ PLAY_RECT_JS = """(() => {
 # 端口 9333 是 jarvis 起窗口时自己带的 `--remote-debugging-port`（本文件顶部 §Scope）。
 # 2026-11-21 轮 21 实测：`click_page_text("")` 连上 9333 后点了**不是我起的窗口**（pid 5244）。
 # 所以**归属先验、后动**：profile 里扫不到 jarvis 的 pid（记录文件 + profile 同一口径），
-# 这个端口上的任何页面都不动，照实返回。fail-closed：扫不到 = 不动。
+# 这个端口上的任何页面都不动，返回。fail-closed：扫不到 = 不动。
 _OWNERSHIP_FAIL = ""
 
 def _owner_pids(port: int = CDP_PORT) -> set[int]:

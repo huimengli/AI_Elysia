@@ -26,7 +26,7 @@
 - 坐标核对：`a[href="https://www.bilibili.com/anime/"]` 的 `getBoundingClientRect` =
   `x=86, y=0, w=28, h=64` → 中心正是 (100, 32)；`document.elementFromPoint(100,32)` →
   `{"点下元素":"SPAN","文本":"番剧","祖先a":"https://www.bilibili.com/anime/"}` —— **点下就是那个链接的 SPAN**；
-- 对照实验：DOM `a.click()`（不可信事件）在同一页面上**没导航**（地址仍首页）；
+- 对验：DOM `a.click()`（不可信事件）在同一页面上**没导航**（地址仍首页）；
   我那条查询 `querySelector('a[href="https://www.bilibili.com/anime/"]')` 还返回「没有该链接」，
   与上面列出 3 个该 href 的结果矛盾（同一页面两次查询结果不一致，**未证实原因**，记 HB-050）。
 - **口径**：「页面点击能用」**未测**；只记「命中坐标 + 点下元素 = 目标链接」这一条实测事实。

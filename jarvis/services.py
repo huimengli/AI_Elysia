@@ -47,6 +47,7 @@ SERVICES = {
 _locks = threading.Lock()
 _procs = {}      # name -> Popen（jarvis 自起）
 _rings = {}      # name -> deque(maxlen=2000)
+_ring_seq = {}   # name -> 单调写入序号（HB-055：环满后 ring[cursor:] 恒空、增量永久冻结的根因修复）
 _meta = {}       # pid -> {name, label, source, started}
 _metrics = {}    # 埋点环形（F 块）：name -> deque(maxlen=200)
 _tool_stats = {} # E 块：tool -> {n, fail, total}
@@ -83,14 +84,14 @@ def listen_pids(ports: list) -> dict:
     """端口 → 监听它的 pid（第 111 处自曝后定稿：用 `netstat -ano` 解析，第 107-110 处的 ctypes
     表系列连踩 4 次：字段顺序、bOwner、返回码 122 当失败、行距 24 且 IPv4 表不含通配/IPv6 行）。"""
     # 节拍实测 1.8 s/拍（第 120 处自曝后量得：设 1 s，中位 1.9 s，一次快照 1998 ms），瓶颈是每拍跑一次
-    # `netstat -ano`。TTL 2 s（照实：监听 pid 陈旧 ≤2 s，提交内存/物理%/CPU 每拍仍新鲜；第 124 处自曝：
+    # `netstat -ano`。TTL 2 s（监听 pid 陈旧 ≤2 s，提交内存/物理%/CPU 每拍仍新鲜；第 124 处自曝：
     # TTL 1 s 在 1 s 节拍下几乎全 miss，第 2/3 拍仍 1.89/1.86 s，节拍压不下去）。
     # 第 125 处自曝：我写了 `all(p in cache)`，没监听的端口（8080/9880 没起时）永远缺位 → 每拍重扫，缓存形同虚设。
-    # 缓存的是全量扫描，所以只按 TTL 放行；未监听的端口照实从缓存里查不到（陈旧 ≤2 s）。
+    # 缓存的是全量扫描，所以只按 TTL 放行；未监听的端口从缓存里查不到（陈旧 ≤2 s）。
     if _net_cache["t"] and time.time() - _net_cache["t"] < 2.0:
         # 第 147 处自曝（真会话 0 推送的根因）：第 125 处把「只按 TTL 放行」写死成 _net_cache["d"][p]，
         # 端口没在听（TTS 未起、重启窗口期）时缓存里没这个键 → 每拍 KeyError(9880)，推送全丢。
-        # 照实：查不到就缺席，不抛。
+        # ：查不到就缺席，不抛。
         d = _net_cache["d"]
         return {p: d[p] for p in ports if p in d}
     out = {}
@@ -114,7 +115,7 @@ def listen_pids(ports: list) -> dict:
 
 
 def _reader(name: str, stream) -> None:
-    """管道逐行 → 走 _log（第 5 条照实：环与 `.tmp/<name>.log` 同步落盘；旧写法直接 append 环，
+    """管道逐行 → 走 _log（第 5 条：环与 `.tmp/<name>.log` 同步落盘；旧写法直接 append 环，
     llama/tts 的服务日志一条文件都没写 —— 第 179 处自曝）。
     llama 的进度行是 \r 覆盖式，必须按 \r 断行，否则一行刷屏。"""
     for raw in stream:
@@ -142,7 +143,7 @@ def launch(name: str) -> dict:
         exe = cfg["cmd"][0]
         if not os.path.exists(exe):
             return {"name": name, "status": "missing", "pid": None,
-                    "source": "照实：可执行文件不存在（" + str(exe) + "）"}
+                    "source": "可执行文件不存在（" + str(exe) + "）"}
         env = dict(os.environ)
         env.update(cfg["env"])
         env.setdefault("MPLCONFIGDIR", str(REPO / ".tmp" / "mplconfig"))
@@ -151,6 +152,7 @@ def launch(name: str) -> dict:
                              stdin=subprocess.DEVNULL, bufsize=0)
         _procs[name] = p
         _rings[name] = deque(maxlen=RING)
+        _ring_seq[name] = 0  # 环重置时序号归零（HB-055）
         _meta[p.pid] = {"name": name, "label": cfg["label"], "source": "jarvis 起",
                             "started": time.strftime("%Y-%m-%d %H:%M:%S")}
         d = _load_pids(); d[name] = p.pid; _save_pids(d)
@@ -181,15 +183,15 @@ def stop_service(name: str, pid: int) -> str:
     return out or "taskkill 无输出"
 
 
-# 第 166-168 处自曝后照实补：Monitor 的日志区原先只有 llama/tts 两环，爱莉希雅自己的
+# 第 166-168 处自曝后补：Monitor 的日志区原先只有 llama/tts 两环，爱莉希雅自己的
 # 日志（唤醒、转录、回复、链路耗时）不进环，页面上看不到；cmd 窗口则被噪声刷屏。
 # 现在：每条日志既进环（前端显示）也写文件（design §2 G 块，照 watchdog 的 .tmp/<tag>.log 口径）。
 _log_files = {}
-_log_handles = {}  # name -> 打开的追加句柄（第 179 处自曝后照实补）
+_log_handles = {}  # name -> 打开的追加句柄（第 179 处自曝后补）
 
 
 def _log_file(name: str) -> Path:
-    """该服务的日志文件（照实：`.tmp/<name>.log`，与 watchdog 的 `.tmp/<tag>.log` 同一口径）。"""
+    """该服务的日志文件（`.tmp/<name>.log`，与 watchdog 的 `.tmp/<tag>.log` 同一口径）。"""
     p = REPO / ".tmp" / (name + ".log")
     _log_files[name] = p
     return p
@@ -209,8 +211,10 @@ def jerr(line: str) -> None:
 def _log(name: str, line: str) -> None:
     ring = _rings.setdefault(name, deque(maxlen=RING))
     stamp = time.strftime("%H:%M:%S")
-    ring.append((stamp, line))
-    try:  # 第 5 条照实落盘；第 179 处自曝后照实补：用缓存句柄，不再每行 open/close（llama 启动刷屏时开销太大）
+    seq = _ring_seq.get(name, 0) + 1
+    _ring_seq[name] = seq
+    ring.append((stamp, line, seq))  # 带序号，logs_since 按序号取增量（HB-055）
+    try:  # 第 5 条落盘；第 179 处自曝后补：用缓存句柄，不再每行 open/close（llama 启动刷屏时开销太大）
         fh = _log_handles.get(name)
         if fh is None:
             f = _log_files.get(name) or _log_file(name)
@@ -303,7 +307,7 @@ def snapshot() -> dict:
     mine = 0
     # 第 126 处自曝后逐段计时坐实：这一段每拍 1688 ms（`app_control` 首建 243 项索引 + 枚举窗口），
     # 是节拍真瓶颈（os_stats 0 ms、listen_pids 冷 67 ms / 缓存 0 ms）。窗口计数变化慢，缓存 5 s
-    # （照实：「我起窗口 n/3」陈旧 ≤5 s；读不到照实写 null，不猜）。
+    # （「我起窗口 n/3」陈旧 ≤5 s；读不到写 null，不猜）。
     if _win_cache["v"] is not None and time.time() - _win_cache["t"] < 5.0:
         mine = _win_cache["v"]
     else:
@@ -312,7 +316,7 @@ def snapshot() -> dict:
             mine = len(_jarvis_windows())
             _win_cache["t"] = time.time(); _win_cache["v"] = mine
         except Exception:
-            mine = None  # 照实：读不到就写 null，不猜窗口数
+            mine = None  # ：读不到就写 null，不猜窗口数
     return {"time": time.strftime("%Y-%m-%d %H:%M:%S"), "os": os_stats(),
             "services": rows, "jarvis_windows": mine,
             "metrics": {k: list(v) for k, v in _metrics.items()},
@@ -323,17 +327,29 @@ def snapshot() -> dict:
 
 
 def logs_since(name: str, cursor: int) -> tuple:
-    """该服务日志的增量（WS 每轮最多 20 行，design §2 G 块）。返回 (lines, new_cursor)。"""
+    """该服务日志的增量（WS 每轮最多 20 行，design §2 G 块）。返回 (lines, new_cursor)。
+    HB-055（2026-11-22 19:50，`records/2026-11-22-19-22-36.md`）：旧实现按 `ring[cursor:cursor+20]` 取，
+    环满（`deque(maxlen=2000)`）后新行丢最旧、索引整体左移，`cursor=2000` 时切片恒空、游标恒 2000 →
+    日志增量永久为 0（页上尾行停在追平满环那一刻）。改按单调序号取尾部增量。"""
     ring = list(_rings.get(name, ()))
-    part = ring[cursor:cursor + 20]
-    return [[t, s] for t, s in part], min(cursor + len(part), len(ring))
+    latest = _ring_seq.get(name, 0)
+    if latest <= cursor:
+        return [], cursor
+    n = min(latest - cursor, 20)
+    base = latest - len(ring) + 1          # ring[0] 的序号（单调序号映射到满环索引，HB-055）
+    off = max(0, cursor - base + 1)       # 游标是「已消费到的最后一条序号」，增量从 off+1 起（第 252 处自曝：旧式把已给过的行再发一次 → 重复 502）
+    part = ring[off:off + n]  # 取序号 (cursor, latest] 对应的真行，不重复、不取尾部同一段
+    if latest - cursor > len(ring):
+        # 客户端落后超过环容量：跳过长日志记（不假装全给，游标推到 latest 不重复发）
+        _log("monitor", "游标落后 " + str(latest - cursor) + " 行 > 环 " + str(len(ring)) + "（" + name + "），跳过中间行")
+    return [[t, s] for t, s, _ in part], base + off + len(part) - 1  # 游标 = 真给出的最后一条序号（跳过长时推到环头之后，不重复）
 
 
 def shutdown(reason: str = "exit") -> str:
     """退出时按名单只杀自起 pid，每条 kill 结果落盘（design §5 第 3 条）。"""
     lines = [time.strftime("%Y-%m-%d %H:%M:%S") + " " + reason];
     for name, p in list(_procs.items()):
-        try:  # 第 175 处自曝（控制台截图照实）：解释器退出时 subprocess 会撞
+        try:  # 第 175 处自曝（控制台截图）：解释器退出时 subprocess 会撞
             # `RuntimeError: can't create new thread at interpreter shutdown`，
             # 之前这条异常把整个 atexit 回调抛掉，SHUT_LOG 一行都没写（第 6 条的逐条落盘未证实）。
             r = subprocess.run(["taskkill", "/PID", str(p.pid), "/T", "/F"],

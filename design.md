@@ -1,19 +1,17 @@
-15. **四灯可见性（v3.5 第 1 条）**：真窗口截图对照——灯体尺寸、亮态光晕与文字提亮在深色玻璃卡下「一眼能分辨」；灯的状态与 `snapshot()` 的 `lamps` 一致（照实复用，不改判定）。
-16. **最新在下 + 两态（v3.5 第 2 条）**：默认顺序最新在底部；向上滚（真滚轮）能看历史且不被新行顶走，上限 200 行；滚到底后新日志直接在底部出现。全量照旧在环（2,000）与 `.tmp/<name>.log`。
-17. **滚动条样式（v3.6 第 1 条，照 home 设计改）**：照 home 自己的口径 —— `width:8px`、thumb `linear-gradient(var(--pink),var(--rose))`、`border-radius:8px`、`track` 透明（照实照抄 `index.html` 第 132–134、199–200 行，不发明颜色/数值）；以真窗口截图为证。v3.5 照你 13:48 贴的那段 CSS（12 px、红 30% 底、`rgb(41 73 144 / 30%)` + `2px solid snow` + 圆角 10 px）照实记台账，15:45 你照实说「颜色不符合 home 设计」→ 以 home 为准。
-18. **about 样式照 home（v3.5 第 4 条）**：`about.html` 与 home 的 `getComputedStyle` 对照（字体族、`radial-gradient`、CSS 变量）+ 真窗口截图。
-19. **推送延迟与消耗（v3.5 第 5 条）**：量「日志产生 → 页上出现」的延迟数值与 120 s 的 CPU/发送次数；若消耗明显上升照实撤掉即时广播，量不到写**未证实**。
-20. **异常触发录音法（v3.6 第 3 条）**：照你定的 10 秒录音法口径（`hard_bug.md` 第 83 行「你定的 10 秒录音法，20 段」+ `need_audio.md` 的 `"音频内容", "文件路径"` 清单，路径为空 = 需要你录）录**会异常触发的声音**：你 15:45 照实「刚打字的声音触发了一次」，接下来不呼唤「爱莉希雅」，只保持打字或用手机播放小说 → 照实记 `Wake peak` 与越线 0.75 的次数（越线 = 误触发，照实入 `tests/`，**不改阈值 0.75、不改 `stt.engine: whisper`**）。我不能说话；手机播放的声音要你放，我照实采录并跑唤醒评分。
 # 总设计
 
-- **版本**：v3.6 —— **v3.5 已归档到 `ai_buckup/design.md_2026-11-22-15-45-55.md`**；v3.4 已归档 `ai_buckup/design.md_2026-11-22-11-48-11.md`，v3.3 已归档 `ai_buckup/design.md_2026-11-22-13-48-06.md`（更早 v3.2/v3.1/v3.0/v2.0/v1.0 在 `ai_buckup/`）
-- **v3.6 唯一变化**：照你 15:45 逐字三条（`records/2026-11-22-15-45-55.md`）——①§6 第 17 条滚动条照 home 设计改（8 px、粉→玫红渐变、圆角 8 px、`track` 透明，照实照抄 home 真规则）②新增 **§9 About 内容 5 块（a–e）**（先写入 design，再照实重写 `jarvis/static/about.html`）③§6 加第 20 条（录音法测异常触发）
+- **版本**：v3.7 —— **v3.6 已归档到 `ai_buckup/design.md_2026-11-22-19-22-36.md`（v3.5 归档件在：`ai_buckup/design.md_2026-11-22-15-45-55.md`）**；v3.4 已归档 `ai_buckup/design.md_2026-11-22-11-48-11.md`，v3.3 已归档 `ai_buckup/design.md_2026-11-22-13-48-06.md`（更早 v3.2/v3.1/v3.0/v2.0/v1.0 在 `ai_buckup/`）
+- **v3.6 唯一变化**：照你 15:45 逐字三条（`records/2026-11-22-15-45-55.md`）——①§6 第 17 条滚动条照 home 设计改（8 px、粉→玫红渐变、圆角 8 px、`track` 透明，照抄 home 真规则）②新增 **§9 About 内容 5 块（a–e）**（先写入 design，再重写 `jarvis/static/about.html`）③§6 加第 20 条（录音法测异常触发）
 - **关联需求（v3.6 新增）**：`records/2026-11-22-15-45-55.md`（15:45 三条：滚动条照 home、About 内容 5 块、录音法测异常触发）
 
-- **更新时间**：2026-11-22-15-48
-- **v3.5 唯一变化**：照你 13:48 逐字五条（`records/2026-11-22-13-48-06.md`）——§2 G 块改「**默认最新在下** + 两态（查看 / 最新追加）+ 滚动条照你给的 CSS」；§3-5 补**四灯可见性**与 **about 页样式照 home**；§6 补第 15–18 条；§7 补 **ws 实时推送的节流与延迟口径**（量出数值，太耗性能照实撤掉）。其余照 v3.4 不动。
-- **v3.4 唯一变化**：照你 11:48 逐字六条（`records/2026-11-22-11-48-11.md`）——§2 G 块加**爱莉希雅自己的日志**（页上显示名「爱莉希雅」，环与文件的 key 照实是 `jarvis`）、**每面板显示上限 200 行**与**全量落盘 `.tmp/<name>.log`**；§2 F 块加**总用时**（照实口径：唤醒确认 → 播放结束）；§3 监视界面样式照 home（同一套 CSS 变量、渐变背景、玻璃卡、字体）并**允许上下滚动**（去掉 `body{overflow:hidden}`）；§5 新增 **cmd 窗口只留「爱莉希雅已经启动」+ 网址 + 报错**（其余进环与文件）；§6 补第 11–14 条；§7 补「页面缓存」与「复用判定」两条照实风险。其余照 v3.3 不动。
-- **v3.3 唯一变化**：照你 18:59 逐字「1. 界面点击无法切换 2. 标签显示应当是全中文 3. 见截图,我想要样式和Chrome标签页相似」——§3-5 改两处：标签文字全中文（主界面 / 监视界面 / 相关页面）、外观仿 Chrome 标签页；并照实记下第 1 条的诊断结论（你的 jarvis 跑旧代码时 `/static/tabs.css`、`/static/tabs.js` 取不到 → 顶栏不存在，所以点不动，**不是顶栏代码坏**）。其余照 v3.2 不动。
+- **更新时间**：2026-11-22-19-22-36
+- **v3.7 唯一变化**：照你 19:22 逐字一条（`records/2026-11-22-19-22-36.md`）——§6 第 17 条补「日志面板禁左右滚动、长行自动换行」（`overflow-x:hidden` + `word-break:break-word` + `white-space:pre-wrap`），滚动条照 home 口径不动。
+- **关联需求（v3.7 新增）**：`records/2026-11-22-19-22-36.md`（19:22 一条：log 不要左右滚动，直接自动换行）
+- **记（v3.7）**：本文件修过结构——自曝 247/248 处照出 15:48 与 18:30 两次「数组 join 写盘」把 §6 条目 15–20 挤到文件头部（首行变成编号条目、`# 总设计` 落到第 7 行）并把 §9 追加两次（第 175、188 行）；把 6 条移回 §6 尾部、删重复 §9（13 行），复验首行 = `# 总设计`、§9 次数 1、条目 17/20 各 1。补规矩：改 md 后打印首行与全部标题行号，不只数关键词计数。
+
+- **v3.5 唯一变化**：照你 13:48 逐字五条（`records/2026-11-22-13-48-06.md`）——§2 G 块改「**默认最新在下** + 两态（查看 / 最新追加）+ 滚动条照你给的 CSS」；§3-5 补**四灯可见性**与 **about 页样式照 home**；§6 补第 15–18 条；§7 补 **ws 实时推送的节流与延迟口径**（量出数值，太耗性能撤掉）。其余照 v3.4 不动。
+- **v3.4 唯一变化**：照你 11:48 逐字六条（`records/2026-11-22-11-48-11.md`）——§2 G 块加**爱莉希雅自己的日志**（页上显示名「爱莉希雅」，环与文件的 key 是 `jarvis`）、**每面板显示上限 200 行**与**全量落盘 `.tmp/<name>.log`**；§2 F 块加**总用时**（口径：唤醒确认 → 播放结束）；§3 监视界面样式照 home（同一套 CSS 变量、渐变背景、玻璃卡、字体）并**允许上下滚动**（去掉 `body{overflow:hidden}`）；§5 新增 **cmd 窗口只留「爱莉希雅已经启动」+ 网址 + 报错**（其余进环与文件）；§6 补第 11–14 条；§7 补「页面缓存」与「复用判定」两条风险。其余照 v3.3 不动。
+- **v3.3 唯一变化**：照你 18:59 逐字「1. 界面点击无法切换 2. 标签显示应当是全中文 3. 见截图,我想要样式和Chrome标签页相似」——§3-5 改两处：标签文字全中文（主界面 / 监视界面 / 相关页面）、外观仿 Chrome 标签页；并记下第 1 条的诊断结论（你的 jarvis 跑旧代码时 `/static/tabs.css`、`/static/tabs.js` 取不到 → 顶栏不存在，所以点不动，**不是顶栏代码坏**）。其余照 v3.2 不动。
 - **v3.2 唯一变化**：新增 §3-5 **分页标签**（照你 18:27 逐字「在页面最顶部添加分页标签,允许切换主界面,monitor(监视界面),about(相关页面)」）——三页共用一条顶栏、当前页高亮、新增 `/about` 路由；§6 验收随之补第 10 条。其余照 v3.1 不动。
 - **v3.1 变化（照旧保留）**：启动脚本定案为**两版并存**（照你 22:14 逐字「保留原start_all,写新start_all_in_one.bat」）——新增 §8，§4 第 4 项、§6 第 9 条、§7 补一条随之改。
 - **关联需求（v3.2 新增）**：`records/2026-11-21-18-27-30.md`（18:27 分页标签三页）
@@ -40,7 +38,7 @@
 | 块 | 内容 | 数据来源 | 备注 |
 | --- | --- | --- | --- |
 | **G 日志中枢（新，最核心）** | 每个服务的 stdout/stderr 逐行 + **爱莉希雅自己的日志**（唤醒/转录/回复/埋点/报错），带标签与时间戳 | jarvis 子进程管道 + `svc.jlog`/`svc.jerr`（`services.py`） | 每服务环形缓冲 **2,000 行**；WS 每轮最多 20 行批量 + 即时广播（100 ms 节流）；**页面显示上限 200 行/面板（`LOGCAP`），默认最新在下**；两态：**查看**（向上滚看历史，不被新行顶走）/**最新追加**（滚到底后新行落底部）；全量逐条追加 `.tmp/<name>.log`；滚动条照你 13:48 给的 CSS（12 px 宽、`rgb(255 5 5 / 30%)` 底、`rgb(41 73 144 / 30%)` 圆角 thumb + `2px solid snow`） |
-| **F 语音链路指标（你说最重要）** | wake 置信度 / ASR 耗时 / LLM 耗时与字数 / TTS 耗时 / **总用时** | 埋点：`main.py` 唤醒（`t_total` 起点）、转写（`asr_secs`）、回复（`llm_secs`/`llm_chars`）、TTS 后（`tts_secs`、`total_secs`） | tokens/s 仍**未埋**（要 tokenizer）；总用时照实 = **唤醒确认 → 播放结束**（含 ASR、LLM、TTS 合成与播放） |
+| **F 语音链路指标（你说最重要）** | wake 置信度 / ASR 耗时 / LLM 耗时与字数 / TTS 耗时 / **总用时** | 埋点：`main.py` 唤醒（`t_total` 起点）、转写（`asr_secs`）、回复（`llm_secs`/`llm_chars`）、TTS 后（`tts_secs`、`total_secs`） | tokens/s 仍**未埋**（要 tokenizer）；总用时= **唤醒确认 → 播放结束**（含 ASR、LLM、TTS 合成与播放） |
 | **A 资源仪表** | 提交 上限/已用/可用 MB、物理%、CPU% | `Win32_OperatingSystem` + CPU 采样 | 颜色安全线取实测（可用一度 237 MB）：≥2,000 粉 / 300–2,000 gold / <300 新增 `--danger` |
 | **B 服务健康四灯** | wake / asr / llm / tts | 现有 `/api/health` 的 `_tcp_probe`（`web.py`） | 复用 `.svc-lamp` 三态 |
 | **C 进程与窗口清单** | 各服务 pid + 提交 MB；我起的浏览器窗口数（上限 3） | `Win32_Process` 命令行匹配 + `_browser_windows()`（`app_control.py`） | 与 Chrome 管理器 ≤3 联动 |
@@ -49,7 +47,7 @@
 ## 3. 独立页 `/monitor`（Q30-2 选定，1080p 起）
 
 `index.html` 现 1001 行、`body{overflow:hidden}`（`L25` 区域）、side-panel 380 px（`L186`）。
-独立页**照 home（`index.html`）的样式**（v3.4 第 1 条照你逐字）：同一套 CSS 变量（`--pink #F8A9C4`、`--pink-2 #FFD8E8`、`--rose`、`--lilac`、`--gold`、`--bg0/#171021`、`--bg1/#1d1428`、`--glass`、`--line`、`--text`、`--text-dim`、`--shadow`）、同一份多层径向渐变背景、同一字体（PingFang SC / Microsoft YaHei）、面板用玻璃卡（`backdrop-filter:blur` + 圆角 16 px + `--shadow`）。**v3.5 第 4 条照你逐字「about页面的风格也要参考home修改」**：`about.html` 用同一套变量与玻璃卡，标题「相关页面 — 爱莉希雅」。**v3.5 第 1 条照你逐字「monitor的4灯不明显，需要修改一下」**：四灯（wake/asr/llama(ocal)/tts）加大灯体与状态色（亮态实心 + 外圈光晕 + 文字加粗提亮，暗态明显变灰），判定来源照实复用 `snapshot()` 的 `lamps`，不改判定逻辑。`body` 不再 `overflow:hidden`（`overflow-y:auto`），日志面板 `max-height:220px` + `overflow:auto`；§3-5 顶栏（`tabs.css`/`tabs.js`，标签全中文、仿 Chrome）照 v3.3 不动。
+独立页**照 home（`index.html`）的样式**（v3.4 第 1 条照你逐字）：同一套 CSS 变量（`--pink #F8A9C4`、`--pink-2 #FFD8E8`、`--rose`、`--lilac`、`--gold`、`--bg0/#171021`、`--bg1/#1d1428`、`--glass`、`--line`、`--text`、`--text-dim`、`--shadow`）、同一份多层径向渐变背景、同一字体（PingFang SC / Microsoft YaHei）、面板用玻璃卡（`backdrop-filter:blur` + 圆角 16 px + `--shadow`）。**v3.5 第 4 条照你逐字「about页面的风格也要参考home修改」**：`about.html` 用同一套变量与玻璃卡，标题「相关页面 — 爱莉希雅」。**v3.5 第 1 条照你逐字「monitor的4灯不明显，需要修改一下」**：四灯（wake/asr/llama(ocal)/tts）加大灯体与状态色（亮态实心 + 外圈光晕 + 文字加粗提亮，暗态明显变灰），判定来源复用 `snapshot()` 的 `lamps`，不改判定逻辑。`body` 不再 `overflow:hidden`（`overflow-y:auto`），日志面板 `max-height:220px` + `overflow:auto`；§3-5 顶栏（`tabs.css`/`tabs.js`，标签全中文、仿 Chrome）照 v3.3 不动。
 
 ```
 1920×1080（最低 1080p，不做窄窗口）
@@ -85,8 +83,8 @@
 - 三页：**主界面** = 现成的 `/`（`index.html`）、**监视界面** = 现成的 `/monitor`、**相关页面** = 新页 `/about`。**路由名不变，标签文字全中文**（v3.3）。
 - 顶栏**三页共用一份**（`tabs.css` + `tabs.js`），当前页高亮由 `location.pathname` 决定，真跳转（不是同一页隐藏/显示块）。
 - **外观仿 Chrome 标签页（v3.3，照你截图 907x51）**：深色标签条 + 圆角凸起的标签卡片（顶部两角圆、底部方），当前页亮底（粉→粉深渐变 + 深色字）、非当前页暗底紫（hover 提亮），标签之间小间隔，条底色比页面更深，字号接近 Chrome。
-- **第 1 条的诊断结论（照实）**：你的 jarvis 跑旧代码（无 `app.mount("/static", …)`）时，`/static/tabs.css` 与 `/static/tabs.js` 取不到（真浏览器实测 status 0 失败），**顶栏不存在**（`body` 第 1 子节点无 `.dsh-tabs`）→ 所以「点击无法切换」。沙箱 7861（新代码）3 轮点击均真切换。结论：**要重启 jarvis**，不是顶栏代码坏。
-- `相关页面`（`/about`）内容照实，只写已实现的事实：组件与端口表、唤醒模型与阈值（`aili_xiya_v1.3.onnx` / 0.75，**不可改**）、埋点口径（`asr_secs`/`llm_secs`/`llm_chars`/`tts_secs`/`wake_peak`，**tokens/s 未埋**）、缓存 TTL（netstat 2 s / 窗口数 5 s / 探针 1 s）、design 版本与归档位置、台账文件位置、照实的**未测项清单**。不写没实现过的功能。
+- **第 1 条的诊断结论**：你的 jarvis 跑旧代码（无 `app.mount("/static", …)`）时，`/static/tabs.css` 与 `/static/tabs.js` 取不到（真浏览器实测 status 0 失败），**顶栏不存在**（`body` 第 1 子节点无 `.dsh-tabs`）→ 所以「点击无法切换」。沙箱 7861（新代码）3 轮点击均真切换。结论：**要重启 jarvis**，不是顶栏代码坏。
+- `相关页面`（`/about`）内容，只写已实现的事实：组件与端口表、唤醒模型与阈值（`aili_xiya_v1.3.onnx` / 0.75，**不可改**）、埋点口径（`asr_secs`/`llm_secs`/`llm_chars`/`tts_secs`/`wake_peak`，**tokens/s 未埋**）、缓存 TTL（netstat 2 s / 窗口数 5 s / 探针 1 s）、design 版本与归档位置、台账文件位置、**未测项清单**。不写没实现过的功能。
 
 ## 4. 架构改动（开工后的实现拆分，Q31 未答复前不写）
 
@@ -110,7 +108,7 @@
   外部起的进程**面板不给关闭按钮**，只给"识别 + 体检"（Q24/Q29 的边界：你的浏览器与你的进程我不动）
 - **点击前确认**：弹一层「要关 llama-server（pid 15600，4,522 MB，jarvis 起的）？确认/取消」，
   **不静默杀**；结果行必须回显 `taskkill` 真实输出（成功/失败），失败时保留行，不显示"已关闭"
-5. **cmd 窗口只留三样（v3.4 第 2 条照你逐字）**：「爱莉希雅已经启动 http://127.0.0.1:7860」、启动指向的网址、**报错信息**。其余（唤醒、peak、转录、回复、工具、TTS 计时）一律走 `svc.jlog`（进环 + `.tmp/jarvis.log`，不刷控制台），`svc.jerr` 才打 stderr（照实：报错要在窗口看见）。F2 打字提示照实保留（`print("[Type your command] ", end="")`），否则没法输入——已记 `need_user.md` **Q46（status: wait）**。
+5. **cmd 窗口只留三样（v3.4 第 2 条照你逐字）**：「爱莉希雅已经启动 http://127.0.0.1:7860」、启动指向的网址、**报错信息**。其余（唤醒、peak、转录、回复、工具、TTS 计时）一律走 `svc.jlog`（进环 + `.tmp/jarvis.log`，不刷控制台），`svc.jerr` 才打 stderr（报错要在窗口看见）。F2 打字提示保留（`print("[Type your command] ", end="")`），否则没法输入——已记 `need_user.md` **Q46（status: wait）**。
 
 ## 6. 验收（验证 3 轮，`tests/<ts>_cc/record_1..3.md` + `opinion.md`）
 
@@ -126,25 +124,32 @@
 10. **分页标签（v3.2）**：三页顶部都有同一份顶栏、当前页高亮、点击切页后 URL 与页面对应；**必须真开浏览器看渲染与 console**（v3.1 的验证轮只测了「页 200 + 标题命中」，被你的截图打穿过一次：JS 转义语法错导致整页不执行）
 11. **样式一致（v3.4 第 1 条）**：监视界面与 home 的 `getComputedStyle` 对照——字体族、`background-image` 含 `radial-gradient`、标题「监视界面 — 爱莉希雅」（真会话窗口截图为证）。
 12. **滚动（v3.4 第 4 条）**：`body` 的 `overflowY=auto`，`scrollBy` 后 `scrollTop` 有位移（实测 0→300，内容高 1275 > 视口 774），日志面板内也可滚（实测 `pre.scrollTop` 有值）。
-13. **200 行上限（v3.4 第 5 条）**：页面板行数 ≤200；灌入 500 行后面板停在 200、首行是最新（前端截断逻辑验，照实标注）；真链路累积到 200 行需 400 s 连续跑 —— **未测**。日志文件照实逐条落盘（实测 `jarvis.log` 1201 行、`llama.log` 13 行、`tts.log` 74 行、`monitor.log` 156 行）。
-14. **切换不卡（v3.4 第 6 条）**：监视页 rAF 心跳实测**最大帧间隔 19 ms**（旧写法每行把整段文本复制一遍，主线程被拖死到 CDP `Runtime.evaluate` 20 s 超时）；真点标签 主界面→home 落地 252 ms、监视界面落地 71 ms。总用时真链路 未测（我不能说话）。
+13. **200 行上限（v3.4 第 5 条）**：页面板行数 ≤200；灌入 500 行后面板停在 200、首行是最新（前端截断逻辑验，标注）；真链路累积到 200 行需 400 s 连续跑 —— **未测**。日志文件逐条落盘（实测 `jarvis.log` 1201 行、`llama.log` 13 行、`tts.log` 74 行、`monitor.log` 156 行）。
+14. **切换不卡（v3.4 第 6 条）**：监视页 rAF 心跳实测**最大帧间隔 19 ms**（旧写法每行把整段文本复制一遍，主线程被拖死到 CDP `Runtime.evaluate` 20 s 超时）；真点标签 主界面→home 落地 252 ms、监视界面落地 71 ms。总用时真链路 未测（我不能说话）。**补（v3.7，你 19:22 原话「log 不要左右滚动，直接自动换行」）**：日志面板 `.svc pre` 禁左右滚动 —— `overflow-x:hidden` + `word-break:break-word` + 保留 `white-space:pre-wrap`，连续无空格长串（长 URL / 长 base64 / 长 JSON 行）断行显示；上下滚动保留（第 16 条两态口径不动），滚动条照 home 口径（8 px、粉→玫红渐变、圆角 8 px、`track` 透明）。
 
+15. **四灯可见性（v3.5 第 1 条）**：真窗口截图对照——灯体尺寸、亮态光晕与文字提亮在深色玻璃卡下「一眼能分辨」；灯的状态与 `snapshot()` 的 `lamps` 一致（复用，不改判定）。
+16. **最新在下 + 两态（v3.5 第 2 条）**：默认顺序最新在底部；向上滚（真滚轮）能看历史且不被新行顶走，上限 200 行；滚到底后新日志直接在底部出现。全量照旧在环（2,000）与 `.tmp/<name>.log`。
+17. **滚动条样式（v3.6 第 1 条，照 home 设计改）**：照 home 自己的口径 —— `width:8px`、thumb `linear-gradient(var(--pink),var(--rose))`、`border-radius:8px`、`track` 透明（照抄 `index.html` 第 132–134、199–200 行，不发明颜色/数值）；以真窗口截图为证。v3.5 照你 13:48 贴的那段 CSS（12 px、红 30% 底、`rgb(41 73 144 / 30%)` + `2px solid snow` + 圆角 10 px）记台账，15:45 你说「颜色不符合 home 设计」→ 以 home 为准。补（v3.7，你 19:22 原话「log 不要左右滚动，直接自动换行」）：日志面板 `.svc pre` 禁左右滚动 —— `overflow-x:hidden` + `word-break:break-word` + 保留 `white-space:pre-wrap`，连续无空格长串（长 URL / 长 base64 / 长 JSON 行）断行显示；上下滚动保留（第 16 条两态口径不动），滚动条照 home 口径（8 px、粉→玫红渐变、圆角 8 px、`track` 透明）不动。记第 249 处自曝：第一次补写因先插入后赋值、锚点索引下移，赋值打在插入块上，本行未变（真行 335 字止于「以 home 为准。」），重算锚点后重做。
+18. **about 样式照 home（v3.5 第 4 条）**：`about.html` 与 home 的 `getComputedStyle` 对照（字体族、`radial-gradient`、CSS 变量）+ 真窗口截图。
+19. **推送延迟与消耗（v3.5 第 5 条）**：量「日志产生 → 页上出现」的延迟数值与 120 s 的 CPU/发送次数；若消耗明显上升撤掉即时广播，量不到写**未证实**。
+20. **异常触发录音法（v3.6 第 3 条）**：照你定的 10 秒录音法口径（`hard_bug.md` 第 83 行「你定的 10 秒录音法，20 段」+ `need_audio.md` 的 `"音频内容", "文件路径"` 清单，路径为空 = 需要你录）录**会异常触发的声音**：你 15:45 「刚打字的声音触发了一次」，接下来不呼唤「爱莉希雅」，只保持打字或用手机播放小说 → 记 `Wake peak` 与越线 0.75 的次数（越线 = 误触发，入 `tests/`，**不改阈值 0.75、不改 `stt.engine: whisper`**）。我不能说话；手机播放的声音要你放，我采录并跑唤醒评分。
+21. **日志面板不左右滚动（v3.7 新增）**：真页测三面板 `scrollWidth <= clientWidth`（无水平溢出）、`scrollLeft` 恒 0、超长连续串断行可见、上下滚看历史不被新推送覆盖；console 0 + 真页截图为证。
 ## 7. 风险与边界（如实）
 
 - **CTRL_CLOSE_EVENT 只有约 5 s 清理窗口**：`shutdown()` 必须轻（只杀 pid，不做长 I/O）；**这条必须在你会话实测**，
   我沙箱里量不了关控制台的行为
 - **管道在沙箱里不可用**（我的子进程无 piped stdio，EPERM）→ 日志接管只能在你的会话验证；沙箱里我可以验
   环形缓冲、WS 推送节奏、pid 记录与 kill 证据文本
-- **ws 实时推送的口径（v3.5 第 5 条照你逐字「log推送似乎有点慢，不能通过ws实时推送吗，如果这样太消耗性能就算了」）**：照实先量再决定。现状是每拍批量（`_mon_interval = min(各客户端 iv)`，通常 1 s；隐藏页降 30 s），所以「一条日志产生 → 页上出现」的延迟照实 ≈ 节拍间隔。新增**即时广播**：`_reader`/`jlog` 落环后把新行立刻入发送队列，由 100 ms 节流合并广播（不为每行单独发，防刷爆与性能塌）。验收照实量两数：① 延迟（服务端产生时间戳 → 页面出现时间戳）；② 120 s 的 CPU 占用与 WS 发送次数。若消耗明显上升照实撤掉并写清结论，不猜。
-- **页面缓存（第 181/184 处自曝照实坐实）**：`FileResponse` 不发缓存头 → jarvis 起的窗口被 Chrome 启发式缓存喂旧页，前端改动进不去。现三条页面路由都带 `Cache-Control: no-store`，且 jarvis 自开监视页带 `?ts=<秒级时间戳>`（同一 URL 的 CDP 导航在 Chrome 里不重新取页）。
-- **复用判定（第 186 处自曝照实坐实）**：`open_url` 旧判定是「标签地址**含**目标子串」——带 `?ts=` 的新地址与旧地址互含 → 复用不导航，真窗口永远跑第一次的旧页。现复用只在地址**完全一致**时成立，否则照实导航一次（实测 12:37 导航后标题变「监视界面 — 爱莉希雅」）。
+- **ws 实时推送的口径（v3.5 第 5 条照你逐字「log推送似乎有点慢，不能通过ws实时推送吗，如果这样太消耗性能就算了」）**：先量再决定。现状是每拍批量（`_mon_interval = min(各客户端 iv)`，通常 1 s；隐藏页降 30 s），所以「一条日志产生 → 页上出现」的延迟≈ 节拍间隔。新增**即时广播**：`_reader`/`jlog` 落环后把新行立刻入发送队列，由 100 ms 节流合并广播（不为每行单独发，防刷爆与性能塌）。验收量两数：① 延迟（服务端产生时间戳 → 页面出现时间戳）；② 120 s 的 CPU 占用与 WS 发送次数。若消耗明显上升撤掉并写清结论，不猜。
+- **页面缓存（第 181/184 处自曝坐实）**：`FileResponse` 不发缓存头 → jarvis 起的窗口被 Chrome 启发式缓存喂旧页，前端改动进不去。现三条页面路由都带 `Cache-Control: no-store`，且 jarvis 自开监视页带 `?ts=<秒级时间戳>`（同一 URL 的 CDP 导航在 Chrome 里不重新取页）。
+- **复用判定（第 186 处自曝坐实）**：`open_url` 旧判定是「标签地址**含**目标子串」——带 `?ts=` 的新地址与旧地址互含 → 复用不导航，真窗口永远跑第一次的旧页。现复用只在地址**完全一致**时成立，否则导航一次（实测 12:37 导航后标题变「监视界面 — 爱莉希雅」）。
 - **stdout 缓冲**：llama 的进度行是 `\r` 回车覆盖式，管道读到的是一串连续块 → 日志区必须按 `\r` 断行处理，
   否则一行刷屏
 - **GPT-SoVITS api_v2 由 jarvis 起时工作目录与 env 要照 `start_all.bat` 现内容设**（`cd /d GPT-SoVITS-main`、
   `MPLCONFIGDIR`、`HF_ENDPOINT=https://hf-mirror.com` 带 scheme，HB-029）
 - **语音/播放判据不能被架构改动破坏**：现役 `aili_xiya_v0.9b.onnx` + `thr 0.75`（2026-11-20 12:33 换，commit 853205；部署 3 轮验收仍未测）、`stt.engine: whisper`、
   `stt.hot_bias: false`、`is_half: false` 不动；**丙方案与轮 5-6 的实测仍等你跑 `start_all.bat`**
-- **两版并存的代价照实（§8）**：`start_all.bat` 起的进程 **jarvis 不认 pid**（不是它起的）→ 面板不给关闭按钮、无日志；
+- **两版并存的代价（§8）**：`start_all.bat` 起的进程 **jarvis 不认 pid**（不是它起的）→ 面板不给关闭按钮、无日志；
   「关窗全关」只在 `start_all_in_one.bat` 版里成立；旧版 4 窗口（含 status panel）继续可用，**不做「自动升级」**
 
 
@@ -163,7 +168,7 @@
 
 1. 全 **ASCII + CRLF**（自曝第 52 处：我用 latin1 写中文进 bat，字节里出现控制字符 0x13 → 窗口「命令语法不正确。」）。
 2. 全 **`%~dp0` 相对路径**，不写绝对路径（现 `start_all.bat` 的 `cd /d %~dp0` 模式，迁移后不受影响）。
-3. 路径照实测：llama = `llm\llama-b12144-bin-win-vulkan-x64\llama-server.exe`（**不是** `.venv-llama\Scripts\llama-server.exe`，那个路径不存在——自曝第 52 处）；GSV = `..\.venv-gsv\Scripts\python.exe -X utf8 api_v2.py`，工作目录 `cd /d %~dp0GPT-SoVITS-main`；jarvis = `.venv\Scripts\python.exe -u -m jarvis.main`。
+3. 路径测：llama = `llm\llama-b12144-bin-win-vulkan-x64\llama-server.exe`（**不是** `.venv-llama\Scripts\llama-server.exe`，那个路径不存在——自曝第 52 处）；GSV = `..\.venv-gsv\Scripts\python.exe -X utf8 api_v2.py`，工作目录 `cd /d %~dp0GPT-SoVITS-main`；jarvis = `.venv\Scripts\python.exe -u -m jarvis.main`。
 4. **env 照现内容全带上**：`MPLCONFIGDIR=%~dp0.tmp\mplconfig`、`HF_ENDPOINT=https://hf-mirror.com`、`HF_HOME=%~dp0.hf-cache`、`HF_HUB_DISABLE_XET=1`、`GGML_VULKAN=1`。自曝第 48 处：我拼的 env 缺 `ALLUSERSPROFILE`，代码把 `%ALLUSERSPROFILE%` 当字面路径，在**项目根**造出 `Tencent\...\QQPCMgr\` 垃圾目录（16:xx 删过，21:45 又出现）。
 5. `-c 24576` 与其余 llama 参数照现内容**一个不动**（Q33 你授权的就是这一处，已落地 `start_all.bat`:19）。
 6. 端口检查照现 `netstat -ano | findstr ":PORT" | findstr "LISTENING"` 的语义移到 jarvis 侧：已起 = 不重复起、不杀、走「接入识别」。
@@ -174,26 +179,13 @@
 
 ## 9. About 内容（v3.6 新增，照你 15:45 逐字「我和你定一下About的内容,需要写入design」）
 
-照实写、不写没实现过的功能；读数全部现采（不写死、不编）。五块照你定的顺序：
+写、不写没实现过的功能；读数全部现采（不写死、不编）。五块照你定的顺序：
 
-- **a. 模型与语音等信息**：唤醒模型 `aili_xiya_v1.3.onnx`（真人 20 轮：14-15，均 14.15，20/20；近音 3、无关 0 → 判据 ≤3 未达）；阈值 **0.75（不可改）**；跨唤醒词串扰照实（小度小度 26 / 16 轮触发，峰 0.797）；STT = `whisper`（`stt.engine: whisper`，不可改）；TTS = GPT-SoVITS（`:9880`）；LLM = llama.cpp（`:8080`，`-c 24576`）；F 块口径照实（`wake / asr / llm / tts / 总用时`，`tokens/s` 未埋要 tokenizer）。
-- **b. 此电脑信息**：照实现采（CPU 型号与核数、内存大小、GPU 与显存、系统版本、Python 版本），面板「提交/物理/可用」读数与 `snapshot()` 同源，不写死数字。
-- **c. 项目地址**：远程 `origin https://github.com/huimengli/AI_Elysia`（照 `git remote -v` 照实；Agent 严禁 `git push`，照实写「本地 commit，未 push」）；本机启动地址 `http://127.0.0.1:7860`（`/`、`/monitor`、`/about` 三页），起法照实（`start_all.bat` 四窗口 / `start_all_in_one.bat` 单窗口，见 §8）。
-- **d. 此项目的介绍**：照实链路 —— 唤醒词「爱莉希雅」→ STT(whisper) → llama.cpp(`:8080`) → GPT-SoVITS(`:9880`) 播放；jarvis(FastAPI `:7860`) 做 Monitor（日志中枢、单窗口托管、指定关闭、外部接入照实）+ 顶栏三页；台账照实（`records/`、`tests/`、`progress.md`、`design.md`、`need_user.md`）。不写没实现过的功能。
-- **e. 此项目支持的工具介绍**：照实取 `jarvis/tools/` 真存在的工具与 `config` 真开关（如应用控制 `open_url`/`navigate_url`、播放控制、关机/关窗授权照 §5），逐条写「做什么、怎么被调用、未测照实标注」，不发明工具名。
+- **a. 模型与语音等信息**：唤醒模型 `aili_xiya_v1.3.onnx`（真人 20 轮：14-15，均 14.15，20/20；近音 3、无关 0 → 判据 ≤3 未达）；阈值 **0.75（不可改）**；跨唤醒词串扰（小度小度 26 / 16 轮触发，峰 0.797）；STT = `whisper`（`stt.engine: whisper`，不可改）；TTS = GPT-SoVITS（`:9880`）；LLM = llama.cpp（`:8080`，`-c 24576`）；F 块口径（`wake / asr / llm / tts / 总用时`，`tokens/s` 未埋要 tokenizer）。
+- **b. 此电脑信息**：现采（CPU 型号与核数、内存大小、GPU 与显存、系统版本、Python 版本），面板「提交/物理/可用」读数与 `snapshot()` 同源，不写死数字。
+- **c. 项目地址**：远程 `origin https://github.com/huimengli/AI_Elysia`（照 `git remote -v` ；Agent 严禁 `git push`，写「本地 commit，未 push」）；本机启动地址 `http://127.0.0.1:7860`（`/`、`/monitor`、`/about` 三页），起法（`start_all.bat` 四窗口 / `start_all_in_one.bat` 单窗口，见 §8）。
+- **d. 此项目的介绍**：链路 —— 唤醒词「爱莉希雅」→ STT(whisper) → llama.cpp(`:8080`) → GPT-SoVITS(`:9880`) 播放；jarvis(FastAPI `:7860`) 做 Monitor（日志中枢、单窗口托管、指定关闭、外部接入）+ 顶栏三页；台账（`records/`、`tests/`、`progress.md`、`design.md`、`need_user.md`）。不写没实现过的功能。
+- **e. 此项目支持的工具介绍**：取 `jarvis/tools/` 真存在的工具与 `config` 真开关（如应用控制 `open_url`/`navigate_url`、播放控制、关机/关窗授权照 §5），逐条写「做什么、怎么被调用、未测标注」，不发明工具名。
 
-验收照实并入 §6：第 2 轮逐块核对（真页文本 + 真窗口截图 + console 0）。
-
-
-## 9. About 内容（v3.6 新增，照你 15:45 逐字「我和你定一下About的内容,需要写入design」）
-
-照实写、不写没实现过的功能；读数全部现采（不写死、不编）。五块照你定的顺序：
-
-- **a. 模型与语音等信息**：唤醒模型 `aili_xiya_v1.3.onnx`（真人 20 轮：14–15，均 14.15，20/20；近音 3、无关 0 → 判据 ≤3 未达）；阈值 **0.75（不可改）**；跨唤醒词串扰照实（小度小度 26 / 16 轮触发，峰 0.797）；STT = `whisper`（`stt.engine: whisper`，不可改）；TTS = GPT-SoVITS（`:9880`）；LLM = llama.cpp（`:8080`，`-c 24576`）；F 块口径照实（`wake / asr / llm / tts / 总用时`；`tokens/s` 未埋要 tokenizer）。
-- **b. 此电脑信息**：照实现采（CPU 型号与核数、内存大小、GPU 与显存、系统版本、Python 版本），面板「提交/物理/可用」读数与 `snapshot()` 同源，不写死数字。
-- **c. 项目地址**：远程 `origin https://github.com/huimengli/AI_Elysia`（照 `git remote -v` 照实；Agent 严禁 `git push`，照实写「本地 commit，未 push」）；本机启动地址 `http://127.0.0.1:7860`（`/`、`/monitor`、`/about` 三页），起法照实（`start_all.bat` 四窗口 / `start_all_in_one.bat` 单窗口，见 §8）。
-- **d. 此项目的介绍**：照实链路 —— 唤醒词「爱莉希雅」→ STT(whisper) → llama.cpp(`:8080`) → GPT-SoVITS(`:9880`) 播放；jarvis(FastAPI `:7860`) 做 Monitor（日志中枢、单窗口托管、指定关闭、外部接入照实）+ 顶栏三页；台账照实（`records/`、`tests/`、`progress.md`、`design.md`、`need_user.md`）。不写没实现过的功能。
-- **e. 此项目支持的工具介绍**：照实取 `jarvis/tools/` 真存在的工具与 `config` 真开关，逐条写「做什么、怎么被调用、未测照实标注」，不发明工具名。
-
-验收照实并入 §6（第 2 轮逐块核对：真页文本 + 真窗口截图 + console 0）。
+验收并入 §6：第 2 轮逐块核对（真页文本 + 真窗口截图 + console 0）。
 

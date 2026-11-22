@@ -1,8 +1,8 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-22-18-40-00（第 17 轮 3 条验收后、commit 前重建）。变化：新增 `records/2026-11-22-15-45-55.md`、`tests/2026-11-22-15-45-55_three_items/record_1..3.md + opinion.md`、`ai_buckup/design.md_2026-11-22-15-45-55.md`（design v3.5 归档，现 **v3.6**）、`ai_buckup/progress.md_2026-11-22-18-30-00.md`（progress 105 行 > 100 照规矩归档）。改动的文件照实列出：`jarvis/static/monitor.html`（滚动条照 home 真口径 8 px / 粉→玫红渐变 / 圆角 8 px / track 透明，删净悬空声明后 202 行）、`jarvis/static/about.html`（补 home 滚动条 + 正文照实重写成 5 块 a–e，100 行）、`design.md`（v3.6：§6 第 17 条改 home 口径、新增第 20 条录音法、新增 §9 About 五块）、`need_audio.md`（照实新增第 12 节 + 照实补登节，共 7 件越线录音路径）、`progress.md`（compact + 归档提示 + 5 条提交记录去重）、`todo.md`（第 98 行 `[x]`）、`tests/opinion.md`（累积追加 17 轮段与照实更正）。照实照实：录音法脚本在 `.tmp/`（`.tmp` 被 `.gitignore` 排除，照实不入 tree.md）。
+更新时间: 2026-11-22-21-59-00（第 19 轮 3 轮验收落盘 + 状态文件清理 + P 级清单落盘后重建）。变化：新增 `records/2026-11-22-19-22-36.md`、`records/2026-11-22-20-44-00.md`、`records/2026-11-22-21-35-00.md`、`tests/2026-11-22-19-22-36_log_wrap/`（record_1..3.md + opinion.md）、`ai_buckup/design.md_2026-11-22-19-22-36.md`、`ai_buckup/progress.md_2026-11-22-21-47-00.md`；`.tmp/` 与 `*.log` 照旧不入库。
 
-结构现状：代码在 `jarvis/`（`web.py` mount `/static` 并出 `/`、`/monitor`、`/about`，三页共用顶栏 `tabs.css`/`tabs.js`，三条路由带 `_NO_STORE`），`tests/` 与 `records/` 照实按时间落盘；`design.md` = v3.6（v3.0-v3.5 已归档）。
+结构现状：共 **755** 个非忽略文件（跟踪 743 + 未跟踪非忽略 12）。代码在 `jarvis/`（`main.py` 启动、`services.py` 状态与日志环、`web.py` 路由与 WS、`wake.py`/`stt.py`/`tts.py` 语音链、`watchdog.py` 守护、`tools/` 工具集、`static/` 三页 + `tabs.css`）；状态文件 `README.md`/`design.md`/`progress.md`/`tree.md`/`todo.md`/`hard_bug.md`/`need_user.md`/`need_audio.md` 在根，`records/` 与 `tests/` 追加，`ai_buckup/` 归档。
 
 - .gitignore
 - LICENSE
@@ -15,6 +15,7 @@
 - ai_buckup/design.md_2026-11-22-11-48-11.md
 - ai_buckup/design.md_2026-11-22-13-48-06.md
 - ai_buckup/design.md_2026-11-22-15-45-55.md
+- ai_buckup/design.md_2026-11-22-19-22-36.md
 - ai_buckup/hard_bug.md_2026-10-13-17-45.md
 - ai_buckup/hard_bug.md_2026-11-13-00-12-17.md
 - ai_buckup/hard_bug.md_2026-11-17-13-26-51.md
@@ -50,6 +51,7 @@
 - ai_buckup/progress.md_2026-11-21-14-42-00.md
 - ai_buckup/progress.md_2026-11-22-13-12-00.md
 - ai_buckup/progress.md_2026-11-22-18-30-00.md
+- ai_buckup/progress.md_2026-11-22-21-47-00.md
 - ai_buckup/todo.md_2026-11-10-21-52-25.md
 - ai_buckup/todo.md_2026-11-12-16-58-46.md
 - ai_buckup/todo.md_2026-11-12-19-23-02.md
@@ -231,6 +233,9 @@
 - records/2026-11-22-11-48-11.md
 - records/2026-11-22-13-48-06.md
 - records/2026-11-22-15-45-55.md
+- records/2026-11-22-19-22-36.md
+- records/2026-11-22-20-44-00.md
+- records/2026-11-22-21-35-00.md
 - records/AI_Benchmark.md
 - records/JARVIS_STATE.md
 - records/PROJECT_SUMMARY.txt
@@ -644,6 +649,10 @@
 - tests/2026-11-22-15-45-55_three_items/record_1.md
 - tests/2026-11-22-15-45-55_three_items/record_2.md
 - tests/2026-11-22-15-45-55_three_items/record_3.md
+- tests/2026-11-22-19-22-36_log_wrap/opinion.md
+- tests/2026-11-22-19-22-36_log_wrap/record_1.md
+- tests/2026-11-22-19-22-36_log_wrap/record_2.md
+- tests/2026-11-22-19-22-36_log_wrap/record_3.md
 - tests/__init__.py
 - tests/opinion.md
 - tests/test_context.py

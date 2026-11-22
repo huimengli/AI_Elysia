@@ -29,12 +29,12 @@ from jarvis.stt import record_until_silence, transcribe_audio, set_abort_event, 
 from jarvis.tts import speak, speak_streamed, is_speaking, stop_speaking, play_ack_wav, play_ack_phrase, preload_ack_audio
 from jarvis.context import ContextManager
 
-# 第 2 条（2026-11-22-11-48-11）照实落法：cmd 窗口只留「爱莉希雅已经启动」+ 网址 + 报错。
+# 第 2 条（2026-11-22-11-48-11）落法：cmd 窗口只留「爱莉希雅已经启动」+ 网址 + 报错。
 # 其余（唤醒/转录/回复/工具/埋点）全部走 jarvis 自己的日志环 + `.tmp/jarvis.log`，不刷控制台。
-pass  # 第 175 处自曝后照实删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
+pass  # 第 175 处自曝后删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
 
 
-from jarvis import services as svc  # 第 177 处自曝后照实补回模块级 import（曾被误当局部 import 换成 pass）
+from jarvis import services as svc  # 第 177 处自曝后补回模块级 import（曾被误当局部 import 换成 pass）
 
 def _jlog(text):
     svc.jlog(text)
@@ -638,7 +638,7 @@ def _exec_tool_with_retry(name: str, args: dict) -> str:
         result = dispatch(name, args)
     # E 块（design §2）：工具调用次数/耗时/失败率的埋点
     try:
-        pass  # 第 175 处自曝后照实删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
+        pass  # 第 175 处自曝后删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
         svc.tool_stat(name, ok, time.time() - t0)
     except Exception:
         pass
@@ -749,9 +749,9 @@ def _handle_wake_body() -> None:
     _jlog(f"[爱莉希雅] Recorded {len(audio)/16000:.1f}s of audio, transcribing...")
     t_asr = time.time()
     user_text = transcribe_audio(audio)
-    # F 块埋点（照实记耗时；tokens/s 未埋，那要 tokenizer）
+    # F 块埋点（记耗时；tokens/s 未埋，那要 tokenizer）
     try:
-        pass  # 第 175 处自曝后照实删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
+        pass  # 第 175 处自曝后删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
         svc.metric("asr_secs", round(time.time() - t_asr, 2))
     except Exception:
         pass
@@ -785,7 +785,7 @@ def _handle_wake_body() -> None:
     response_text = _process_request(user_text)
     _check_abort()
     try:
-        pass  # 第 175 处自曝后照实删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
+        pass  # 第 175 处自曝后删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
         svc.metric("llm_secs", round(time.time() - t_llm, 2))
         svc.metric("llm_chars", len(response_text))
     except Exception:
@@ -796,9 +796,9 @@ def _handle_wake_body() -> None:
     t_tts = time.time()
     _speak_streamed_if_unmuted(response_text)
     try:
-        pass  # 第 175 处自曝后照实删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
-        svc.metric("tts_secs", round(time.time() - t_tts, 2))  # 照实：含合成与播放全程
-        svc.metric("total_secs", round(time.time() - t_total, 2))  # 第 3 条：总用时（唤醒确认 → 播放结束，照实口径）
+        pass  # 第 175 处自曝后删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
+        svc.metric("tts_secs", round(time.time() - t_tts, 2))  # ：含合成与播放全程
+        svc.metric("total_secs", round(time.time() - t_total, 2))  # 第 3 条：总用时（唤醒确认 → 播放结束，口径）
     except Exception:
         pass
 
@@ -932,7 +932,7 @@ def main() -> None:
             _jlog("[Monitor] " + json.dumps(launch(_name), ensure_ascii=False))
         arm_shutdown()
     start_web_background(port=7860)
-    # 第 2 条要求照实：cmd 窗口这一行就是你要看到的「爱莉希雅已经启动」+ 网址；其余噪声全进日志环与 .tmp/jarvis.log。
+    # 第 2 条要求：cmd 窗口这一行就是你要看到的「爱莉希雅已经启动」+ 网址；其余噪声全进日志环与 .tmp/jarvis.log。
     print("爱莉希雅已经启动 http://127.0.0.1:7860")
 
     threading.Thread(target=_keyboard_listener, daemon=True).start()
@@ -945,12 +945,12 @@ def main() -> None:
         # design §7 第 7 条：jarvis 起自己的浏览器窗口开 /monitor（不最大化，窗口数走同一条口径）
         try:
             from jarvis.tools.app_control import open_url
-            # 第 185 处自曝后照实整块重写（第 184 处：同一 URL 的 CDP 导航在 Chrome 里命中缓存不重新取页，
+            # 第 185 处自曝后整块重写（第 184 处：同一 URL 的 CDP 导航在 Chrome 里命中缓存不重新取页，
             # 真窗口跑旧页 —— 第 1/4/5/6 条的前端改动进不去），所以自开监视页带时间戳参数。
             _u = "http://127.0.0.1:7860/monitor?ts=" + str(int(time.time()))
             _jlog("[Monitor] " + open_url(_u))
         except Exception as e:
-            _jerr(f"[Monitor] 自起窗口打不开（{e!r}）— 退回默认浏览器，照实不假装成功")
+            _jerr(f"[Monitor] 自起窗口打不开（{e!r}）— 退回默认浏览器，不假装成功")
             webbrowser.open("http://localhost:7860/monitor")
     else:
         webbrowser.open("http://localhost:7860")

@@ -7,7 +7,7 @@
 - 结果：**PASS**
 - 备注：只关 jarvis 自起 pid（profile 认 pid），不碰你的窗口
 
-**平凡通过照实写**：关前 0、关后 0，没有窗口可关。机制第一手：`_jarvis_profile_pids()` 在我沙箱里跑不了（它用 `powershell` + `capture_output`，即 piped stdio，被沙箱拒 → `except` 吞掉返回空集），`PID_FILE` 42 条历史 pid 随进程死亡；`_browser_windows()` 只看到 DSH 窗口 pid 5244（不计）。轮 7-8 起的 jarvis 窗口在我程序结束时一起被杀（11-18/11-20 已记过的已知环境事实）。
+**平凡通过写**：关前 0、关后 0，没有窗口可关。机制第一手：`_jarvis_profile_pids()` 在我沙箱里跑不了（它用 `powershell` + `capture_output`，即 piped stdio，被沙箱拒 → `except` 吞掉返回空集），`PID_FILE` 42 条历史 pid 随进程死亡；`_browser_windows()` 只看到 DSH 窗口 pid 5244（不计）。轮 7-8 起的 jarvis 窗口在我程序结束时一起被杀（11-18/11-20 已记过的已知环境事实）。
 
 `pwsh` 独立复核（不经过 jarvis 代码）：`Get-CimInstance Win32_Process` 查 `chrome.exe` 带 `chrome_profile` 的进程 → **0 条**。
 

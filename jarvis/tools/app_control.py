@@ -300,9 +300,9 @@ def open_url(url: str) -> str:
     if mine:
         ps = pages()
         hit = [(t, a) for t, a in ps if ident and ident in a]
-        # 第 186 处自曝后照实补：子串命中不等于「就是这一页」。带时间戳参数的新地址
+        # 第 186 处自曝后补：子串命中不等于「就是这一页」。带时间戳参数的新地址
         # 与旧地址互含，旧判定会复用不导航，真窗口永远跑第一次加载的旧页（第 1/4/5/6 条的
-        # 前端改动进不去）。复用只在地址完全一致时成立，否则照实导航一次。
+        # 前端改动进不去）。复用只在地址完全一致时成立，否则导航一次。
         exact = [(t, a) for t, a in hit if a.rstrip("/") == want]
         if exact:
             t2 = mine[0][2]

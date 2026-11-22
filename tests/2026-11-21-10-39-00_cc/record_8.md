@@ -5,4 +5,4 @@
 - 期望：复读地址含 `bing.com/search`
 - 实际：标题「**爱萅希雅 - 搜索**」，地址 `https://cn.bing.com/search?q=%E7%88%B1%E8%90%85%E5%B8%8C%E9%9B%85&rdr=1&rdrig=9EFCE71FC031`
 - 结果：**PASS**
-- 备注：www.bing.com 被重定向到 **cn.bing.com** 并带 `rdr` 参数；判据（含 `bing.com/search`）成立。标题里「萅」是页面渲染的字，不是我写的关键词 —— 照实记。本轮只验兜底页真能落地，不验反爬时机。
+- 备注：www.bing.com 被重定向到 **cn.bing.com** 并带 `rdr` 参数；判据（含 `bing.com/search`）成立。标题里「萅」是页面渲染的字，不是我写的关键词 —— 记。本轮只验兜底页真能落地，不验反爬时机。
