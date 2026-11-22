@@ -33,6 +33,7 @@ async def _capture_loop():
     _loop = asyncio.get_running_loop()
     svc.jlog("[Web] Event loop captured — WebSocket broadcast ready.")  # 第 2 条：不往控制台刷
     asyncio.create_task(_monitor_loop())
+    asyncio.create_task(_log_flush_loop())  # 第 5 条（13:48）：日志即时推送，100 ms 节流合并
 
 
 # ─── Thread-safe broadcast ───
@@ -405,6 +406,45 @@ async def api_service_stop(req: Request):
                            "refused": out.startswith("拒绝")})
 
 
+def _batch_lines(st: dict) -> list:
+    """逐客户端取新日志（游标推进），每轮最多 20 行。第 2 条（11:48）：加爱莉希雅自己的日志环。"""
+    batch = []
+    for name in list(svc.SERVICES) + ["jarvis"]:
+        part, new = svc.logs_since(name, st["cursor"].get(name, 0))
+        st["cursor"][name] = new
+        if part:
+            batch.append([name, part])
+    return batch
+
+
+async def _log_flush_loop():
+    """第 5 条（照你 13:48 逐字「log推送似乎有点慢，不能通过ws实时推送吗」）：100 ms 节流的即时推送。
+    只发日志增量（type:"logchunk"），不重发整份快照 —— 快照照旧每拍 1 s（采样含 netstat/探针，每 100 ms
+    做一次会白烧 CPU，照实写进 design §7）。游标与逐客户端隔离沿用同一条口径，所以即时推送与 1 s 拍
+    不会重复发同一行。量出延迟与消耗后再决定留不留（tests 批次）。"""
+    while True:
+        try:
+            await asyncio.sleep(0.1)
+            if not _mon_state:
+                continue
+            for ws in list(_mon_state.keys()):
+                st = _mon_state.get(ws)
+                if st is None:
+                    continue
+                try:
+                    batch = _batch_lines(st)
+                    if not batch:
+                        continue
+                    await ws.send_text(json.dumps({"type": "logchunk", "logs": batch}))
+                    globals()["_rt_sends"] = globals().get("_rt_sends", 0) + 1
+                except Exception as e3:
+                    svc._log("monitor", "实时推送发送失败: " + repr(e3) + " client_state=" + str(getattr(ws, "client_state", None)))
+                    if getattr(ws, "client_state", None) == 2:
+                        _mon_state.pop(ws, None)
+        except Exception as e4:
+            svc._log("monitor", "实时推送循环异常: " + repr(e4))
+            await asyncio.sleep(1)
+
 async def _monitor_loop():
     """服务端采样与推送同一节拍（Q30-3：最低 1 s）；日志每轮最多 20 行。"""
     while True:
@@ -428,12 +468,7 @@ async def _monitor_loop():
                 if beat % 10 == 1:
                     svc._log("monitor", "处理客户端 id=" + str(id(ws)) + " iv=" + str(st["interval"]) + " cur=" + str(len(st["cursor"])))
                 try:
-                    batch = []
-                    for name in list(svc.SERVICES) + ["jarvis"]:  # 第 2 条：加爱莉希雅自己的日志环
-                        part, new = svc.logs_since(name, st["cursor"].get(name, 0))
-                        st["cursor"][name] = new
-                        if part:
-                            batch.append([name, part])
+                    batch = _batch_lines(st)
                     payload = {"type": "monitor", "data": snap, "logs": batch}
                     await ws.send_text(json.dumps(payload))
                 except Exception as e2:

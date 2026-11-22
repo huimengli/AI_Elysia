@@ -79,3 +79,15 @@
 
 - **补测照实（2026-11-22-13:24）**：第 5 条真链路 300 s 连续跑 → 面板 200 行（缓冲首 = 12:53:39 最新在上、末 = 12:46:13 最旧被截），`jarvis.log` 1835 行全量落盘 → 第 5 条由 未测 转 **PASS**；一次瞬时读数 203 > 上限与复验 200 冲突，照实记第 192 处自曝（**未证实**，不猜）。第 2 条「报错在 cmd 看见」照实 **未测**（未构造真报错场景）。
 
+
+## 2026-11-22-13-48-06 · 第 16 轮 5 条（monitor 4 灯加大、日志两态、滚动条照你 CSS、about 照 home、ws 实时推送）
+
+- 落盘在先：`records/2026-11-22-13-48-06.md`（5 条原话 + 理解 + 设计影响 + 测试安排 + 状态）、`todo.md` 第 97 行；`design.md` 先归档 `ai_buckup/design.md_2026-11-22-13-48-06.md`（v3.4）后升到 **v3.5**（§7 加第 5 条口径：只发日志增量 100 ms 节流、快照照旧每拍 1 s；§3 加第 2 条两态与 200 行上限；§5 加第 1 条灯与第 3 条滚动条）。
+- `jarvis/web.py`：`_batch_lines(st)`（逐客户端取新日志、推进游标、每轮 ≤20 行）；`async def _log_flush_loop()`（100 ms 节流只发 `{"type":"logchunk","logs":[[name,lines]]}`，无客户端 0.1 s skip，`globals()["_rt_sends"]` 计数）紧接 `_monitor_loop` 启动；1 s 拍的 payload 在 `try:` 内（行 472，缩进 20），`ws.send_text` 行 473。
+- `jarvis/static/monitor.html`（225 行）：第 1 条灯加大（字号 15 px、胶囊 `border-radius:999px`、外圈 `box-shadow` 光晕、12×12 灯点、亮态 `#7CE2A6` 实心 + 光晕、`.lamp.on`/`.lamp.off`）；第 3 条 `*::-webkit-scrollbar` 与 `::-webkit-scrollbar-thumb` 照你原样一个数值不改；第 2 条两态（`follow[name]` + 每面板「最新追加/查看」按钮与状态文字、`pre.onscroll` 判到底自动切回、查看态冻结视野）；`ensurePanel(name)` 建面板（第 198 处缺口照实补：即时增量也要建面板）；`appendLogs` 为唯一路径（1 s 拍与 100 ms 通道共用），`push` + `splice(0, len-200)` 保最新 200（第 192 处方向）+ `sortByTime` 按时间戳稳定排序（第 209 处坐实到达序无保证）。
+- `jarvis/static/about.html`（84 行）：第 4 条照 home 改 —— `:root` 同一套变量、三层 `radial-gradient` + `linear-gradient(165deg)`、`body::before` 2 px 粉条、PingFang/YaHei、表格与 `p,ul` 成 16 px 圆角玻璃卡（`box-shadow:var(--shadow)` + `backdrop-filter:blur(10px)`）、`code` 金色；照实把「当前 v3.2」改「当前 v3.5」。照实记第 220 处自曝：重写块一度追加在 `</html>` 之后（页外游离、浏览器不认），照实搬进 `<head>` 后 computed 复量才生效。
+- 自曝第 193–221 处照实记（要点：`trim()` 与带空格字面量比较恒 `-1` → 插到文件最前 / 换掉文件末尾；数行错吞相邻 `payload`、插进无 `snap` 的循环、用删前的索引 off-by-one、缩进 16 空格；`screenshot_id: null`、参数名 `deltaY`（真名 `delta_y`）、拿无滚动余量的面板测、复用已消耗的 `screenshot_id`；100 ms 通道与 1 s 拍共用游标到达序无保证（209）；`sortByTime` 插两次 + `findIndex` 命中同款 forEach 删新块留旧块（210–212）；自程序引号写坏未跑（213）；坐标算出截图外（214）；沿用已 `clearInterval` 的旧计数误判冻结失效（217，218 插桩照实证明冻结生效）；往未建目录写 `ENOENT`（219）；报告未生效的 about 样式（220，第 176 处同类续犯）；猜文件名 `home.html`（221，真文件是 `index.html` 55 KB）。下一条从 222 起。
+- 验收 3 轮全 PASS（`tests/2026-11-22-13-48-06_five_items/record_1..3.md + opinion.md`，累积已追加 `tests/opinion.md`）：第 1 轮真窗口截图 + 真滚轮（面板 `scrollTop` 随滚轮走、`follow` 切换、查看态 20 s 内 flush 计数 20 与末行 14:40:26 不变 = 冻结、滚到底 `follow=true` 新行落底部、三面板时间序倒置 0、200 行上限、灯 4、console 0）；第 2 轮 about computed + 真截图照出粉条/三层渐变/16 px 玻璃卡/金色 code；第 3 轮无客户端基线 6.296875 s CPU/60 s、有客户端 6.625 s/60 s → 增量 **0.328 s ≈ 0.55% 单核**，逐行延迟 0.5/0.9/均 **0.7 s**、60 s 21 chunk/21 行 → 照实**保留**实时推送（不算太耗性能）。
+- **未测照实照实写**：第 2 条「报错要在 cmd 看见」未构造真报错场景；真链路总用时需你在麦克风前（我不能说话）；`SHUT_LOG` 逐条落盘 + 只杀自起 pid 正面路径加防护后未复测。
+- `need_user.md` 照实未答照实不动（Q46/Q45/Q44/Q43/Q41/Q19/Q18/Q21–Q24/Q30/Q31-1/Q36/Q39/Q40）。
+

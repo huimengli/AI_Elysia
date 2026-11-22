@@ -1,16 +1,19 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-22-13-02-00（Monitor 六条 commit 前重建）。变化：新增 `records/2026-11-22-11-48-11.md`、`tests/2026-11-22-11-48-11_six_items/record_1..3.md + opinion.md`、`ai_buckup/design.md_2026-11-22-11-48-11.md`（design v3.3 归档，现 v3.4）。改动的文件照实列出：`jarvis/services.py`（日志中枢 `jlog`/`jerr` + 逐条落盘 `.tmp/<name>.log` + `_reader` 走 `_log`）、`jarvis/web.py`（日志循环加爱莉希雅自己的环、三条页面路由加 `Cache-Control: no-store`）、`jarvis/main.py`（启动只 print 一行「爱莉希雅已经启动 + 网址」、`t_total` 总用时埋点、自开监视页带 `?ts=`）、`jarvis/wake.py`/`stt.py`/`tts.py`/`apps.py`/`events.py`（print 全分流）、`jarvis/static/monitor.html`（样式照 home、可上下滚动、显示名「爱莉希雅」、`LOGCAP=200`、每拍只赋值一次）、`jarvis/tools/app_control.py`（复用判定改地址完全一致）。
+更新时间: 2026-11-22-15-05-00（第 16 轮 5 条验收后、commit 前重建）。变化：新增 `records/2026-11-22-13-48-06.md`、`tests/2026-11-22-13-48-06_five_items/record_1..3.md + opinion.md`、`ai_buckup/design.md_2026-11-22-13-48-06.md`（design v3.4 归档，现 **v3.5**）。改动的文件照实列出：`jarvis/web.py`（`_batch_lines` 逐客户端取新行 + `_log_flush_loop` 100 ms 节流只发 `logchunk` 增量，1 s 拍 payload 在 `try:` 内行 472）、`jarvis/static/monitor.html`（第 1 条灯加大、第 3 条滚动条照你 CSS 原样、第 2 条两态 `follow` + 每面板「最新追加/查看」按钮与状态文字、`ensurePanel` 建面板、`appendLogs` 唯一路径 + `sortByTime` 时间戳稳定排序、200 行上限）、`jarvis/static/about.html`（第 4 条照 home 改：`:root` 变量、三层 radial + linear、2 px 粉条、16 px 圆角玻璃卡、金色 `code`，「当前 v3.5」）、`design.md`（v3.5）、`todo.md`（第 97 行）、`progress.md`、`tests/opinion.md`（累积追加）。
 
-结构现状：代码在 `jarvis/`（`web.py` mount `/static` 并出 `/`、`/monitor`、`/about`，三页共用顶栏 `tabs.css`/`tabs.js`），`tests/` 与 `records/` 照实按时间落盘；`design.md` = v3.4（v3.0/v3.1/v3.2/v3.3 已归档）。
+结构现状：代码在 `jarvis/`（`web.py` mount `/static` 并出 `/`、`/monitor`、`/about`，三页共用顶栏 `tabs.css`/`tabs.js`，三条路由带 `_NO_STORE`），`tests/` 与 `records/` 照实按时间落盘；`design.md` = v3.5（v3.0/v3.1/v3.2/v3.3/v3.4 已归档）。
 
 - .gitignore
+- LICENSE
+- README.md
 - ai_buckup/design.md_2026-11-17-10-24-25.md
 - ai_buckup/design.md_2026-11-17-10-44-33.md
 - ai_buckup/design.md_2026-11-20-22-14-46.md
 - ai_buckup/design.md_2026-11-21-18-27-30.md
 - ai_buckup/design.md_2026-11-21-18-59-49.md
 - ai_buckup/design.md_2026-11-22-11-48-11.md
+- ai_buckup/design.md_2026-11-22-13-48-06.md
 - ai_buckup/hard_bug.md_2026-10-13-17-45.md
 - ai_buckup/hard_bug.md_2026-11-13-00-12-17.md
 - ai_buckup/hard_bug.md_2026-11-17-13-26-51.md
@@ -44,6 +47,7 @@
 - ai_buckup/progress.md_2026-11-20-13-57-30.md
 - ai_buckup/progress.md_2026-11-20-22-14-46.md
 - ai_buckup/progress.md_2026-11-21-14-42-00.md
+- ai_buckup/progress.md_2026-11-22-13-12-00.md
 - ai_buckup/todo.md_2026-11-10-21-52-25.md
 - ai_buckup/todo.md_2026-11-12-16-58-46.md
 - ai_buckup/todo.md_2026-11-12-19-23-02.md
@@ -63,7 +67,6 @@
 - dsh-my-presets/package.json
 - hard_bug.md
 - install.bat
-- jarvis_screen.png
 - jarvis/__init__.py
 - jarvis/apps.py
 - jarvis/context.py
@@ -94,8 +97,8 @@
 - jarvis/wake.py
 - jarvis/watchdog.py
 - jarvis/web.py
+- jarvis_screen.png
 - jieba.cache
-- LICENSE
 - llm/startLlama.ps1
 - llm/startLlamaCpu.ps1
 - llm/startLlamaVulkanTest.ps1
@@ -115,7 +118,6 @@
 - openWakeWord/output/aili_xiya_v1.0c/aili_xiya_v1.0c.onnx
 - openWakeWord/output/aili_xiya_v1.0c/aili_xiya_v1.0c.onnx.data
 - progress.md
-- README.md
 - records/2026-10-12-12-28-30.md
 - records/2026-10-13-11-45.md
 - records/2026-10-13-11-55.md
@@ -225,14 +227,14 @@
 - records/2026-11-21-18-59-49.md
 - records/2026-11-22-11-06-00.md
 - records/2026-11-22-11-48-11.md
+- records/2026-11-22-13-48-06.md
 - records/AI_Benchmark.md
 - records/JARVIS_STATE.md
 - records/PROJECT_SUMMARY.txt
 - requirements.txt
-- start_all_in_one.bat
-- start_all.bat
 - start.bat
-- tests/__init__.py
+- start_all.bat
+- start_all_in_one.bat
 - tests/2026-11-08-14-12-32_cc/opinion.md
 - tests/2026-11-08-14-12-32_cc/record_1.md
 - tests/2026-11-08-14-12-32_cc/record_2.md
@@ -446,8 +448,8 @@
 - tests/2026-11-17-13-25-00_coerce/opinion.md
 - tests/2026-11-17-13-25-00_coerce/record_1.md
 - tests/2026-11-17-13-25-00_coerce/record_2.md
-- tests/2026-11-17-13-25-00_coerce/record_3_extra_click_at.md
 - tests/2026-11-17-13-25-00_coerce/record_3.md
+- tests/2026-11-17-13-25-00_coerce/record_3_extra_click_at.md
 - tests/2026-11-17-18-46-00_cc/opinion.md
 - tests/2026-11-17-18-46-00_cc/record_1.md
 - tests/2026-11-17-18-46-00_cc/record_2.md
@@ -631,6 +633,11 @@
 - tests/2026-11-22-11-48-11_six_items/record_1.md
 - tests/2026-11-22-11-48-11_six_items/record_2.md
 - tests/2026-11-22-11-48-11_six_items/record_3.md
+- tests/2026-11-22-13-48-06_five_items/opinion.md
+- tests/2026-11-22-13-48-06_five_items/record_1.md
+- tests/2026-11-22-13-48-06_five_items/record_2.md
+- tests/2026-11-22-13-48-06_five_items/record_3.md
+- tests/__init__.py
 - tests/opinion.md
 - tests/test_context.py
 - tests/test_llm.py
