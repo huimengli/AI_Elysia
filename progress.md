@@ -100,3 +100,16 @@
   标签改全中文「主界面 / 监视界面 / 相关页面」（路由 `/` `/monitor` `/about` 不变），`about.html` 的 title/h1 也全中文；外观仿 Chrome：条 36 px 底 `rgb(21,15,31)`，标签圆角 `11px 11px 0 0`、高 30 px、非当前页底 `rgb(36,26,49)`、当前页粉渐变 + 深色字、8 px 圆点。design v3.2 → **v3.3**（先归档 `ai_buckup/design.md_2026-11-21-18-59-49.md`）。
   **本批自曝第 131-133 处**：131 我把 network 的 `status 0` 当 404 证据（不成立，resource-timing 不暴露状态），改 `fetch` 取真状态码；132 正则塞进探针字符串把 TS 解析器炸了；133 `args` 通道没注入（`arguments[0]` undefined），改用字面量。另照实记：改静态页后浏览器给缓存旧页，**刷新后复测**才算数。
 - 2026-11-21 19:09 **仿 Chrome 标签页批 commit 47ffef0**（`feature/AI_monitor`，count 286，tree.md 721 文件同步重建）。本条 hash 照规则下一批补记。未 push。
+
+## 2026-11-22 11:14 会话追加（jarvis 真会话验收 + 根因修复）
+
+- **真会话 0 推送根因**：`services.py` `listen_pids` 缓存命中分支写死 `_net_cache["d"][p]`，端口没在听（TTS 未起/重启窗口期）每拍抛 `KeyError(9880)`（**自曝第 147 处**）。修：命中分支只返回缓存里存在的端口。
+- **自曝第 154 处**：把「启动 + 轮询」塞进一个 pwsh 调用，超时被提升为后台作业（返回 `kind:"promoted"`，没有 `stdout`）→ `Cannot read properties of undefined (reading "text")`。我一开始误判成语法炸，照实更正根因。
+- **自曝第 149-151 处**：pwsh 直连 `ClientWebSocket` 探测连错三轮——类型名打错（`[Th=CancellationToken]`）、`SendAsync` 少参数、传整数组绑不上（要 `ArraySegment[byte]`）；修后 16 条里 15 条是 M（中位 1.0 s）。
+- **自曝第 153 处**：用 `snap["lamps"]` 当锚点插入，它在循环里也存在 → 带进 12 空格缩进，`py_compile FAIL`。读现场修缩进后 OK。
+- **自曝第 157-159 处**：为做逐客户端隔离写了占位伪代码（`and_false`）炸 TS 解析器；随后在 `batch = []` 前插 `try:` 却没有配套 `except`（必语法炸），而且 `as e2` 落到了**第一个** `except Exception:`（`_broadcast_to_ws` 里，无关函数）。按行索引整块重写后 `py_compile OK`。教训照实：改代码块要用行索引整块替换，不能用「看起来唯一」的锚点。
+- **自曝第 158 处（真 bug）**：`web.py` 发送失败的 `except Exception:` 没有 `as e`，行内 `repr(e)` 用的是外层已被 Python 回收的 `e` → 发送失败时 `NameError`。改成 `except Exception as e2` + 落环。
+- **自曝第 160-163 处**：真会话量节拍连读 0 拍全是我的假象——标签页被会话重置成 `about:blank`、计数器挂在数据到达之后、挂在重连前的旧 socket。挂 `addEventListener` 到**当前** `ws` 后 32 s 计 27 拍、累计 49 拍，中位 1.0 s。教训照实记进测试批次的 opinion。
+- 顺带加取证口（照实命名，不发明）：`GET /api/monitor_logs` 只读取日志环、`snap["clients"]` + `snap["client_info"]`（逐客户端 iv/cursor/socket id）、每 10 拍记「处理客户端」一条、发送失败落环。
+- **真会话验收 3 轮 PASS/部分 PASS**：顶栏全中文+真切换+console 无 error、1 s 节拍（中位 1.0/均值 1.1/最大 2.7 = TTL 重扫）、隐藏页降 30（隐藏 40 s 0 拍）、日志折叠 `none`↔`block`、关闭按钮 confirm 取消不杀进程；「关窗全关」端口全消、自起 pid 15276/9608 消失，`SHUT_LOG` 不存在 → **逐条落盘未证实**。
+- 落盘：`records/2026-11-22-11-06-00.md`、`todo.md` 勾条、`tests/2026-11-22-11-04-00_real_session/record_1..3.md + opinion.md`、`tests/opinion.md` 追加。

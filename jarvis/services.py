@@ -88,7 +88,11 @@ def listen_pids(ports: list) -> dict:
     # 第 125 处自曝：我写了 `all(p in cache)`，没监听的端口（8080/9880 没起时）永远缺位 → 每拍重扫，缓存形同虚设。
     # 缓存的是全量扫描，所以只按 TTL 放行；未监听的端口照实从缓存里查不到（陈旧 ≤2 s）。
     if _net_cache["t"] and time.time() - _net_cache["t"] < 2.0:
-        return {p: _net_cache["d"][p] for p in ports}
+        # 第 147 处自曝（真会话 0 推送的根因）：第 125 处把「只按 TTL 放行」写死成 _net_cache["d"][p]，
+        # 端口没在听（TTS 未起、重启窗口期）时缓存里没这个键 → 每拍 KeyError(9880)，推送全丢。
+        # 照实：查不到就缺席，不抛。
+        d = _net_cache["d"]
+        return {p: d[p] for p in ports if p in d}
     out = {}
     try:
         r = subprocess.run(["netstat", "-ano"], capture_output=True, text=True,

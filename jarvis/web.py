@@ -53,7 +53,7 @@ async def _async_broadcast(event: dict) -> None:
     for ws in list(_clients):
         try:
             await ws.send_text(data)
-        except Exception:
+        except Exception as e2:
             if ws in _clients:
                 _clients.remove(ws)
 
@@ -370,11 +370,21 @@ async def monitor_page():
     return FileResponse(_STATIC_DIR / "monitor.html")
 
 
+@app.get("/api/monitor_logs")
+async def api_monitor_logs(name: str = "monitor", since: int = 0):
+    """只读取证口：把 Monitor 日志环（含推送循环的异常）暴露出来。第 136-137 处自曝后加。"""
+    part, new = svc.logs_since(name, since)
+    return JSONResponse({"name": name, "lines": part, "cursor": new})
+
+
 @app.get("/api/monitor")
 async def api_monitor():
     snap = await asyncio.to_thread(svc.snapshot)
     # B 块四灯在快照里也要有（轮 1 自曝：只有 WS 推送带，/api/monitor 空）
     snap["lamps"] = await asyncio.to_thread(_health_snapshot)
+    snap["clients"] = len(_mon_state)
+    # 第 155 处取证：服务端有客户端、无发送失败，页面收不到 —— 把每个客户端的现场摆出来。
+    snap["client_info"] = [{"iv": v["interval"], "cur": len(v["cursor"]), "id": id(ws)} for ws, v in _mon_state.items()]
     return JSONResponse(snap)
 
 
@@ -405,25 +415,36 @@ async def _monitor_loop():
                 st = _mon_state.get(ws)
                 if st is None:
                     continue
-                batch = []
-                for name in svc.SERVICES:
-                    part, new = svc.logs_since(name, st["cursor"].get(name, 0));
-                    st["cursor"][name] = new;
-                    if part:
-                        batch.append([name, part])
-                payload = {"type": "monitor", "data": snap, "logs": batch}
+                # 第 156-158 处：逐客户端隔离 —— 一个客户端处理/发送失败不饿死后面的（第 156 处实测我的客户端 cur 永远 0）；
+                # 每 10 拍记谁被处理，好照实看清「谁在收、谁被跳过」。
+                beat = globals().get("_mon_beat", 0) + 1
+                globals()["_mon_beat"] = beat
+                if beat % 10 == 1:
+                    svc._log("monitor", "处理客户端 id=" + str(id(ws)) + " iv=" + str(st["interval"]) + " cur=" + str(len(st["cursor"])))
                 try:
+                    batch = []
+                    for name in svc.SERVICES:
+                        part, new = svc.logs_since(name, st["cursor"].get(name, 0))
+                        st["cursor"][name] = new
+                        if part:
+                            batch.append([name, part])
+                    payload = {"type": "monitor", "data": snap, "logs": batch}
                     await ws.send_text(json.dumps(payload))
-                except Exception:
-                    # 第 119 处自曝（截图实测「一阵就停」）：原先 send 抛异常就把客户端 pop 出监控表，
-                    # 而页面只在 open 与改间隔时发 monitor_config，一次瞬时失败后页面永久静默。只在真断开时摘。
-                    if getattr(ws, "client_state", None) == 2:  # Disconnected
+                except Exception as e2:
+                    # 第 119 处 + 第 158 处自曝：原先 send 失败就 pop 客户端；改成落环 + 只在真断开时摘。
+                    # 第 158 处的真 bug：原先 `except Exception:` 没有 as e，行内用 e 会 NameError。这里用 e2。
+                    svc._log("monitor", "发送失败: " + repr(e2) + " client_state=" + str(getattr(ws, "client_state", None)))
+                    if getattr(ws, "client_state", None) == 2:
                         _mon_state.pop(ws, None)
-            # 节拍补偿（轮 2 自曝：单拍采样 8-9 s，只 sleep(1) 会漂到 8-9 s 一拍）
             await asyncio.sleep(max(0.0, max(1, _mon_interval) - (time.time() - t0)))
         except Exception as e:
             # 推送循环不能因一次采样/发送崩掉：记到日志区，下一拍继续
             svc._log("monitor", "推送循环异常: " + repr(e))
+            # 第 134 处根因取证（第 141 处自曝）：只写异常名看不出是哪一行 —— KeyError(9880)
+            # 查了半天，字面量 [9880] 不存在（只有 out[port]=… 与 .get(port)）。带上现场那一行。
+            import traceback as _tb
+            tail = [x for x in _tb.format_exc().split(chr(10)) if x.strip()]
+            svc._log("monitor", "现场: " + " | ".join(tail[-6:]))
             await asyncio.sleep(1)
 
 
