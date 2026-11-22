@@ -1,4 +1,5 @@
 from __future__ import annotations
+from jarvis import services as svc  # 第 2 条：日志走环与 .tmp/jarvis.log，控制台只留报错
 """Event log — every wake/user/assistant/system event persisted to SQLite.
 
 Independent of the web UI: records exist even when no browser is open
@@ -41,7 +42,7 @@ class EventLog:
                     (ts, kind, text, source),
                 )
         except Exception as e:
-            print(f"[EventLog] WARN: failed to persist {kind!r}: {e}")
+            svc.jerr(f"[EventLog] WARN: failed to persist {kind!r}: {e}")
 
     def recent(self, limit: int = 100) -> list[dict]:
         """Return the latest `limit` events in chronological order (oldest first)."""

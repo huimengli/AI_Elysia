@@ -1,4 +1,5 @@
 from __future__ import annotations
+from jarvis import services as svc  # 第 2 条：日志走环与 .tmp/jarvis.log，控制台只留报错
 from pathlib import Path
 import threading
 import time
@@ -100,7 +101,7 @@ def listen_for_wake_word(callback) -> None:
     _last_detect = [0.0]
     _last_log = time.time()
 
-    print("[爱莉希雅] Listening for wake word...")
+    svc.jlog("[爱莉希雅] Listening for wake word...")
     try:
         while True:
             # ── Hot reload: settings changed model and/or threshold ──
@@ -114,7 +115,7 @@ def listen_for_wake_word(callback) -> None:
                         new_model = Model(wakeword_models=[new_spec], inference_framework="onnx")
                     except Exception as e:
                         # A bad/missing model must not kill listening — keep the old one.
-                        print(f"[Wake] reload failed ({e}); keeping {state['model']}")
+                        svc.jerr(f"[Wake] reload failed ({e}); keeping {state['model']}")
                     else:
                         oww = new_model
                         _model_key = new_key
@@ -126,11 +127,11 @@ def listen_for_wake_word(callback) -> None:
                         # needs 1 s warmup; ignore hits during the swap.
                         _ignore_until[0] = time.time() + 2.0
                         _peak = 0.0
-                        print(f"[Wake] reloaded {state['model']} / threshold {state['threshold']}")
+                        svc.jlog(f"[Wake] reloaded {state['model']} / threshold {state['threshold']}")
                 else:
                     cfg = new_cfg
                     state["threshold"] = new_cfg["threshold"]
-                    print(f"[Wake] threshold -> {cfg['threshold']}")
+                    svc.jlog(f"[Wake] threshold -> {cfg['threshold']}")
                 continue
 
             # ── Mic pause: STT is recording, yield the hardware ──
@@ -138,7 +139,7 @@ def listen_for_wake_word(callback) -> None:
                 state["listening"] = False
                 if mic.is_active():
                     mic.stop_stream()
-                    print("[Wake] Mic paused for STT recording.")
+                    svc.jlog("[Wake] Mic paused for STT recording.")
                 while _mic_pause.is_set():
                     time.sleep(0.05)
                 # Resume after STT is done
@@ -149,7 +150,7 @@ def listen_for_wake_word(callback) -> None:
                 # scores above the threshold and used to abort the turn 1-2s later
                 # (records/2026-11-08-20-44-17). Give the turn 4s of grace.
                 _ignore_until[0] = time.time() + 4.0
-                print("[Wake] Mic resumed.")
+                svc.jlog("[Wake] Mic resumed.")
                 continue
 
             try:
@@ -164,7 +165,7 @@ def listen_for_wake_word(callback) -> None:
                 # Transient allocation failure (e.g. MemoryError under RAM
                 # pressure) must not kill the whole process — back off and
                 # keep listening.
-                print(f"[Wake] predict failed ({e}); continuing")
+                svc.jerr(f"[Wake] predict failed ({e}); continuing")
                 time.sleep(0.5)
                 continue
             score = predictions.get(_model_key, 0)
@@ -175,7 +176,7 @@ def listen_for_wake_word(callback) -> None:
             _peak = max(_peak, score)
             state["peak"] = float(_peak)
             if time.time() - _last_log >= 3.0:
-                print(f"[Wake] peak {_peak:.3f} / threshold {cfg['threshold']}")
+                svc.jlog(f"[Wake] peak {_peak:.3f} / threshold {cfg['threshold']}")
                 _peak = 0.0
                 _last_log = time.time()
 
@@ -187,7 +188,7 @@ def listen_for_wake_word(callback) -> None:
             state["last_detect"] = now
             # F 块埋点（design §2）：真越线时的 score，供 /monitor 的 wake 曲线
             try:
-                from jarvis import services as svc
+                pass  # 第 175 处自曝后照实删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
                 svc.metric("wake_peak", round(float(score), 3))
             except Exception:
                 pass
@@ -205,7 +206,7 @@ def listen_for_wake_word(callback) -> None:
                 from jarvis.main import abort_all, is_recording
                 # The 0.3s-cut evidence (records/2026-11-08-19-25-48.md) shows this
                 # branch firing while the flag was already True, so log the decision.
-                print(f"[Wake] barge-in score={score:.3f} recording={is_recording()}")
+                svc.jlog(f"[Wake] barge-in score={score:.3f} recording={is_recording()}")
                 if is_recording():
                     _ignore_until[0] = now + 2.0
                 else:
@@ -216,11 +217,11 @@ def listen_for_wake_word(callback) -> None:
                         _last_detect[0] = 0.0
                         _ignore_until[0] = now + 4.0
                         abort_all()
-                        print("[爱莉希雅] Stopped. (voice interrupt)")
+                        svc.jlog("[爱莉希雅] Stopped. (voice interrupt)")
                     else:
                         _last_detect[0] = now
                         _ignore_until[0] = now + 0.6
-                        print("[Wake] barge-in candidate 1/2 (no abort yet)")
+                        svc.jlog("[Wake] barge-in candidate 1/2 (no abort yet)")
             else:
                 from jarvis.main import is_speaking, stop_speaking
                 if is_speaking():

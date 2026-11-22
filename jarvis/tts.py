@@ -1,3 +1,4 @@
+from jarvis import services as svc  # 第 2 条：日志走环与 .tmp/jarvis.log，控制台只留报错
 from pathlib import Path
 import io
 import queue
@@ -204,11 +205,11 @@ def preload_ack_audio() -> int:
             if pcm:
                 raw.append((p.stem, np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32767, rate))
         except Exception as e:
-            print(f"[TTS] ack preload skipped {p.name}: {e}")
+            svc.jerr(f"[TTS] ack preload skipped {p.name}: {e}")
     if not raw:
         _ack_cache = []
         _ack_named = {}
-        print("[TTS] ack audio preloaded: 0 clips in memory")
+        svc.jlog("[TTS] ack audio preloaded: 0 clips in memory")
         return 0
     rates = [r for _, _, r in raw]
     target = max(set(rates), key=rates.count)
@@ -222,7 +223,7 @@ def preload_ack_audio() -> int:
         named[stem] = (audio, target)
     _ack_cache = cache
     _ack_named = named
-    print(f"[TTS] ack audio preloaded: {len(cache)} clips in memory（统一 {target} Hz，"
+    svc.jlog(f"[TTS] ack audio preloaded: {len(cache)} clips in memory（统一 {target} Hz，"
           f"具名 {sorted(named)}）")
     # Warm the output stream at startup too: opening it costs ~3.4 s (measured),
     # so paying that here keeps the *first* wake answer as fast as the rest.
@@ -230,9 +231,9 @@ def preload_ack_audio() -> int:
         try:
             t_open = time.perf_counter()
             _output_stream(cache[0][1])
-            print(f"[TTS] output stream warmed in {1000 * (time.perf_counter() - t_open):.0f} ms")
+            svc.jlog(f"[TTS] output stream warmed in {1000 * (time.perf_counter() - t_open):.0f} ms")
         except Exception as e:
-            print(f"[TTS] output stream warm-up failed (first ack will be slow): {e}")
+            svc.jerr(f"[TTS] output stream warm-up failed (first ack will be slow): {e}")
     return len(cache)
 
 
@@ -265,13 +266,13 @@ def _play_cached(audio: np.ndarray, rate: int, label: str, t0: float) -> None:
     stream = None
     try:
         stream = _output_stream(rate)
-        print(f"[TTS] {label} stream ready in {1000 * (time.perf_counter() - t0):.0f} ms")
+        svc.jlog(f"[TTS] {label} stream ready in {1000 * (time.perf_counter() - t0):.0f} ms")
         chunk = max(1, int(rate * 0.1))
         for i in range(0, len(audio), chunk):
             if _interrupt.is_set():
                 break
             stream.write(audio[i : i + chunk])
-        print(f"[TTS] {label} played ({len(audio) / rate:.2f} s), "
+        svc.jlog(f"[TTS] {label} played ({len(audio) / rate:.2f} s), "
               f"total {1000 * (time.perf_counter() - t0):.0f} ms")
     finally:
         if stream is not None and _interrupt.is_set():
@@ -294,7 +295,7 @@ def play_ack_wav() -> None:
     if not _ack_cache:
         preload_ack_audio()
     if not _ack_cache:
-        print("[TTS] No pre-generated ack wavs — falling back to live TTS")
+        svc.jlog("[TTS] No pre-generated ack wavs — falling back to live TTS")
         speak("嗯？我在听。")
         return
     t0 = time.perf_counter()
@@ -334,7 +335,7 @@ def _produce_segments(sentences: list[str], q: "queue.Queue") -> None:
         try:
             pcm, rate = _synth(s)
         except Exception as e:
-            print(f"[TTS] segment synth failed ({s[:12]!r}): {e}")
+            svc.jerr(f"[TTS] segment synth failed ({s[:12]!r}): {e}")
             break
         if pcm:
             q.put((pcm, rate))
@@ -391,7 +392,7 @@ def speak_queued(text: str) -> None:
         _speaking.clear()
         _interrupt.clear()
         first = f"{first_ms:.0f} ms" if first_ms is not None else "n/a"
-        print(
+        svc.jlog(
             f"[TTS] queued: {len(sentences)} segments, first sound {first}, "
             f"played {played:.2f} s, total {1000 * (time.perf_counter() - t0):.0f} ms"
             + (" (interrupted)" if interrupted else "")

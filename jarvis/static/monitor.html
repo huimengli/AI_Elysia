@@ -1,24 +1,51 @@
 <!DOCTYPE html>
-<html lang="zh-CN"><head><meta charset="utf-8"><title>Monitor — 爱莉希雅</title>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>监视界面 — 爱莉希雅</title>
 <style>
-:root{--pink:#e8a2c7;--pink-2:#f7d4e6;--gold:#d8b46a;--lilac:#b7a6d9;--text:#efe9f2;--text-dim:#9b93a2;--bg:#181421;--danger:#e06a6a}
-body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;overflow:hidden}
-#a{padding:10px 14px;border-bottom:1px solid #2b2436}
-.bar{height:10px;background:#2b2436;border-radius:5px;overflow:hidden;margin:4px 0}
-.bar i{display:block;height:100%;background:var(--pink)}
-.bar.gold i{background:var(--gold)}.bar.danger i{background:var(--danger)}
-.lamp{display:inline-block;padding:3px 10px;margin-right:8px;border-radius:12px;background:#2b2436;font-size:13px}
-.lamp.on{background:#2f5f3f}.lamp.off{background:#5f2f2f}
-#grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px}
-.card{border:1px solid #2b2436;border-radius:8px;padding:8px}
+:root{
+  --pink:#F8A9C4; --pink-2:#FFD8E8; --rose:#7E3F66; --lilac:#C9B7E0; --gold:#F2C9A8;
+  --bg0:#171021; --bg1:#1d1428; --glass:rgba(255,255,255,0.055); --glass-2:rgba(255,255,255,0.10);
+  --line:rgba(248,169,196,0.34); --line-2:rgba(201,183,224,0.28);
+  --text:#F6ECF2; --text-dim:#CDBCC8; --shadow:0 10px 34px rgba(20,10,30,0.45); --danger:#e06a6a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{height:auto;}
+/* 第 1 条（2026-11-22-11-48-11）：配色/字体/面板照 home（index.html 的 :root 与渐变玻璃卡）；
+   第 4 条：body 不再 overflow:hidden，允许上下滚动（日志区也各自可滚）。 */
+body{
+  background:
+    radial-gradient(1100px 700px at 12% -12%, #2c1c3c 0%, transparent 62%),
+    radial-gradient(900px 620px at 100% 0%, rgba(248,169,196,0.20), transparent 58%),
+    radial-gradient(700px 520px at 50% 120%, rgba(201,183,224,0.16), transparent 60%),
+    linear-gradient(165deg, var(--bg0), var(--bg1) 58%, #150f1f);
+  color:var(--text);
+  font-family:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  overflow-y:auto; overflow-x:hidden; letter-spacing:0.02em;
+}
+body::before{content:"";position:fixed;left:0;right:0;top:0;height:2px;z-index:9;
+  background:linear-gradient(90deg,transparent,var(--pink),var(--lilac),var(--gold),transparent);opacity:0.75;}
+#a{margin:44px 20px 0;padding:14px 22px;border-radius:16px;
+  background:linear-gradient(120deg,rgba(126,63,102,0.30),rgba(255,255,255,0.06));
+  border:1px solid var(--line);box-shadow:var(--shadow);backdrop-filter:blur(14px);}
+.bar{height:10px;background:var(--glass-2);border-radius:5px;overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pink-2),var(--pink))}
+.bar.gold i{background:linear-gradient(90deg,var(--gold),#E8B87A)}
+.bar.danger i{background:linear-gradient(90deg,#F08A8A,var(--danger))}
+.lamp{display:inline-block;padding:3px 10px;margin:0 8px 4px 0;border-radius:12px;background:var(--glass-2);border:1px solid var(--line-2);font-size:13px}
+.lamp.on{background:rgba(80,150,110,0.35);border-color:rgba(120,200,150,0.5)}
+.lamp.off{background:rgba(150,80,80,0.30);border-color:rgba(220,120,120,0.45)}
+#grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 20px}
+.card{border:1px solid var(--line);border-radius:16px;padding:10px 12px;
+  background:linear-gradient(120deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
+  box-shadow:var(--shadow);backdrop-filter:blur(10px)}
 table{width:100%;border-collapse:collapse;font-size:13px}
-td,th{padding:2px 6px;text-align:left;border-bottom:1px solid #2b2436}
-#logs{padding:0 14px 12px;font:12px/1.45 Consolas,monospace}
-.svc{border:1px solid #2b2436;border-radius:8px;margin-top:8px}
-.svc>div{padding:4px 8px;cursor:pointer;color:var(--pink-2)}
-.svc pre{margin:0;padding:6px 8px;max-height:180px;overflow:auto;white-space:pre-wrap;color:var(--text-dim)}
-button{background:#2b2436;color:var(--text);border:1px solid var(--lilac);border-radius:6px;padding:2px 8px}
-select{width:58px;margin:0 8px;padding:2px 4px;background:#2b2436;color:var(--text);border:1px solid #2b2436;border-radius:6px}
+td,th{padding:2px 6px;text-align:left;border-bottom:1px solid var(--line-2)}
+#logs{padding:0 20px 16px;font:12px/1.45 Consolas,monospace}
+.svc{border:1px solid var(--line-2);border-radius:16px;margin-top:8px;
+  background:linear-gradient(120deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));box-shadow:var(--shadow)}
+.svc>div{padding:6px 12px;cursor:pointer;color:var(--pink-2)}
+.svc pre{margin:0;padding:6px 12px;max-height:220px;overflow:auto;white-space:pre-wrap;color:var(--text-dim)}
+button{background:var(--glass-2);color:var(--text);border:1px solid var(--lilac);border-radius:8px;padding:2px 10px}
+select{width:64px;margin:0 8px;padding:2px 4px;background:var(--glass-2);color:var(--text);border:1px solid var(--line-2);border-radius:8px}
 .ext{color:var(--text-dim);font-size:12px}
 </style><link rel="stylesheet" href="/static/tabs.css">
 </head><body>
@@ -40,6 +67,9 @@ select{width:58px;margin:0 8px;padding:2px 4px;background:#2b2436;color:var(--te
 const $ = (s) => document.getElementById(s);
 var iv = +(localStorage.getItem("mon_interval") || 5); $("iv").value = String(iv);
 var logdiv = {};
+var logbuf = {};
+var LBL = {jarvis: "爱莉希雅"};  // 第 2 条：页上显示「爱莉希雅」，环与文件的 key 照实是 jarvis
+var LOGCAP = 200;  // 第 5 条：进 monitor 后每面板只显示 200 行（全量在环与 .tmp/<name>.log）
 function fmt(n) { return (n === null || n === undefined) ? "—" : n; }
 function send_cfg(i) {
   if (ws.readyState === 1) ws.send(JSON.stringify({type: "monitor_config", interval: i}));
@@ -79,8 +109,8 @@ function render(m) {
   });
   var f = "", mm = d.metrics || {};
   var last = (a) => (a && a.length ? a[a.length - 1] : null);
-  f += "wake " + fmt(last(mm.wake_peak)) + " · ASR " + fmt(last(mm.asr_secs)) + " s · LLM " + fmt(last(mm.llm_secs)) + " s / " + fmt(last(mm.llm_chars)) + " 字 · TTS " + fmt(last(mm.tts_secs)) + " s";
-  f += "<div class=\"ext\">照实：tokens/s 未埋（要 tokenizer），这条尺记的是耗时与字数；TTS 含合成与播放全程。</div>";
+  f += "wake " + fmt(last(mm.wake_peak)) + " · ASR " + fmt(last(mm.asr_secs)) + " s · LLM " + fmt(last(mm.llm_secs)) + " s / " + fmt(last(mm.llm_chars)) + " 字 · TTS " + fmt(last(mm.tts_secs)) + " s · 总用时 " + fmt(last(mm.total_secs)) + " s";
+  f += "<div class=\"ext\">照实：tokens/s 未埋（要 tokenizer）；总用时 = 唤醒确认 → 播放结束（含 ASR、LLM、TTS 合成与播放）；TTS 含合成与播放全程。</div>";
   $("f").innerHTML = f;
   var c = $("curve").getContext("2d"); c.clearRect(0, 0, 360, 60); c.fillStyle = "#e8a2c7";
   var pts = (mm.wake_peak || []).slice(-120);
@@ -93,13 +123,20 @@ function render(m) {
     var name = pair[0], lines = pair[1];
     if (!logdiv[name]) {
       var box = document.createElement("div"); box.className = "svc";
-      var head = document.createElement("div"); head.textContent = "[log] " + name + "（可折叠，最新在上，环形 2,000 行）";
+      var head = document.createElement("div"); head.textContent = "[log] " + (LBL[name] || name) + "（可折叠，最新在上；页面显示上限 200 行，全量写 .tmp/" + name + ".log）";
       var pre = document.createElement("pre");
       head.onclick = () => { pre.style.display = pre.style.display === "none" ? "block" : "none"; };
       box.appendChild(head); box.appendChild(pre); $("logs").appendChild(box); logdiv[name] = pre;
     }
     var pre = logdiv[name];
-    lines.forEach(function (l) { pre.textContent = l[0] + " " + l[1] + "\n" + pre.textContent; });
+    var buf = logbuf[name] || [];
+    for (var i = lines.length - 1; i >= 0; i--) buf.unshift(lines[i]);
+    if (buf.length > LOGCAP) buf.length = LOGCAP;
+    logbuf[name] = buf;
+    /* 第 6 条（第 168 处坐实）：旧写法每行都做 `pre.textContent = 新行 + pre.textContent`，
+       每行把已累积的整段文本复制一遍，日志越多越卡（主线程被拖死，CDP evaluate 超时）。
+       现在每拍只赋值一次，且上限 200 行。 */
+    pre.textContent = buf.map(function (l) { return l[0] + " " + l[1]; }).join("\n");
   });
 }
 connect();

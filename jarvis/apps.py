@@ -1,4 +1,5 @@
 from __future__ import annotations
+from jarvis import services as svc  # 第 2 条：日志走环与 .tmp/jarvis.log，控制台只留报错
 """本机常用应用表 —— 扫开始菜单快捷方式入库，`open_app` 先匹配这张表（records/2026-11-13-13-46-12.md）。
 
 表建在现有的 `jarvis/data/events.db` 里（`apps` 表），不新建数据库文件、不发明新目录，
@@ -298,7 +299,7 @@ def register_alias(name: str, raw: str) -> None:
             c.execute("INSERT INTO app_queries (raw, matched, ts) VALUES (?, ?, ?)",
                       (raw, name, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     except Exception as e:
-        print(f"[Apps] WARN: 别名登记失败 {raw!r} -> {name!r}: {e}")
+        svc.jerr(f"[Apps] WARN: 别名登记失败 {raw!r} -> {name!r}: {e}")
 
 
 def fuzzy_open(query: str) -> tuple[str, str]:

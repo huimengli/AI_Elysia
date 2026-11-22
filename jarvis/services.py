@@ -7,7 +7,7 @@ stdout）、不重复起、不杀，面板不给关闭按钮（design §5）。
 跑法：jarvis 作父进程起 llama-server / api_v2（`stdout=PIPE, stderr=STDOUT`），读线程把每行
 塞进每服务 2,000 行环形缓冲；`shutdown()` 按名单 `taskkill /PID x /T /F` 并落盘证据。
 """
-import ctypes, json, os, socket, subprocess, threading, time
+import ctypes, json, os, socket, subprocess, sys, threading, time
 from collections import deque
 from pathlib import Path
 
@@ -114,14 +114,15 @@ def listen_pids(ports: list) -> dict:
 
 
 def _reader(name: str, stream) -> None:
-    """管道逐行 → 环形缓冲。llama 的进度行是 \\r 覆盖式，必须按 \\r 断行，否则一行刷屏。"""
-    ring = _rings[name]
+    """管道逐行 → 走 _log（第 5 条照实：环与 `.tmp/<name>.log` 同步落盘；旧写法直接 append 环，
+    llama/tts 的服务日志一条文件都没写 —— 第 179 处自曝）。
+    llama 的进度行是 \r 覆盖式，必须按 \r 断行，否则一行刷屏。"""
     for raw in stream:
         text = raw.decode("utf-8", "replace")
         for part in text.replace("\r", "\n").split("\n"):
             line = part.strip()
             if line:
-                ring.append((time.strftime("%H:%M:%S"), line))
+                _log(name, line)
 
 
 def launch(name: str) -> dict:
@@ -180,8 +181,46 @@ def stop_service(name: str, pid: int) -> str:
     return out or "taskkill 无输出"
 
 
+# 第 166-168 处自曝后照实补：Monitor 的日志区原先只有 llama/tts 两环，爱莉希雅自己的
+# 日志（唤醒、转录、回复、链路耗时）不进环，页面上看不到；cmd 窗口则被噪声刷屏。
+# 现在：每条日志既进环（前端显示）也写文件（design §2 G 块，照 watchdog 的 .tmp/<tag>.log 口径）。
+_log_files = {}
+_log_handles = {}  # name -> 打开的追加句柄（第 179 处自曝后照实补）
+
+
+def _log_file(name: str) -> Path:
+    """该服务的日志文件（照实：`.tmp/<name>.log`，与 watchdog 的 `.tmp/<tag>.log` 同一口径）。"""
+    p = REPO / ".tmp" / (name + ".log")
+    _log_files[name] = p
+    return p
+
+
+def jlog(line: str) -> None:
+    """爱莉希雅自己的日志：进环 + 写文件，**不往控制台刷**（design §2 第 2 条：cmd 窗口只留启动语、网址与报错）。"""
+    _log("jarvis", line)
+
+
+def jerr(line: str) -> None:
+    """报错：进环 + 写文件，并且真的打到控制台（报错信息是你要在 cmd 窗口看到的东西）。"""
+    _log("jarvis", line)
+    print(line, file=sys.stderr)
+
+
 def _log(name: str, line: str) -> None:
-    _rings.setdefault(name, deque(maxlen=RING)).append((time.strftime("%H:%M:%S"), line))
+    ring = _rings.setdefault(name, deque(maxlen=RING))
+    stamp = time.strftime("%H:%M:%S")
+    ring.append((stamp, line))
+    try:  # 第 5 条照实落盘；第 179 处自曝后照实补：用缓存句柄，不再每行 open/close（llama 启动刷屏时开销太大）
+        fh = _log_handles.get(name)
+        if fh is None:
+            f = _log_files.get(name) or _log_file(name)
+            f.parent.mkdir(parents=True, exist_ok=True)
+            fh = f.open("a", encoding="utf-8")
+            _log_handles[name] = fh
+        fh.write(stamp + " " + line + "\n")
+        fh.flush()
+    except Exception:  # 写文件失败不影响环与调用方；句柄作废下次重开
+        _log_handles.pop(name, None)
 
 
 def _mem_mb(pid: int) -> int:
@@ -294,6 +333,16 @@ def shutdown(reason: str = "exit") -> str:
     """退出时按名单只杀自起 pid，每条 kill 结果落盘（design §5 第 3 条）。"""
     lines = [time.strftime("%Y-%m-%d %H:%M:%S") + " " + reason];
     for name, p in list(_procs.items()):
+        try:  # 第 175 处自曝（控制台截图照实）：解释器退出时 subprocess 会撞
+            # `RuntimeError: can't create new thread at interpreter shutdown`，
+            # 之前这条异常把整个 atexit 回调抛掉，SHUT_LOG 一行都没写（第 6 条的逐条落盘未证实）。
+            r = subprocess.run(["taskkill", "/PID", str(p.pid), "/T", "/F"],
+                              capture_output=True, text=True, encoding="utf-8",
+                              errors="replace", shell=False, timeout=10)
+            res = (r.stdout + r.stderr).strip() or "taskkill 无输出"
+        except Exception as e:
+            res = "taskkill 抛 " + repr(e)
+        lines.append(name + " pid " + str(p.pid) + " → " + res)
         r = subprocess.run(["taskkill", "/PID", str(p.pid), "/T", "/F"],
                               capture_output=True, text=True, encoding="utf-8",
                               errors="replace", shell=False)

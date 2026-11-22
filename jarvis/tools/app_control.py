@@ -296,21 +296,25 @@ def open_url(url: str) -> str:
     # 所以**地址证据是主判据**，标题只作参考。
     mine = _jarvis_windows()
     ident = _url_identity(url)
+    want = url.rstrip("/")
     if mine:
         ps = pages()
         hit = [(t, a) for t, a in ps if ident and ident in a]
-        if hit:
-            t = mine[0][2]
-            return (f"复用我自己起的窗口：{focus_window(t)}\n"
-                    f"页面地址证据（扫全部标签）：{hit[0][1]}（含 {ident}），"
-                    f"标题「{hit[0][0][:40]}」，没有导航")
+        # 第 186 处自曝后照实补：子串命中不等于「就是这一页」。带时间戳参数的新地址
+        # 与旧地址互含，旧判定会复用不导航，真窗口永远跑第一次加载的旧页（第 1/4/5/6 条的
+        # 前端改动进不去）。复用只在地址完全一致时成立，否则照实导航一次。
+        exact = [(t, a) for t, a in hit if a.rstrip("/") == want]
+        if exact:
+            t2 = mine[0][2]
+            return (f"复用我自己起的窗口：{focus_window(t2)}\n"
+                    f"页面地址证据（扫全部标签）：{exact[0][1]}（与目标完全一致 {want}），"
+                    f"标题「{exact[0][0][:40]}」，没有导航")
         nav = navigate_url(url)
         ps2 = pages()
         ok = [(t, a) for t, a in ps2 if ident and ident in a]
-        return (f"我起过窗口，当前标签地址 {[a for _, a in ps]} 不含目标 {ident}，"
+        return (f"我起过窗口，当前标签地址 {[a for _, a in ps]} 与目标 {want} 不完全一致，"
                 f"已导航：{nav}\n复读全部标签地址：{[a for _, a in ps2]}，"
                 f"导航{'成功' if ok else '未证实'}")
-
     # Window limit (user rule 20:09: **只限 jarvis 起的窗口 ≤3** — the user's own
     # browser windows are not counted): count only windows jarvis started, refuse a 4th.
     if len(mine) >= WINDOW_LIMIT:

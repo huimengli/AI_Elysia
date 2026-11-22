@@ -1,10 +1,8 @@
 # Tree — 结构快照（仅非 .gitignore 文件）
 
-更新时间: 2026-11-22-11-16-00（jarvis 真会话验收批 commit 前重建）。变化：`jarvis/services.py`（`listen_pids` 缓存命中分支不再写死按键 —— 第 147 处 `KeyError(9880)` 根因）、
-`jarvis/web.py`（新增只读取证口 `GET /api/monitor_logs`、`snap["clients"]`/`snap["client_info"]` 逐客户端现场、发送失败落环 + `except Exception as e2` 修第 158 处、
-逐客户端隔离 + 每 10 拍记「处理客户端」）、`records/2026-11-22-11-06-00.md`（真会话验收）、`tests/2026-11-22-11-04-00_real_session/`（record_1-3 + opinion）。
-结构现状：代码在 `jarvis/`（`web.py` mount `/static` 并出 `/`、`/monitor`、`/about`，三页共用 `static/tabs.css` + `static/tabs.js` 顶栏）；
-`tests/` 与 `records/` 照实按时间落盘；`design.md` = v3.3（Monitor 设计，v3.0/v3.1/v3.2 归档在 `ai_buckup/`）。
+更新时间: 2026-11-22-13-02-00（Monitor 六条 commit 前重建）。变化：新增 `records/2026-11-22-11-48-11.md`、`tests/2026-11-22-11-48-11_six_items/record_1..3.md + opinion.md`、`ai_buckup/design.md_2026-11-22-11-48-11.md`（design v3.3 归档，现 v3.4）。改动的文件照实列出：`jarvis/services.py`（日志中枢 `jlog`/`jerr` + 逐条落盘 `.tmp/<name>.log` + `_reader` 走 `_log`）、`jarvis/web.py`（日志循环加爱莉希雅自己的环、三条页面路由加 `Cache-Control: no-store`）、`jarvis/main.py`（启动只 print 一行「爱莉希雅已经启动 + 网址」、`t_total` 总用时埋点、自开监视页带 `?ts=`）、`jarvis/wake.py`/`stt.py`/`tts.py`/`apps.py`/`events.py`（print 全分流）、`jarvis/static/monitor.html`（样式照 home、可上下滚动、显示名「爱莉希雅」、`LOGCAP=200`、每拍只赋值一次）、`jarvis/tools/app_control.py`（复用判定改地址完全一致）。
+
+结构现状：代码在 `jarvis/`（`web.py` mount `/static` 并出 `/`、`/monitor`、`/about`，三页共用顶栏 `tabs.css`/`tabs.js`），`tests/` 与 `records/` 照实按时间落盘；`design.md` = v3.4（v3.0/v3.1/v3.2/v3.3 已归档）。
 
 - .gitignore
 - ai_buckup/design.md_2026-11-17-10-24-25.md
@@ -12,6 +10,7 @@
 - ai_buckup/design.md_2026-11-20-22-14-46.md
 - ai_buckup/design.md_2026-11-21-18-27-30.md
 - ai_buckup/design.md_2026-11-21-18-59-49.md
+- ai_buckup/design.md_2026-11-22-11-48-11.md
 - ai_buckup/hard_bug.md_2026-10-13-17-45.md
 - ai_buckup/hard_bug.md_2026-11-13-00-12-17.md
 - ai_buckup/hard_bug.md_2026-11-17-13-26-51.md
@@ -64,6 +63,7 @@
 - dsh-my-presets/package.json
 - hard_bug.md
 - install.bat
+- jarvis_screen.png
 - jarvis/__init__.py
 - jarvis/apps.py
 - jarvis/context.py
@@ -94,10 +94,12 @@
 - jarvis/wake.py
 - jarvis/watchdog.py
 - jarvis/web.py
+- jieba.cache
 - LICENSE
 - llm/startLlama.ps1
 - llm/startLlamaCpu.ps1
 - llm/startLlamaVulkanTest.ps1
+- love_silvia.txt
 - need_audio.md
 - need_user.md
 - onnx_opinion.md
@@ -222,6 +224,7 @@
 - records/2026-11-21-18-27-30.md
 - records/2026-11-21-18-59-49.md
 - records/2026-11-22-11-06-00.md
+- records/2026-11-22-11-48-11.md
 - records/AI_Benchmark.md
 - records/JARVIS_STATE.md
 - records/PROJECT_SUMMARY.txt
@@ -624,6 +627,10 @@
 - tests/2026-11-22-11-04-00_real_session/record_1.md
 - tests/2026-11-22-11-04-00_real_session/record_2.md
 - tests/2026-11-22-11-04-00_real_session/record_3.md
+- tests/2026-11-22-11-48-11_six_items/opinion.md
+- tests/2026-11-22-11-48-11_six_items/record_1.md
+- tests/2026-11-22-11-48-11_six_items/record_2.md
+- tests/2026-11-22-11-48-11_six_items/record_3.md
 - tests/opinion.md
 - tests/test_context.py
 - tests/test_llm.py

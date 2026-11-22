@@ -28,6 +28,20 @@ from jarvis.wake import listen_for_wake_word
 from jarvis.stt import record_until_silence, transcribe_audio, set_abort_event, set_hot_words
 from jarvis.tts import speak, speak_streamed, is_speaking, stop_speaking, play_ack_wav, play_ack_phrase, preload_ack_audio
 from jarvis.context import ContextManager
+
+# 第 2 条（2026-11-22-11-48-11）照实落法：cmd 窗口只留「爱莉希雅已经启动」+ 网址 + 报错。
+# 其余（唤醒/转录/回复/工具/埋点）全部走 jarvis 自己的日志环 + `.tmp/jarvis.log`，不刷控制台。
+pass  # 第 175 处自曝后照实删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
+
+
+from jarvis import services as svc  # 第 177 处自曝后照实补回模块级 import（曾被误当局部 import 换成 pass）
+
+def _jlog(text):
+    svc.jlog(text)
+
+
+def _jerr(text):
+    svc.jerr(text)
 from jarvis.memory import Memory
 from jarvis.events import EventLog
 from jarvis.tools.router import TOOL_SCHEMAS, dispatch, tool_label
@@ -54,7 +68,7 @@ def register_clean_exit_hook() -> None:
         except Exception:
             pass
     atexit.register(_write)
-    print(f"[watchdog] clean_exit marker armed: {path}")
+    _jlog(f"[watchdog] clean_exit marker armed: {path}")
 
 # Global abort — Esc sets this, stops everything (speech + tool loop + follow-up)
 _abort = threading.Event()
@@ -93,7 +107,7 @@ def abort_all() -> None:
     import traceback
     frames = traceback.extract_stack()[:-1]
     site = frames[-1] if frames else None
-    print(f"[ABORT] set by {site.name}:{site.lineno} thread={threading.current_thread().name}" if site else "[ABORT] set")
+    _jlog(f"[ABORT] set by {site.name}:{site.lineno} thread={threading.current_thread().name}" if site else "[ABORT] set")
     stop_speaking()
     # Broadcast 已停止。 only on the unset→set transition. The user's own
     # speech scores 0.65-0.78 around the wake threshold, so a single turn used to
@@ -140,12 +154,12 @@ def toggle_mute() -> None:
     if _muted.is_set():
         _muted.clear()
         _broadcast({"type": "mute", "muted": False})
-        print("[爱莉希雅] Unmuted.")
+        _jlog("[爱莉希雅] Unmuted.")
     else:
         _muted.set()
         stop_speaking()
         _broadcast({"type": "mute", "muted": True})
-        print("[爱莉希雅] Muted.")
+        _jlog("[爱莉希雅] Muted.")
 
 
 def _speak_if_unmuted(text: str) -> None:
@@ -194,9 +208,9 @@ def _record_hot_phrase(text: str) -> None:
             set_hot_words(memory.top_hot_phrases(12))
         else:
             set_hot_words([])
-        print(f"[热词] 表 {len(memory.hot_phrase_rows())} 行，偏置={'开' if _load_config().get('stt', {}).get('hot_bias', False) else '关'}")
+        _jlog(f"[热词] 表 {len(memory.hot_phrase_rows())} 行，偏置={'开' if _load_config().get('stt', {}).get('hot_bias', False) else '关'}")
     except Exception as e:
-        print(f"[热词] 记录失败（不影响对话）：{e}")
+        _jerr(f"[热词] 记录失败（不影响对话）：{e}")
 
 
 def _speak_streamed_if_unmuted(text: str) -> None:
@@ -226,9 +240,9 @@ event_log = EventLog()  # T7: operation log → sqlite (jarvis/data/events.db)
 try:
     from jarvis.apps import populate as _populate_apps
     _apps_stats = _populate_apps()
-    print(f"[Apps] {_apps_stats}")
+    _jlog(f"[Apps] {_apps_stats}")
 except Exception as e:
-    print(f"[Apps] WARN: 应用表灌入失败，open_app 将只走其它路径：{e}")
+    _jerr(f"[Apps] WARN: 应用表灌入失败，open_app 将只走其它路径：{e}")
 
 
 def _system_prompt() -> str:
@@ -456,7 +470,7 @@ def _call_openai_provider(provider_cfg: dict, temperature: float, full_messages:
                 # `result[:120]` cut the report right before the failure reason, so the
                 # end-to-end round could not be root-caused from jarvis' own log. Full text
                 # goes to the log; the WS/UI keeps its 200-char cap.
-                print(f"[Tool: {call['function']['name']}] " + result.replace("\n", " | "))
+                _jlog(f"[Tool: {call['function']['name']}] " + result.replace("\n", " | "))
                 _broadcast({"type": "tool_result", "name": call["function"]["name"], "label": tool_label(call["function"]["name"]), "result": result[:200]})
                 full_messages.append({
                     "role": "tool",
@@ -504,7 +518,7 @@ def _call_ollama_provider(provider_cfg: dict, temperature: float, full_messages:
                 if tool_count == 4:
                     _speak_if_unmuted("好的，我处理一下。")
                 result = _exec_tool_with_retry(tc.function.name, args)
-                print(f"[Tool: {tc.function['name'] if isinstance(tc, dict) else tc.function.name}] "
+                _jlog(f"[Tool: {tc.function['name'] if isinstance(tc, dict) else tc.function.name}] "
                       + result.replace("\n", " | "))
                 _broadcast({"type": "tool_result", "name": tc.function.name, "label": tool_label(tc.function.name), "result": result[:200]})
                 full_messages.append({
@@ -624,7 +638,7 @@ def _exec_tool_with_retry(name: str, args: dict) -> str:
         result = dispatch(name, args)
     # E 块（design §2）：工具调用次数/耗时/失败率的埋点
     try:
-        from jarvis import services as svc
+        pass  # 第 175 处自曝后照实删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
         svc.tool_stat(name, ok, time.time() - t0)
     except Exception:
         pass
@@ -655,10 +669,10 @@ def handle_wake() -> None:
     try:
         _handle_wake_inner()
     except _Aborted:
-        print("[爱莉希雅] Aborted.")
+        _jlog("[爱莉希雅] Aborted.")
     except Exception as e:
         import traceback
-        print(f"[ERROR] {e}")
+        _jerr(f"[ERROR] {e}")
         traceback.print_exc()
         event_log.log("system", f"Pipeline error: {e}", "error")
         if not _abort.is_set():
@@ -667,7 +681,7 @@ def handle_wake() -> None:
         _stt_recording = False
         _abort.clear()
         _broadcast({"type": "status", "message": "就绪。"})
-        print("[爱莉希雅] Listening for wake word...")
+        _jlog("[爱莉希雅] Listening for wake word...")
 
 
 def _handle_wake_inner() -> None:
@@ -681,11 +695,11 @@ def _handle_wake_inner() -> None:
     from jarvis.tools.browser_cdp import duck
 
     note = duck("pause")
-    print(f"[Duck] {note}")
+    _jlog(f"[Duck] {note}")
     try:
         _handle_wake_body()
     finally:
-        print(f"[Duck] {duck('resume')}")
+        _jlog(f"[Duck] {duck('resume')}")
 
 
 def _handle_wake_body() -> None:
@@ -698,12 +712,13 @@ def _handle_wake_body() -> None:
     _stt_recording = True
     if is_speaking():
         stop_speaking()
-    print("[爱莉希雅] Wake word detected!")
+    _jlog("[爱莉希雅] Wake word detected!")
+    t_total = time.time()  # 第 3 条：总用时起点（唤醒确认这一刻）
     event_log.log("wake", "Wake word triggered", "voice")
     _broadcast({"type": "status", "message": "在。"})
     _broadcast({"type": "wake", "text": "Wake word triggered"})
     if _muted.is_set():
-        print("[爱莉希雅] (muted) skipping ack")
+        _jlog("[爱莉希雅] (muted) skipping ack")
     else:
         play_ack_wav()  # T8: pre-synthesized local wav, no live SoVITS
 
@@ -714,7 +729,7 @@ def _handle_wake_body() -> None:
     # cut captures to 0.3s: events.db rows 162-169 are wake → 0.3s → "no voice
     # recognized" (records/2026-11-08-19-25-48.md).
     _abort.clear()
-    print("[爱莉希雅] Recording...")
+    _jlog("[爱莉希雅] Recording...")
     _broadcast({"type": "status", "message": "正在聆听…"})
 
     # Pause wake word mic so STT can use the hardware exclusively
@@ -731,22 +746,22 @@ def _handle_wake_body() -> None:
         _stt_recording = False
         resume_wake_mic()  # Always resume wake word detection
     _check_abort()
-    print(f"[爱莉希雅] Recorded {len(audio)/16000:.1f}s of audio, transcribing...")
+    _jlog(f"[爱莉希雅] Recorded {len(audio)/16000:.1f}s of audio, transcribing...")
     t_asr = time.time()
     user_text = transcribe_audio(audio)
     # F 块埋点（照实记耗时；tokens/s 未埋，那要 tokenizer）
     try:
-        from jarvis import services as svc
+        pass  # 第 175 处自曝后照实删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
         svc.metric("asr_secs", round(time.time() - t_asr, 2))
     except Exception:
         pass
     if not user_text.strip():
-        print("[爱莉希雅] Transcription empty — didn't catch anything.")
+        _jlog("[爱莉希雅] Transcription empty — didn't catch anything.")
         event_log.log("system", "Wake: no voice recognized", "voice")
         _ask_repeat_if_unmuted()  # 预合成 ack，不走 live TTS
         _broadcast({"type": "status", "message": "就绪。"})
         return
-    print(f"[You] {user_text}")
+    _jlog(f"[You] {user_text}")
 
     # 热词表写入 + 偏置回灌（records/2026-11-11-21-36-30.md 第 2 项）：
     # 真实转录成功后记 `user`；含唤醒词近音（sim 在 0.5-0.9 之间）记 `near_miss`；
@@ -754,7 +769,7 @@ def _handle_wake_body() -> None:
     _record_hot_phrase(user_text)
 
     if not _looks_understandable(user_text):
-        print(f"[爱莉希雅] Low-quality transcription ({user_text!r}) — asking to repeat.")
+        _jlog(f"[爱莉希雅] Low-quality transcription ({user_text!r}) — asking to repeat.")
         event_log.log("system", f"Wake: low-quality transcription: {user_text}", "voice")
         _ask_repeat_if_unmuted()  # 同上：预合成 ack
         _broadcast({"type": "status", "message": "就绪。"})
@@ -763,26 +778,27 @@ def _handle_wake_body() -> None:
     if _is_stop_command(user_text):
         event_log.log("system", f"Voice stop command: {user_text}", "voice")
         abort_all()
-        print("[爱莉希雅] Stopped. (voice)")
+        _jlog("[爱莉希雅] Stopped. (voice)")
         raise _Aborted()
 
     t_llm = time.time()
     response_text = _process_request(user_text)
     _check_abort()
     try:
-        from jarvis import services as svc
+        pass  # 第 175 处自曝后照实删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
         svc.metric("llm_secs", round(time.time() - t_llm, 2))
         svc.metric("llm_chars", len(response_text))
     except Exception:
         pass
 
-    print(f"[爱莉希雅] {response_text}")
+    _jlog(f"[爱莉希雅] {response_text}")
     _broadcast({"type": "status", "message": "正在说话…"})
     t_tts = time.time()
     _speak_streamed_if_unmuted(response_text)
     try:
-        from jarvis import services as svc
+        pass  # 第 175 处自曝后照实删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
         svc.metric("tts_secs", round(time.time() - t_tts, 2))  # 照实：含合成与播放全程
+        svc.metric("total_secs", round(time.time() - t_total, 2))  # 第 3 条：总用时（唤醒确认 → 播放结束，照实口径）
     except Exception:
         pass
 
@@ -831,7 +847,7 @@ def _process_request(user_text: str, source: str = "voice") -> str:
     except Exception as e:
         # Surface the primary failure (an Ollama connection error used to mask
         # the real cause, e.g. the chat-template 500 from a second system turn).
-        print(f"[WARN] Primary provider failed ({e}), trying Ollama fallback")
+        _jerr(f"[WARN] Primary provider failed ({e}), trying Ollama fallback")
         _broadcast({"type": "status", "message": f"主模型失败：{str(e)[:120]}，改用备用模型…"})
         event_log.log("system", f"Primary provider failed: {str(e)[:200]}", source)
         cfg = _load_config()
@@ -857,7 +873,7 @@ def _keyboard_listener() -> None:
                 # Escape key
                 if key == b'\x1b':
                     abort_all()
-                    print("\n[爱莉希雅] Stopped. (Esc)")
+                    _jlog("\n[爱莉希雅] Stopped. (Esc)")
                 # Extended keys: F2 = 0x00+0x3c, INSERT = 0xe0+0x52
                 elif key in (b'\x00', b'\xe0'):
                     special = msvcrt.getch()
@@ -876,13 +892,13 @@ def _keyboard_listener() -> None:
 def _handle_typed_command(text: str) -> None:
     """Process a typed command (same as voice, but from keyboard)."""
     _abort.clear()
-    print(f"[You] {text}")
+    _jlog(f"[You] {text}")
     try:
         response = _process_request(text)
-        print(f"[爱莉希雅] {response}")
+        _jlog(f"[爱莉希雅] {response}")
         _speak_streamed_if_unmuted(response)
     except _Aborted:
-        print("[爱莉希雅] Stopped.")
+        _jlog("[爱莉希雅] Stopped.")
     finally:
         _abort.clear()
 
@@ -894,17 +910,17 @@ def _warm_stt() -> None:
         t0 = time.perf_counter()
         from jarvis.stt import _get_model
         _get_model()
-        print(f"[STT] whisper warmed in {1000 * (time.perf_counter() - t0):.0f} ms")
+        _jlog(f"[STT] whisper warmed in {1000 * (time.perf_counter() - t0):.0f} ms")
     except Exception as e:
-        print(f"[WARN] STT warm-up failed (first transcription will fail): {e}")
+        _jerr(f"[WARN] STT warm-up failed (first transcription will fail): {e}")
 
 
 def main() -> None:
     import webbrowser
     from jarvis.web import start_web_background
 
-    print("[爱莉希雅] Starting up...")
-    print("[爱莉希雅] Keys: Esc = stop | F2 = type | INSERT = mute/unmute")
+    _jlog("[爱莉希雅] Starting up...")
+    _jlog("[爱莉希雅] Keys: Esc = stop | F2 = type | INSERT = mute/unmute")
 
     register_clean_exit_hook()  # HB-049：看门狗要的第一手证据
     # 单窗口模式（start_all_in_one.bat 设 JARVIS_ONE_WINDOW=1）：jarvis 作父进程起子服务，
@@ -913,10 +929,11 @@ def main() -> None:
     if os.environ.get("JARVIS_ONE_WINDOW") == "1":
         from jarvis.services import arm_shutdown, launch
         for _name in ("llama", "tts"):
-            print("[Monitor] " + json.dumps(launch(_name), ensure_ascii=False))
+            _jlog("[Monitor] " + json.dumps(launch(_name), ensure_ascii=False))
         arm_shutdown()
     start_web_background(port=7860)
-    print("[爱莉希雅] Web UI: http://localhost:7860")
+    # 第 2 条要求照实：cmd 窗口这一行就是你要看到的「爱莉希雅已经启动」+ 网址；其余噪声全进日志环与 .tmp/jarvis.log。
+    print("爱莉希雅已经启动 http://127.0.0.1:7860")
 
     threading.Thread(target=_keyboard_listener, daemon=True).start()
     # Load whisper in the background as soon as the server is up: the model lives
@@ -928,9 +945,12 @@ def main() -> None:
         # design §7 第 7 条：jarvis 起自己的浏览器窗口开 /monitor（不最大化，窗口数走同一条口径）
         try:
             from jarvis.tools.app_control import open_url
-            print("[Monitor] " + open_url("http://127.0.0.1:7860/monitor"))
+            # 第 185 处自曝后照实整块重写（第 184 处：同一 URL 的 CDP 导航在 Chrome 里命中缓存不重新取页，
+            # 真窗口跑旧页 —— 第 1/4/5/6 条的前端改动进不去），所以自开监视页带时间戳参数。
+            _u = "http://127.0.0.1:7860/monitor?ts=" + str(int(time.time()))
+            _jlog("[Monitor] " + open_url(_u))
         except Exception as e:
-            print(f"[Monitor] 自起窗口打不开（{e!r}）— 退回默认浏览器，照实不假装成功")
+            _jerr(f"[Monitor] 自起窗口打不开（{e!r}）— 退回默认浏览器，照实不假装成功")
             webbrowser.open("http://localhost:7860/monitor")
     else:
         webbrowser.open("http://localhost:7860")
@@ -941,12 +961,12 @@ def main() -> None:
     try:
         preload_ack_audio()
     except Exception as e:
-        print(f"[WARN] ack preload failed (will fall back to live TTS): {e}")
+        _jerr(f"[WARN] ack preload failed (will fall back to live TTS): {e}")
     try:
         _speak_if_unmuted("早安，爱莉希雅已上线。")
     except Exception as e:
         # Best-effort greeting: a missing/unready TTS backend must not kill the server.
-        print(f"[WARN] Startup greeting failed (TTS unavailable?): {e}")
+        _jerr(f"[WARN] Startup greeting failed (TTS unavailable?): {e}")
     listen_for_wake_word(handle_wake)
 
 

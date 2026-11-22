@@ -2,6 +2,7 @@
 from __future__ import annotations
 import asyncio
 import json
+from fastapi import Response  # 第 181 处自曝后照实补：页面禁缓存（jarvis 起的窗口被 Chrome 启发式缓存喂旧版，第 1/4/5/6 条的前端改动进不去）
 import threading
 import time
 from pathlib import Path
@@ -30,7 +31,7 @@ _loop: asyncio.AbstractEventLoop | None = None
 async def _capture_loop():
     global _loop
     _loop = asyncio.get_running_loop()
-    print("[Web] Event loop captured — WebSocket broadcast ready.")
+    svc.jlog("[Web] Event loop captured — WebSocket broadcast ready.")  # 第 2 条：不往控制台刷
     asyncio.create_task(_monitor_loop())
 
 
@@ -60,7 +61,7 @@ async def _async_broadcast(event: dict) -> None:
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    return HTMLResponse((_STATIC_DIR / "index.html").read_text(encoding="utf-8"))
+    return HTMLResponse((_STATIC_DIR / "index.html").read_text(encoding="utf-8"), headers=_NO_STORE)
 
 
 @app.get("/favicon.ico", response_class=FileResponse)
@@ -361,13 +362,18 @@ _mon_interval = 5          # 全局节拍 = 各客户端的最小间隔
 @app.get("/about", response_class=FileResponse)
 async def about():
     """about（相关页面）：只写已实现的事实，不写没实现过的功能（design v3.2 §3-5）。"""
-    return FileResponse(_STATIC_DIR / "about.html")
+    return FileResponse(_STATIC_DIR / "about.html", headers=_NO_STORE)
 
+
+
+# 第 181 处自曝（照实坐实）：jarvis 起的窗口拿到的是 Chrome 启发式缓存里的旧页 —— `FileResponse`
+# 不发缓存头，前端改动（样式/滚动/200 行上限/每拍一次赋值）在真会话里不生效。这里显式 no-store。
+_NO_STORE = {"Cache-Control": "no-store, must-revalidated", "Pragma": "no-cache"}
 
 @app.get("/monitor", response_class=FileResponse)
 async def monitor_page():
     """独立页 /monitor（Q30-2 选定，1080p 起）。"""
-    return FileResponse(_STATIC_DIR / "monitor.html")
+    return FileResponse(_STATIC_DIR / "monitor.html", headers=_NO_STORE)
 
 
 @app.get("/api/monitor_logs")
@@ -423,7 +429,7 @@ async def _monitor_loop():
                     svc._log("monitor", "处理客户端 id=" + str(id(ws)) + " iv=" + str(st["interval"]) + " cur=" + str(len(st["cursor"])))
                 try:
                     batch = []
-                    for name in svc.SERVICES:
+                    for name in list(svc.SERVICES) + ["jarvis"]:  # 第 2 条：加爱莉希雅自己的日志环
                         part, new = svc.logs_since(name, st["cursor"].get(name, 0))
                         st["cursor"][name] = new
                         if part:

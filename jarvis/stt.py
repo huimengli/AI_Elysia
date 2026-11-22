@@ -1,3 +1,4 @@
+from jarvis import services as svc  # 第 2 条：日志走环与 .tmp/jarvis.log，控制台只留报错
 from pathlib import Path
 import time
 import yaml
@@ -46,7 +47,7 @@ def _get_sherpa():
             num_threads=int(sh.get("num_threads", 2)),
             debug=False,
         )
-        print(f"[STT] sherpa-onnx Paraformer loaded from {md}")
+        svc.jlog(f"[STT] sherpa-onnx Paraformer loaded from {md}")
     return _sherpa_rec
 
 
@@ -109,13 +110,13 @@ def _get_model(force_cpu=False):
     try:
         _model = WhisperModel(stt["model"], device=device, compute_type=compute_type)
         _model_device = device
-        print(f"[STT] Loaded {stt['model']} on {device}")
+        svc.jlog(f"[STT] Loaded {stt['model']} on {device}")
     except Exception as e:
         if device != "cpu":
-            print(f"[STT] {device} failed to load ({e}), falling back to CPU")
+            svc.jerr(f"[STT] {device} failed to load ({e}), falling back to CPU")
             _model = WhisperModel(stt["model"], device="cpu", compute_type="int8")
             _model_device = "cpu"
-            print(f"[STT] Loaded {stt['model']} on cpu")
+            svc.jlog(f"[STT] Loaded {stt['model']} on cpu")
         else:
             raise
     return _model
@@ -136,7 +137,7 @@ def _dump_audio(audio: np.ndarray, sample_rate: int = 16000) -> Path:
         w.setsampwidth(2)
         w.setframerate(sample_rate)
         w.writeframes(pcm)
-    print(f"[STT] capture saved: {path.name} ({len(pcm) // 2 // sample_rate} s)")
+    svc.jlog(f"[STT] capture saved: {path.name} ({len(pcm) // 2 // sample_rate} s)")
     return path
 
 
@@ -208,9 +209,9 @@ def transcribe_audio(audio: np.ndarray) -> str:
             text = _sherpa_transcribe(audio)
             if text.strip():
                 return text
-            print("[STT] sherpa 空结果，回退 whisper")
+            svc.jlog("[STT] sherpa 空结果，回退 whisper")
         except Exception as e:
-            print(f"[STT] sherpa 失败（{e}），回退 whisper")
+            svc.jerr(f"[STT] sherpa 失败（{e}），回退 whisper")
     try:
         model = _get_model()
         segments, _ = model.transcribe(
@@ -226,7 +227,7 @@ def transcribe_audio(audio: np.ndarray) -> str:
     except Exception as e:
         # If CUDA worked for loading but fails during inference, retry on CPU
         if _model_device != "cpu":
-            print(f"[STT] {_model_device} transcription failed ({e}), reloading on CPU")
+            svc.jerr(f"[STT] {_model_device} transcription failed ({e}), reloading on CPU")
             try:
                 model = _get_model(force_cpu=True)
                 segments, _ = model.transcribe(
@@ -240,9 +241,9 @@ def transcribe_audio(audio: np.ndarray) -> str:
                 )
                 return " ".join(seg.text.strip() for seg in segments).strip()
             except Exception as e2:
-                print(f"[STT] CPU transcription also failed: {e2}")
+                svc.jerr(f"[STT] CPU transcription also failed: {e2}")
                 return ""
-        print(f"[STT] Transcription failed: {e}")
+        svc.jerr(f"[STT] Transcription failed: {e}")
         return ""
 
 # Global abort event — set by main.py so recording can be interrupted
@@ -289,7 +290,7 @@ def record_until_silence(
             # chunk and the capture was 0.3s → "我没听清，请再说一遍。". The user's
             # sentence needs ~1.5s before an abort is meaningful.
             if _abort_event and _abort_event.is_set() and time.time() - _start > 1.5:
-                print("[STT] Recording aborted.")
+                svc.jlog("[STT] Recording aborted.")
                 break
 
             data, _ = stream.read(chunk)
@@ -299,21 +300,21 @@ def record_until_silence(
 
             if rms >= speech_threshold:
                 if not heard_speech:
-                    print(f"[STT] Speech detected (rms={rms:.4f})")
+                    svc.jlog(f"[STT] Speech detected (rms={rms:.4f})")
                 heard_speech = True
                 silent_chunks = 0
             elif heard_speech and rms < silence_threshold:
                 silent_chunks += 1
 
             if heard_speech and silent_chunks >= silent_chunks_needed:
-                print("[STT] Silence detected, stopping recording.")
+                svc.jlog("[STT] Silence detected, stopping recording.")
                 break
             if not heard_speech and len(recording) >= no_speech_chunks_needed:
-                print(f"[STT] No speech in {no_speech_seconds}s, stopping early "
+                svc.jlog(f"[STT] No speech in {no_speech_seconds}s, stopping early "
                       f"(max rms={max(float(np.sqrt(np.mean(c ** 2))) for c in recording):.4f}).")
                 break
             if len(recording) * chunk >= max_seconds * sample_rate:
-                print(f"[STT] Max recording time reached ({max_seconds}s)")
+                svc.jlog(f"[STT] Max recording time reached ({max_seconds}s)")
                 break
 
     if not recording:
@@ -322,5 +323,5 @@ def record_until_silence(
     try:
         _dump_audio(audio, sample_rate)
     except Exception as e:
-        print(f"[STT] capture dump failed: {e}")
+        svc.jerr(f"[STT] capture dump failed: {e}")
     return audio
