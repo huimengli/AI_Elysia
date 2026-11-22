@@ -58,16 +58,12 @@ button{background:var(--glass-2);color:var(--text);border:1px solid var(--lilac)
 select{width:64px;margin:0 8px;padding:2px 4px;background:var(--glass-2);color:var(--text);border:1px solid var(--line-2);border-radius:8px}
 .ext{color:var(--text-dim);font-size:12px}
 /* 第 3 条（照你 13:48 逐字给的 CSS，一个数值不改） */
-*::-webkit-scrollbar{
-    background-color:rgb(255 5 5 / 30%);
-    width:12px
-}
-
-*::-webkit-scrollbar-thumb{
-    background-color: rgb(41 73 144 / 30%);
-    border: 2px solid snow;
-    border-radius: 10px;
-}
+/* 第 1 条（2026-11-22-15:45 照你原话「滚动条不对,颜色不符合home设计,改一下」）：
+照实照抄 home（index.html 132-134、199-200）的滚动条口径：宽 8px、thumb 粉→玫红渐变、圆角 8px、track 透明。
+13:48 那段（12px、红 30% 底、rgb(41 73 144 / 30%)、2px solid snow、圆角 10px）照实记入台账，以 home 为准。 */
+*::-webkit-scrollbar{width:8px;}
+*::-webkit-scrollbar-thumb{background:linear-gradient(var(--pink),var(--rose));border-radius:8px;}
+*::-webkit-scrollbar-track{background:transparent;}
 </style><link rel="stylesheet" href="/static/tabs.css">
 </head><body>
 <div id="a">

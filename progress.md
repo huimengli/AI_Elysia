@@ -1,44 +1,21 @@
-<!-- 已归档于 ai_buckup/progress.md_2026-11-22-13-12-00.md（155 行 > 100，抽取最近 72 行；旧内容全在备份里） -->
-<!-- 归档动作记录：2026-11-22 13:12，见 records/2026-11-22-11-48-11.md 第「归档照实」段 -->
+<!-- 已归档于 ai_buckup/progress.md_2026-11-22-18-30-00.md -->
 
-- 2026-11-21 16:40 **Monitor 验证 3 轮跑完**：轮 1 PASS 5/5（含外部 pid 关闭被拒）、轮 2 **部分 PASS**（协议全对，1 s 节拍未达：实测 4.26-4.66 s/拍、首拍 14.87 s，根因单拍采样耗时）、轮 3 PASS 4/4 + 外部起追加段 PASS（pid 与 `netstat` 真值一致，外部服务没被杀）。5 项未测照实（真机节拍、隐藏页省电、前端渲染、关窗全关 5 s 时限、`/monitor` 窗口不最大化 + 窗口数口径）。
-- 本批自曝 **第 98-111 共 14 处**，最贵的是 ctypes 查监听 pid 连踩 4 次（结构字段顺序、bOwner、把返回码 122 当失败、行距 24 且 IPv4 表不含通配/IPv6 行），最后改用 `netstat -ano`；另有 四灯没进 `/api/monitor`、`_mon_interval` 少 `global`、`windll.psapi` 查不到 `K32GetProcessMemoryInfo`、`ws.onclose = ws.onclose` 自赋值、驱动没设超时 16 分钟不出结果、JS 写出 null 字节。
-- 2026-11-21 16:44 **Monitor 验证批收尾 commit f7c444d**（`git rev-list --count HEAD` = 276）。第 112 处自曝：我先写了 `commit -F .tmp/commit_msg18.txt` 却没建这个文件，commit 没发生（当时 hash/count 都停在 0439033 / 275），补写消息文件才提交上。
-- 2026-11-21 16:38 **tree.md 照实重建并 commit（8644b3e，705 文件 / 65 目录）**；随后 progress 补 hash 的 commit **3836875**（`rev-list --count` = 278）。`git status` 只剩照旧不 commit 的 3 个根目录垃圾。本条的 hash（3836875 的后续 commit）照规则只能在下一批补记。
-- 2026-11-21 18:23 **真会话截图打穿 Monitor 前端**：页面是空壳，根因 = JS 转义（`class=\"ext"` 少闭合转义）→ 整段 script 语法错。修 2 处 + 排版（标签/下拉重叠）+ 推送「一阵就停」（`send_text` 异常就 pop，改为仅真断开才摘）+ 前端 10 s 心跳重注册。
-  复测（共用浏览器真页）：无语法错、`ws.readyState 1`、真数据渲染全对（`jarvis 起 pid 8440/1516`、提交 MB 1060/3、`log_lines 13/19`、四灯全 online、我起窗口 1/3、F 块 `wake 0.75 · ASR 0.03 s`、日志 2 面板）→ `C:\Users\楼听\Downloads\monitor_after.png`。
-  真机节拍（设 1 s，29 拍）：中位 1.9 s / 均值 1.8 s / 最小 1.4 / 最大 2.0；逐段计时坐实瓶颈是窗口计数 1688 ms（不是 netstat 67 ms）；加缓存后稳态 50→0 ms。1 s 节拍达标 **未测**（要重启 jarvis 生效）。
-  **本批自曝第 113-127 处（15 处）**：113 `dsh_browser_state` 传空参被拒；114 探针写多语句被当表达式拒；115 逐行前缀扫描对截断必然报错（方法无效）；116 `new Function` 只给「Invalid or unexpected token」，靠塞进 `<script>` 才拿到行号列号；117 用字符串拼接躲转义把 TS 解析器炸了；118 快照实测 1998 ms；119 推送「一阵就停」根因（pop 过早）；120 我的计数挂在旧 socket 上读到 0 拍（假象），逐段计时才定准瓶颈；121 探针在 `try` 里直返，TTL 缓存写不进去；122 删死代码时把 `def listen_pids` 一起带走（`NameError`）；123 凭记忆写锚点没命中（`命中 1/0`）；124 netstat TTL 1 s 在 1 s 节拍全 miss；125 `all(p in cache)` 让缓存形同虚设；126 窗口计数每拍 1688 ms 才是真瓶颈。
-- 2026-11-21 18:24 **Monitor 前端与节拍修复 commit 4e40a24**（`feature/AI_monitor`，`rev-list --count` = 280）；本条的 hash 照规则在下一批补记。未 push。
-- 2026-11-21 18:40 **分页标签（主界面 / monitor / about）开工并验证 3 轮全 PASS**：三页共用一份顶栏（`tabs.css`+`tabs.js`，当前页高亮由 `location.pathname` 决定），新页 `about.html` + 新路由 `@app.get("/about")`，`web.py` 新增 `app.mount("/static", StaticFiles(...))`；design v3.1 → **v3.2**（先归档 `ai_buckup/design.md_2026-11-21-18-27-30.md`），§6 补第 10 条「必须真开浏览器看渲染与 console」。
-  3 轮证据照实：轮 1 `顶栏第1子节点=true`+三标签+主界面高亮+padding 38px+console 无 error（主界面排版未压坏）；轮 2 `URL=/monitor`+高亮跟着+资源条填上（提交 25815·已用 22559·可用 3255·物理 54%·CPU 3.5%）+服务行 3；轮 3 `URL=/about`+表 5/6/8 行+未测条 3+`tokens/s 未埋`在场+回切 `URL=/` 高亮回主界面。截图 `C:\Users\楼听\Downloads\tabs_index.png`、`tabs_about.png`。
-  **本批自曝第 128-130 处**：128 凭 grep 摘要拼长锚点，头部替换命中 0（改成按行索引替换才成）；129 重犯第 120 处——计数器挂在推送开始之后，读到 0 拍是假象；130 往不存在的目录写文件（ENOENT）。
-- 2026-11-21 18:41 **分页标签 commit ac65d39**（`feature/AI_monitor`，`rev-list --count` = 282，tree.md 715 文件同步重建）。本条 hash 照规则下一批补记。未 push。
-- 2026-11-21 18:42 **need_user Q45 commit a2c9d15**（count 284）；本条 hash 照规则下一批补记。未 push。
-- 2026-11-21 19:08 **分页标签三条修改（全中文 + 仿 Chrome）并验证 3 轮全 PASS**：第 1 条「点击无法切换」根因照实坐实——你的 jarvis 跑旧代码，`fetch("/static/tabs.js")` 真状态码 **404**、顶栏不存在（`body` 第 1 子节点无 `.dsh-tabs`），不是顶栏代码坏（沙箱 7861 新代码 3 次点击 URL/高亮都跟着走）。
-  标签改全中文「主界面 / 监视界面 / 相关页面」（路由 `/` `/monitor` `/about` 不变），`about.html` 的 title/h1 也全中文；外观仿 Chrome：条 36 px 底 `rgb(21,15,31)`，标签圆角 `11px 11px 0 0`、高 30 px、非当前页底 `rgb(36,26,49)`、当前页粉渐变 + 深色字、8 px 圆点。design v3.2 → **v3.3**（先归档 `ai_buckup/design.md_2026-11-21-18-59-49.md`）。
-  **本批自曝第 131-133 处**：131 我把 network 的 `status 0` 当 404 证据（不成立，resource-timing 不暴露状态），改 `fetch` 取真状态码；132 正则塞进探针字符串把 TS 解析器炸了；133 `args` 通道没注入（`arguments[0]` undefined），改用字面量。另照实记：改静态页后浏览器给缓存旧页，**刷新后复测**才算数。
-- 2026-11-21 19:09 **仿 Chrome 标签页批 commit 47ffef0**（`feature/AI_monitor`，count 286，tree.md 721 文件同步重建）。本条 hash 照规则下一批补记。未 push。
+# Progress — 跨会话进度台账（compact，保留最近三段原文与全部 Git 提交记录）
 
-## 2026-11-22 11:14 会话追加（jarvis 真会话验收 + 根因修复）
+- 归档动作照实记（2026-11-22-18-30）：本文件 105 行 > 100 → 备份到 `ai_buckup/progress.md_2026-11-22-18-30-00.md`（105 行全量），本文件只留最近三段原文与全部「Git 提交记录」，不删历史内容。
+- 更早段照实见归档件（11:14 会话追加段、Monitor 六条改造段的前半、自曝 147-191 的要点、`81a0f6e`/`a105727`/`d41f726` 三条提交记录上下文）。
+- 自曝编号照实连续，下一条从 239 起。
 
-- **真会话 0 推送根因**：`services.py` `listen_pids` 缓存命中分支写死 `_net_cache["d"][p]`，端口没在听（TTS 未起/重启窗口期）每拍抛 `KeyError(9880)`（**自曝第 147 处**）。修：命中分支只返回缓存里存在的端口。
-- **自曝第 154 处**：把「启动 + 轮询」塞进一个 pwsh 调用，超时被提升为后台作业（返回 `kind:"promoted"`，没有 `stdout`）→ `Cannot read properties of undefined (reading "text")`。我一开始误判成语法炸，照实更正根因。
-- **自曝第 149-151 处**：pwsh 直连 `ClientWebSocket` 探测连错三轮——类型名打错（`[Th=CancellationToken]`）、`SendAsync` 少参数、传整数组绑不上（要 `ArraySegment[byte]`）；修后 16 条里 15 条是 M（中位 1.0 s）。
-- **自曝第 153 处**：用 `snap["lamps"]` 当锚点插入，它在循环里也存在 → 带进 12 空格缩进，`py_compile FAIL`。读现场修缩进后 OK。
-- **自曝第 157-159 处**：为做逐客户端隔离写了占位伪代码（`and_false`）炸 TS 解析器；随后在 `batch = []` 前插 `try:` 却没有配套 `except`（必语法炸），而且 `as e2` 落到了**第一个** `except Exception:`（`_broadcast_to_ws` 里，无关函数）。按行索引整块重写后 `py_compile OK`。教训照实：改代码块要用行索引整块替换，不能用「看起来唯一」的锚点。
-- **自曝第 158 处（真 bug）**：`web.py` 发送失败的 `except Exception:` 没有 `as e`，行内 `repr(e)` 用的是外层已被 Python 回收的 `e` → 发送失败时 `NameError`。改成 `except Exception as e2` + 落环。
-- **自曝第 160-163 处**：真会话量节拍连读 0 拍全是我的假象——标签页被会话重置成 `about:blank`、计数器挂在数据到达之后、挂在重连前的旧 socket。挂 `addEventListener` 到**当前** `ws` 后 32 s 计 27 拍、累计 49 拍，中位 1.0 s。教训照实记进测试批次的 opinion。
-- 顺带加取证口（照实命名，不发明）：`GET /api/monitor_logs` 只读取日志环、`snap["clients"]` + `snap["client_info"]`（逐客户端 iv/cursor/socket id）、每 10 拍记「处理客户端」一条、发送失败落环。
-- **真会话验收 3 轮 PASS/部分 PASS**：顶栏全中文+真切换+console 无 error、1 s 节拍（中位 1.0/均值 1.1/最大 2.7 = TTL 重扫）、隐藏页降 30（隐藏 40 s 0 拍）、日志折叠 `none`↔`block`、关闭按钮 confirm 取消不杀进程；「关窗全关」端口全消、自起 pid 15276/9608 消失，`SHUT_LOG` 不存在 → **逐条落盘未证实**。
-- 落盘：`records/2026-11-22-11-06-00.md`、`todo.md` 勾条、`tests/2026-11-22-11-04-00_real_session/record_1..3.md + opinion.md`、`tests/opinion.md` 追加。
+
+
+## Git 提交记录（照实全量，含归档时被切掉的 3 条）
 
 - 2026-11-22-11-16-00 `81a0f6e` fix(monitor): 修 Monitor 推送链根因并落盘真会话验收（自曝 147、149-163；已本地 commit，未 push）
 - 2026-11-22-11-17-00 `a105727` docs(progress): 追加 81a0f6e 提交记录与自曝段（已本地 commit，未 push）
-- **自曝第 164 处**：我引用了**还没写**的 `.tmp/commit_msg31.txt` 去 `commit -F` → `could not read log file`。规矩照实：消息文件必须先写再提交。
-- **自曝第 165 处**：真会话探针在 `CONNECTING` 时 `ws.send` → `InvalidStateError`，让 15 s 窗口读成 0 拍。量 WS 节拍要等 `readyState=1` 再发 config，并以页面渲染出的数据为证据。
-- 重启后复测照实：`标签=主界面/监视界面/相关页面 ｜ 高亮=主界面 ｜ 条高=36 ｜ 底=rgb(21,15,31)`、点击三条 URL 真变（`/about` title 全中文）、console(含error) 0、累计 18 拍、发送失败 0、异常 0、窗口=1。
 - 2026-11-22-11-21-00 `d41f726` docs(tests): 追加重启后健康复测与自曝 164-165（已本地 commit，未 push）
+- 2026-11-22-13-16-00 `23fdf38` feat(monitor): Monitor 六条改造（自曝 169–191；已本地 commit，未 push）
+- 2026-11-22-15-06-00 `ebe1d80` feat(monitor): 五处改造（自曝 193–221；已本地 commit，未 push）
+
 
 ## 2026-11-22-13-12 · Monitor 六条改造（你 11:48 逐字六条）
 
@@ -74,7 +51,7 @@
 
 
 
-- 2026-11-22-13-16-00 `23fdf38` feat(monitor): Monitor 六条改造（自曝 169–191；已本地 commit，未 push）
+«已去重（第 240 处自曝：补回时重复）»
 
 
 - **补测照实（2026-11-22-13:24）**：第 5 条真链路 300 s 连续跑 → 面板 200 行（缓冲首 = 12:53:39 最新在上、末 = 12:46:13 最旧被截），`jarvis.log` 1835 行全量落盘 → 第 5 条由 未测 转 **PASS**；一次瞬时读数 203 > 上限与复验 200 冲突，照实记第 192 处自曝（**未证实**，不猜）。第 2 条「报错在 cmd 看见」照实 **未测**（未构造真报错场景）。
@@ -90,4 +67,17 @@
 - 验收 3 轮全 PASS（`tests/2026-11-22-13-48-06_five_items/record_1..3.md + opinion.md`，累积已追加 `tests/opinion.md`）：第 1 轮真窗口截图 + 真滚轮（面板 `scrollTop` 随滚轮走、`follow` 切换、查看态 20 s 内 flush 计数 20 与末行 14:40:26 不变 = 冻结、滚到底 `follow=true` 新行落底部、三面板时间序倒置 0、200 行上限、灯 4、console 0）；第 2 轮 about computed + 真截图照出粉条/三层渐变/16 px 玻璃卡/金色 code；第 3 轮无客户端基线 6.296875 s CPU/60 s、有客户端 6.625 s/60 s → 增量 **0.328 s ≈ 0.55% 单核**，逐行延迟 0.5/0.9/均 **0.7 s**、60 s 21 chunk/21 行 → 照实**保留**实时推送（不算太耗性能）。
 - **未测照实照实写**：第 2 条「报错要在 cmd 看见」未构造真报错场景；真链路总用时需你在麦克风前（我不能说话）；`SHUT_LOG` 逐条落盘 + 只杀自起 pid 正面路径加防护后未复测。
 - `need_user.md` 照实未答照实不动（Q46/Q45/Q44/Q43/Q41/Q19/Q18/Q21–Q24/Q30/Q31-1/Q36/Q39/Q40）。
+
+«已去重（第 240 处自曝：补回时重复）»
+
+## 2026-11-22-15-45-55 · 第 17 轮 3 条（滚动条照 home、About 五块写入 design、录音法录异常触发）
+
+- 落盘在先：`records/2026-11-22-15-45-55.md`（3 条原话 + 理解 + 设计影响 + 测试安排 + 状态）、`todo.md` 第 98 行；`design.md` 先归档 v3.5 到 `ai_buckup/design.md_2026-11-22-15-45-55.md` 后升 **v3.6**（§6 第 17 条滚动条改 home 口径、新增第 20 条录音法、新增 **§9 About 内容 5 块 a–e**）。照实记第 222 处自曝（连续两次）：第一次升版写入全没落上（改动只赋给内存数组、写盘用原始字符串），照实重做（数组 join 写盘）后复 grep 才落上（行 9 = v3.6 + 归档提示、更新时间 15-48）。
+- `jarvis/static/monitor.html`（202 行）与 `jarvis/static/about.html`（89 行）滚动条照实照抄 home 真口径（`index.html` 132-134、199-200）：`width:8px` + `linear-gradient(var(--pink),var(--rose))` + `border-radius:8px` + `track:transparent`；照实记第 223/224 处自曝（about 原先一条滚动条规则都没有；第一次替换把 thumb 的多行声明留在原地成悬空声明，CSS 残缺，照实删净后复验）。照实记 13:48 你贴的那段 CSS 入台账，15:45 你说「不符合 home 设计」→ 以 home 为准。
+- `jarvis/static/about.html`（100 行）正文照实重写成 5 块（a 模型与语音 / b 此电脑 / c 项目地址（远程 `origin https://github.com/huimengli/AI_Elysia` 照实只读不 push + 本机 `http://127.0.0.1:7860` 三页）/ d 介绍照实链路 / e 工具介绍照实取 `TOOL_MAP` 44 个真注册名分类），读数全部现采；照实记第 226 处自曝（第一次采机器读数采错：`NumberOfProcessors`=1 是 socket 数、GPU 取到虚拟驱动 `OrayIddDriver Device` 显存 0 MB，照实重采得物理 8 核 / 逻辑 16 核、AMD Radeon 780M 4095 MB，照实把虚拟驱动一并列出）。
+- 第 3 条照实复用真口径写两脚本：`.tmp/abnormal_capture_rounds.py`（喂 STT 落盘件）、`.tmp/abnormal_10s_recorder.py`（真麦 10 s 段，照实照抄 `wake.py` 90-96 行 `input=True` + `deploy_rounds.py` 逐件 3 实例 + `del`/`gc` + 5 s 冷却，阈值 0.75 不动）。照实记第 229-234 处自曝（`join` 写成 Python 语法、`stream_callback=None`、未 trim 锚点、4 空格缩进 `IndentationError`）与第 235-238 处（TS 反斜杠转义写坏两次、TS 属性名含括号、照 stdout 尾部把「保存 7 件」报成 5 件，照实从 json 全量核后追加更正段）。
+- 验收 3 轮全 PASS（`tests/2026-11-22-15-45-55_three_items/record_1..3.md + opinion.md`，累积追加 `tests/opinion.md`）：第 1 轮三面板滚动条实测宽 **8 px**、thumb `linear-gradient(rgb(248,169,196), rgb(126,63,102))`、圆角 **8px**、track 透明、旧口径声明残余 0、真页截图照出粉色 thumb、console 0；第 2 轮 about 5 块真页全在 + 16 关键字全命中 + console 0（照实记 about 无溢出测得滚动条宽 0，不谎称可见）；第 3 轮 20 段 **保存 7 件 / 丢弃 13 段**、3 实例全越线 **5 段**（峰 0.760/0.768/0.767/0.794/0.777），jarvis 真触发 8 次（15:44-18:08，越线峰 0.751-0.822，触发后转录照实空/aborted）→ 打字声与手机播放小说照实能让 v1.3 越线（与 HB-051 定性一致），7 件照实补登 `need_audio.md`（第 12 节 + 照实补登节）。
+- **未测照实照实写**：越线 7 件离线只跑 1 遍（未做 3 轮）；这些件是否让 jarvis 真触发需你在麦克风前复现（我不能说话）；「报错要在 cmd 看见」与真链路总用时照实仍未测。
+- `need_user.md` 照实未答照实不动（Q46/Q45/Q44/Q43/Q41/Q19/Q18/Q21-Q24/Q30/Q31-1/Q36/Q39/Q40）。
+
 

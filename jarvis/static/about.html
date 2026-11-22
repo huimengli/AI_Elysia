@@ -9,6 +9,11 @@
 <style>
   /* 第 4 条（照你 13:48 逐字「about页面的风格也要参考home修改」）：同一套 CSS 变量、
      同一份多层径向渐变背景、同一字体，表格/段落做成 home 的玻璃卡。 */
+/* 第 1 条（2026-11-22-15:45 照你原话「滚动条不对,颜色不符合home设计,改一下」）：照实照抄 home（index.html 132-134、199-200）——宽 8px、thumb 粉→玫红渐变、圆角 8px、track 透明。 */
+*::-webkit-scrollbar{width:8px;}
+*::-webkit-scrollbar-thumb{background:linear-gradient(var(--pink),var(--rose));border-radius:8px;}
+*::-webkit-scrollbar-track{background:transparent;}
+
   :root{
     --pink:#F8A9C4; --pink-2:#FFD8E8; --rose:#7E3F66; --lilac:#C9B7E0; --gold:#F2C9A8;
     --bg0:#171021; --bg1:#1d1428; --glass:rgba(255,255,255,0.055); --glass-2:rgba(255,255,255,0.10);
@@ -44,41 +49,52 @@
 </head>
 <body>
 <h1>相关页面 — 照实的项目现状（不写没实现过的功能）</h1>
-<h2>组件与端口（照实）</h2>
-<table><tr><th>组件</th><th>端口</th><th>起法</th></tr>
-<tr><td>jarvis (FastAPI)</td><td>7860</td><td>你起 / `start_all.bat` / `start_all_in_one.bat`</td></tr>
-<tr><td>llama.cpp</td><td>8080</td><td>单窗口版由 jarvis 作父进程起（`-c 24576` 未动）</td></tr>
-<tr><td>GPT-SoVITS</td><td>9880</td><td>单窗口版由 jarvis 作父进程起</td></tr>
-<tr><td>Umi-OCR</td><td>50015</td><td>外部起（面板标「外部起 · 无日志接管」，无关闭按钮）</td></tr>
-</table>
-<h2>唤醒与识别（照实）</h2>
-<table><tr><th>项</th><th>值</th></tr>
-<tr><td>唤醒模型</td><td><code>aili_xiya_v1.3.onnx</code></td></tr>
-<tr><td>阈值</td><td>0.75（<span class="bad">不可改</span>，照你定的规矩）</td></tr>
-<tr><td>STT 引擎</td><td>whisper（`stt.engine: whisper`，不可改）</td></tr>
-<tr><td>真人 20 轮判据</td><td>近音 ≤3：v1.3 真人 14-15（均 14.15，20/20 满足），近音 3、无关 0 → 判据 ≤3 <span class="bad">未达</span>；v0.9b 真人 4.00（0/20 满足）</td></tr>
+
+<h2>a. 模型与语音等信息（照实）</h2>
+<table><tr><th>项</th><th>照实值</th></tr>
+<tr><td>唤醒模型（现役）</td><td><code>openWakeWord/output/aili_xiya_v1.3/aili_xiya_v1.3.onnx</code>；<code>config.yaml</code> 里列有 v0.3 / v0.9 / v0.9b / v1.0c / v1.3 五个选项</td></tr>
+<tr><td>阈值 / 分块</td><td><code>threshold: 0.75</code>（<span class="bad">不可改</span>）、<code>chunk_size: 1280</code></td></tr>
+<tr><td>真人 20 轮判据</td><td>v1.3 真人 14–15（均 14.15，20/20 满足），近音 3、无关 0 → 判据「近音 ≤3」<span class="bad">未达</span>；v0.9b 真人 4.00（0/20 满足）</td></tr>
 <tr><td>跨唤醒词串扰</td><td>v1.3 总 28（小度小度 26 / 16 轮触发，峰 0.797）；v0.9b 总 36（小艺 9，峰 0.799）→ Q42 照数选 v1.3；重训练不进（你的规则）</td></tr>
+<tr><td>键盘/打字声照实会触发</td><td>同一把尺 3 轮：v1.3 1 轮 1 次（峰 0.792）；v0.9b 3 轮全出现（峰 0.809 = 真唤醒量级）。你 2026-11-22-15:45 照实「刚打字的声音触发了一次」→ 继续用你定的 10 秒录音法采异常触发样本（<code>design.md</code> §6 第 20 条），<span class="bad">不改阈值 0.75、不改 stt.engine</span></td></tr>
+<tr><td>STT</td><td><code>stt.engine: whisper</code>（<span class="bad">不可改</span>）</td></tr>
+<tr><td>LLM</td><td>llama.cpp <code>:8080</code>，<code>-c 24576</code>（未动）</td></tr>
+<tr><td>TTS</td><td>GPT-SoVITS <code>:9880</code>（含合成与播放全程计时）</td></tr>
+<tr><td>F 块口径</td><td>照实 <code>wake / asr / llm / tts / 总用时</code>；<code>tokens/s</code> <span class="bad">未埋</span>（要 tokenizer）</td></tr>
 </table>
-<h2>Monitor 埋点口径（照实）</h2>
-<table><tr><th>指标</th><th>口径</th></tr>
-<tr><td><code>asr_secs</code></td><td>一次转调耗时</td></tr>
-<tr><td><code>llm_secs</code> / <code>llm_chars</code></td><td>LLM 处理耗时 / 回复字数</td></tr>
-<tr><td><code>tts_secs</code></td><td>含合成与播放全程</td></tr>
-<tr><td><code>wake_peak</code></td><td>真越线时的 score</td></tr>
-<tr><td>tokens/s</td><td><span class="bad">未埋</span>（要 tokenizer），F 块记的是耗时与字数</td></tr>
-<tr><td>工具统计（E 块）</td><td>次数 / 失败 / 均耗时</td></tr>
-<tr><td>缓存 TTL（照实）</td><td>netstat 2 s、我起窗口数 5 s、探针 1 s → 监听 pid 陈旧 ≤2 s、窗口数 ≤5 s</td></tr>
+
+<h2>b. 此电脑信息（照实现采，不写死）</h2>
+<table><tr><th>项</th><th>照实读数</th></tr>
+<tr><td>CPU</td><td>AMD Ryzen 7 7840U w/ Radeon 780M Graphics（物理 8 核 / 逻辑 16 核）</td></tr>
+<tr><td>内存</td><td>23.8 GB（面板「提交 / 物理 / 可用」与 <code>snapshot()</code> 同源，现读）</td></tr>
+<tr><td>GPU</td><td>AMD Radeon 780M Graphics，显存 4095 MB（照实另有一块虚拟显示驱动 <code>OrayIddDriver Device</code> 显存 0 MB，非真显卡）</td></tr>
+<tr><td>系统</td><td>Windows 10 专业版 10.0.19045</td></tr>
+<tr><td>Python</td><td>3.12.0（<code>.venv</code>；GPT-SoVITS 用 <code>.venv-gsv</code>）</td></tr>
 </table>
-<h2>控制授权（照实）</h2>
-<p>面板只关**本进程起的** pid（名单在 <code>.tmp/jarvis_child_pids.json</code>）；外部 pid 请求被拒（「不是本进程起的」）；taskkill 真实输出回显进日志环形缓冲（2,000 行/服务）。关窗全关走 <code>shutdown()</code>，<span class="bad">未测</span>（CTRL_CLOSE_EVENT 约 5 s 时限，沙箱不可测）。</p>
-<h2>台账位置（照实）</h2>
-<p><code>progress.md</code> 进度台账 · <code>tree.md</code> 结构快照 · <code>records/</code> 需求记录 · <code>tests/</code> 测试（每轮 record_i.md + 批次 opinion.md + 累积 tests/opinion.md） · <code>hard_bug.md</code> 阻塞问题 · <code>need_user.md</code> 需你确认的 Q · <code>design.md</code> 总设计（当前 v3.5，旧版在 <code>ai_buckup/</code>）。</p>
-<h2>照实的未测项</h2>
-<ul class="note">
-<li>真会话 1 s 节拍达标（实测中位 1.9 s，缓存后稳态快照 50→0 ms，要重启 jarvis 才生效）</li>
-<li>隐藏页降 30 s 的实际省电、日志折叠、关闭按钮 confirm、关窗全关只杀自起 pid</li>
-<li>真端到端语音（7860/8080/9880/9333 未监听时只有 50015 在听）与 20 轮轮 11-20 需你在麦克风前</li>
-</ul>
+
+<h2>c. 项目地址（照实）</h2>
+<table><tr><th>地址</th><th>照实值</th></tr>
+<tr><td>远程（照 <code>git remote -v</code>）</td><td><code>origin https://github.com/huimengli/AI_Elysia</code>；照实规矩：<span class="bad">Agent 严禁 git push</span>，现状态是本地 commit、未 push</td></tr>
+<tr><td>本机启动地址</td><td><code>http://127.0.0.1:7860</code> — 主界面 <code>/</code>、监视界面 <code>/monitor</code>、相关页面 <code>/about</code>（三条路由都带 <code>Cache-Control: no-store</code>）</td></tr>
+<tr><td>起法</td><td><code>start_all.bat</code>（4 窗口，行为与今天一致）/ <code>start_all_in_one.bat</code>（单窗口，见 <code>design.md</code> §8）；端口照实 7860（jarvis）/ 8080（llama.cpp）/ 9880（GPT-SoVITS）/ 50015（Umi-OCR，外部起）</td></tr>
+</table>
+
+<h2>d. 此项目的介绍（照实链路）</h2>
+<p>唤醒词「爱莉希雅」→ STT（whisper）→ llama.cpp（<code>:8080</code>）→ GPT-SoVITS（<code>:9880</code>）播放。<code>jarvis</code>（FastAPI <code>:7860</code>）做 Monitor：日志中枢（环 2,000 行/服务 + 全量写 <code>.tmp/&lt;name&gt;.log</code>）、单窗口托管、指定关闭（只关本进程起的 pid，名单 <code>.tmp/jarvis_child_pids.json</code>；外部 pid 请求被拒「不是本进程起的」）、外部起的进程标「外部起 · 无日志接管」不造假日志；顶栏三页共用一份 <code>tabs.css</code>/<code>tabs.js</code>（主界面 / 监视界面 / 相关页面，仿 Chrome 标签）。台账照实：<code>records/</code> 需求记录、<code>tests/</code> 测试（每轮 record_i.md + 批次 opinion.md + 累积 tests/opinion.md）、<code>progress.md</code>、<code>tree.md</code>、<code>design.md</code>（现 <b>v3.6</b>，旧版在 <code>ai_buckup/</code>）、<code>hard_bug.md</code>、<code>need_user.md</code>。提交照 Conventional Commits（英文 type/scope + 中文 subject），身份 绘梦璃，<span class="bad">从不 push</span>。</p>
+
+<h2>e. 此项目支持的工具介绍（照实取 <code>jarvis/tools/router.py</code> 的 <code>TOOL_MAP</code>，共 44 个注册名，不发明名字）</h2>
+<table><tr><th>类别</th><th>注册名（照实）</th><th>做什么</th></tr>
+<tr><td>网页</td><td><code>web_search / fetch_page / open_url / open_site / navigate_url / read_page / find_on_page / click_page_text / play_first_video / play_music / music_control / manage_browser_windows / get_weather / get_time</code></td><td>打开浏览器搜索页（baidu 优先，被块则换）、取 URL 纯文本、在 jarvis 自己的窗口里打开站点与播放、页内找字/点字、播结果页第一个可播项并核验、播放控制（pause/resume/close，只作用于自己的窗口）、窗口数管理</td></tr>
+<tr><td>应用与进程</td><td><code>open_app / kill_process</code></td><td>按名字起应用、按名字杀进程</td></tr>
+<tr><td>桌面视觉与鼠标</td><td><code>read_screen / describe_screen / find_on_screen / click_at / scroll_screen / move_mouse / screenshot</code></td><td>截屏后交给多模态模型回答（OCR 读字符，中文不可靠，照实写明）、按屏幕坐标点/滚/移、存截图</td></tr>
+<tr><td>窗口与输入</td><td><code>focus_window / get_open_windows / type_text / press_key / media_control</code></td><td>按标题聚焦窗口、列已开窗口、打字、按键、媒体键</td></tr>
+<tr><td>文件与代码</td><td><code>read_file / write_file / list_files / run_python</code></td><td>读/写/列文件，跑一段 Python</td></tr>
+<tr><td>剪贴板与系统</td><td><code>get_clipboard / set_clipboard / set_volume / get_volume / get_system_info / set_brightness / lock_screen / power_command</code></td><td>剪贴板读写、音量、系统信息、亮度、锁屏、电源命令</td></tr>
+<tr><td>通知与定时</td><td><code>show_notification / set_timer</code></td><td>系统通知、定时提醒</td></tr>
+<tr><td>子任务</td><td><code>jarvis/tools/subagent.py</code>（本地模型 <code>qwen3:8b</code>）</td><td>把子任务委派给本地 Ollama 模型做并行/更省的处理</td></tr>
+</table>
+<p class="note"><b>未测照实照实写</b>：真端到端语音轮 11–20 需你在麦克风前（我不能说话）；「报错要在 cmd 看见」未构造真报错场景；<code>SHUT_LOG</code> 逐条落盘 + 只杀自起 pid 的正面路径加防护后未复测；Umi-OCR（50015）外部起、无日志接管、无关闭按钮。</p>
+
 <script src="/static/tabs.js"></script>
 </body>
 </html>
