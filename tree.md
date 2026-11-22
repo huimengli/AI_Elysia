@@ -653,6 +653,7 @@
 - tests/2026-11-22-19-22-36_log_wrap/record_1.md
 - tests/2026-11-22-19-22-36_log_wrap/record_2.md
 - tests/2026-11-22-19-22-36_log_wrap/record_3.md
+- tests/2026-11-22-19-22-36_log_wrap/record_4.md
 - tests/__init__.py
 - tests/opinion.md
 - tests/test_context.py
