@@ -115,3 +115,7 @@
 - 落盘：`records/2026-11-22-11-06-00.md`、`todo.md` 勾条、`tests/2026-11-22-11-04-00_real_session/record_1..3.md + opinion.md`、`tests/opinion.md` 追加。
 
 - 2026-11-22-11-16-00 `81a0f6e` fix(monitor): 修 Monitor 推送链根因并落盘真会话验收（自曝 147、149-163；已本地 commit，未 push）
+- 2026-11-22-11-17-00 `a105727` docs(progress): 追加 81a0f6e 提交记录与自曝段（已本地 commit，未 push）
+- **自曝第 164 处**：我引用了**还没写**的 `.tmp/commit_msg31.txt` 去 `commit -F` → `could not read log file`。规矩照实：消息文件必须先写再提交。
+- **自曝第 165 处**：真会话探针在 `CONNECTING` 时 `ws.send` → `InvalidStateError`，让 15 s 窗口读成 0 拍。量 WS 节拍要等 `readyState=1` 再发 config，并以页面渲染出的数据为证据。
+- 重启后复测照实：`标签=主界面/监视界面/相关页面 ｜ 高亮=主界面 ｜ 条高=36 ｜ 底=rgb(21,15,31)`、点击三条 URL 真变（`/about` title 全中文）、console(含error) 0、累计 18 拍、发送失败 0、异常 0、窗口=1。
