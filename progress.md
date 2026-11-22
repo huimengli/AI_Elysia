@@ -81,3 +81,5 @@
 - `need_user.md` 照实未答照实不动（Q46/Q45/Q44/Q43/Q41/Q19/Q18/Q21-Q24/Q30/Q31-1/Q36/Q39/Q40）。
 
 
+
+- 2026-11-22-18-50-00 `7c0beae` feat(monitor,about): 滚动条照 home 真口径、about 五块内容照实写入 design v3.6、录音法录到异常触发段（自曝 222–243；已本地 commit，未 push）
