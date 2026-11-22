@@ -113,3 +113,5 @@
 - 顺带加取证口（照实命名，不发明）：`GET /api/monitor_logs` 只读取日志环、`snap["clients"]` + `snap["client_info"]`（逐客户端 iv/cursor/socket id）、每 10 拍记「处理客户端」一条、发送失败落环。
 - **真会话验收 3 轮 PASS/部分 PASS**：顶栏全中文+真切换+console 无 error、1 s 节拍（中位 1.0/均值 1.1/最大 2.7 = TTL 重扫）、隐藏页降 30（隐藏 40 s 0 拍）、日志折叠 `none`↔`block`、关闭按钮 confirm 取消不杀进程；「关窗全关」端口全消、自起 pid 15276/9608 消失，`SHUT_LOG` 不存在 → **逐条落盘未证实**。
 - 落盘：`records/2026-11-22-11-06-00.md`、`todo.md` 勾条、`tests/2026-11-22-11-04-00_real_session/record_1..3.md + opinion.md`、`tests/opinion.md` 追加。
+
+- 2026-11-22-11-16-00 `81a0f6e` fix(monitor): 修 Monitor 推送链根因并落盘真会话验收（自曝 147、149-163；已本地 commit，未 push）
