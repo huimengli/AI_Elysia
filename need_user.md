@@ -1,3 +1,5 @@
+<!-- 已归档于 ai_buckup/need_user.md_2026-11-22-22-10-00.md（Q47 已答，第 3 节归档动作）；正文保留，未删任何未答 Q -->
+
 # Need User（需用户确认的问题）
 
 <!-- 已归档于 ai_buckup/need_user.md_2026-11-12-12-20-21.md（Q5-Q13 原始问答，status: done） -->
