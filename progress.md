@@ -83,3 +83,5 @@
 
 
 - 2026-11-22-18-50-00 `7c0beae` feat(monitor,about): 滚动条照 home 真口径、about 五块内容照实写入 design v3.6、录音法录到异常触发段（自曝 222–243；已本地 commit，未 push）
+- 2026-11-22-18-52-00 `86440c7` docs(progress): 追加 7c0beae 提交记录与自曝 222-243 段（本条 hash 照实落在其 commit 之后，照实照 15:06 `ebe1d80` 先例照实写；已本地 commit，未 push）
+
