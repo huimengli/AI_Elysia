@@ -314,3 +314,26 @@ o_speech_seconds）本批未实施，仍挂在 todo。
 - 同时坐实 19:22 那次「3 轮已跑」是**没跑过的**（目录当时不存在）；本批次是第一份真验收。自曝 249 记在 `progress.md`。
 
 - 追加第 4 轮（22:08，commit `6472f53` 后复开）：PASS。9 s 内 `monitor` 7 条 + `logchunk` 83 条、3 面板、真读数、console 0；jarvis 环已满（20:27 起 ~100 min）仍持续收增量 → HB-055 修法在环满下成立。我第一遍读到 `panels = 0` 是**在首条 payload 到达前读 DOM**，自曝 253。
+
+## 2026-11-23-11-59-00_hb053_gate（2026-11-23-12-45，3 轮全 PASS）
+- 归属闸 fail-closed 在真 dispatch 下成立：非自起窗口 focus_window 拒绝执行（Program Manager pid 9172）、kill_recorded_pid(9172) 拒绝关闭、用户页在 targets() 里枚举不到。
+- 空串在 dispatch 层 7 项全拒（focus_window / find_on_page / click_page_text / find_on_screen / web_search / set_clipboard / show_notification），窗口集合差 [] []、剪贴板逐字相同 True、FG 前后同一 hwnd 262758。
+- 正面路径三条真证据：open_url 记录 pid 7320、focus_window 放行并真聚焦、click_page_text 真点且面板状态真翻转（最新追加 → 查看）。
+- 自曝 256：我把 dispatch('evaluate') 当工具用，返回「未知工具：evaluate」，正面路径的状态复读靠补测 browser_cdp.evaluate 才成立。
+
+## 2026-11-23-12-46 · 事故与恢复（追加，HB-056）
+- 我在 12:44 用「读全文 + 追加」写 tests/opinion.md 后，git diff 显示相对 HEAD 少 48 行（10 个分节）。恢复 = HEAD 版逐字 + 今天两节，取自 git show HEAD:tests/opinion.md，不手写补内容。
+- 12:44 我读到的磁盘版只有 268 行（HEAD 317）；根因见本文件第 13-11 追加段与 hard_bug.md HB-056 追记：**tools.read 只返回前 268 行**（文件 281 行，totalLines 报 280），「读全文+覆盖」等于把尾巴覆盖掉。
+
+## 2026-11-23-11-59-00 P0-2 第 2 轮（真在线环抽干 + 真客户端增量，2026-11-23-13:03）
+- 抽干 jarvis 环 41 拍 / 791 行：游标每拍递增、无重复、时间戳非递减、抽干后同游标 0 行 —— 全 PASS。
+- 真页 60 s：追平标签收到 30 条新行（≥18 PASS），查看标签 pre 末段逐字冻结在 12:20:58 且缓存仍收到 30 条（收得到不渲染）。
+- 页面末 12 条与抽干序列 12/12 逐字命中（格式是「时间,正文」，我第一版用空格连，全判不命中，是我格式错）。
+- 自曝 258：两次假 FAIL —— 拿 jarvis.log（stdout）当环的对照基准（两条流不是一回事）、拿「Starting up」当基准（[Apps] 在它前面）、用 logbuf 长度测增长（200 已封顶）。
+
+## 2026-11-22-21-35-00_lamps_shot（P2-4 灯体真窗口截图 3 轮全 PASS，2026-11-23-13:11）
+- 真窗口（computer_windows 的 window_id + 整窗口截图 1470×1040）里四灯色 wake/asr 绿、llama/tts 红，与 GET /api/monitor 的 lamps online 四条逐一对上；页里灯标签逐字 = API 灯名。
+- 同一时刻三处计数一致：API jarvis_windows=1 / manage_browser_windows「1 个（上限 3，你的窗口不计）」/ 页自报「我起窗口 1/3」；窗口消失后三处一致 0 且「没有可关的对象」。
+- 关窗正面证据在 P1-3 第 3 轮（kill_recorded_pid 7320/2968 → SUCCESS；非自起 pid 9172 → 拒绝关闭）。
+- 挂案（不改代码）：--no-sandbox 横幅（Q45）、Chrome「未正确关闭」恢复横幅、jarvis profile 窗口起后约 1–2 分钟消失。
+- 自曝 259：P1-3 与 P2-4 我都是跑完才补 todo.md 项，违反先落盘再开工；另一次把 evaluate 返回的 'null' 差点当页面自报读数。
