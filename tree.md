@@ -1,8 +1,8 @@
 # 项目结构快照（tree.md）
 
-<!-- 重建时间：2026-11-23-14-31，git ls-files + 非忽略文档类 untracked；旧版归档 ai_buckup/tree.md_2026-11-23-14-31-00.md -->
+<!-- 重建时间：2026-11-23-14-43，git ls-files + 非忽略文档类 untracked；旧版归档 ai_buckup/tree.md_2026-11-23-14-43-00.md -->
 
-共 800 个文件。
+共 802 个文件。
 
 ## `(根)`（18 个）
 
@@ -25,7 +25,7 @@
 - `todo.md`
 - `tree.md`
 
-## `ai_buckup`（70 个）
+## `ai_buckup`（72 个）
 
 - `ai_buckup/design.md_2026-11-17-10-24-25.md`
 - `ai_buckup/design.md_2026-11-17-10-44-33.md`
@@ -36,6 +36,7 @@
 - `ai_buckup/design.md_2026-11-22-13-48-06.md`
 - `ai_buckup/design.md_2026-11-22-15-45-55.md`
 - `ai_buckup/design.md_2026-11-22-19-22-36.md`
+- `ai_buckup/design.md_2026-11-23-14-42-00.md`
 - `ai_buckup/hard_bug.md_2026-10-13-17-45.md`
 - `ai_buckup/hard_bug.md_2026-11-13-00-12-17.md`
 - `ai_buckup/hard_bug.md_2026-11-17-13-26-51.md`
@@ -97,6 +98,7 @@
 - `ai_buckup/tree.md_2026-11-23-14-09-00.md`
 - `ai_buckup/tree.md_2026-11-23-14-25-00.md`
 - `ai_buckup/tree.md_2026-11-23-14-31-00.md`
+- `ai_buckup/tree.md_2026-11-23-14-43-00.md`
 
 ## `dsh-my-presets`（2 个）
 
