@@ -69,3 +69,9 @@
 - 今天的落地共 6 个 commit（不依赖你的答案）：`9edf316` P2-3 20 轮全 PASS、`91395d3` progress/todo 归档压缩（P3-2）、`9092cbc` design v3.8 §10（P2-2 先设计后开工）、`381828c` 部署侧 3 轮补「记未达」（键盘噪音 2/3 轮单实例越线记 FAIL）、`77170aa` Q48 状态更新 + 补归档件、`bf5348d` P1-2 只读审查落盘。全部本地提交，未 push。三服务仍全停。
 - `f1c09c9` docs(AI): Q48 第三次提问超时落盘（2 个文件；本地提交，未 push）
 - 自曝第 264 处（2026-11-23-15:08）：提问工具我踩两次形状 —— ①直接当工具名调（`unknown tool "ask_user_question"`，只能从 `run_code` 里 `tools["ask_user_question"]` 调）；②在 `run_code` 里把程序预算给成 300000 ms 等于提问窗口 5 分钟，**程序比提问先超时**（`execution deadline reached (300000ms)`），提问投递了、答案收不回，我误以为「窗口给足就能收答」。教训：**提问窗口必须小于程序预算**，答案要在程序里 `await` 到就落盘；超时不等于用户没答（用户可能在聊天里后答），我照实写「三次超时未答」，不写「用户拒绝」。
+- `eb9fef2` docs(AI): 自曝第 264 处 + hash 追记（1 个文件；本地提交，未 push）
+
+## 追加（2026-11-23-15:33）· 三服务全起，四灯全绿（Q48 执行开始）
+- 照 `services.py:26-44` 的实测命令起 llama（pid 18176，`:8080` 200）+ GPT-SoVITS api_v2（pid 6304，`:9880` 在听，根路径 404 属正常）+ 真 `jarvis.main`（`:7860`，`JARVIS_ONE_WINDOW=1`）。顺序照 `start_all_in_one.bat` 的口径：先起服务、后起 jarvis，让它认「外部起 · 无日志接管」，不抢管道、不杀它们。
+- 四灯逐字复核：wake 绿（`aili_xiya_v1.3.onnx / threshold 0.75`、listening true）、asr 绿（`faster-whisper small / cpu / zh（模型已加载=True）`）、llm 绿、tts 绿；`jarvis_windows=1`。启动 1.5 s 后有一次假唤醒（peak 0.791 越线 → 录音 2 s 无语音 `max rms=0.0021` → `Transcription empty`），照实记，与 `stt.py:265-267` docstring 记过的同族，不是模型坏了。
+- 自曝第 265 处：相对路径 + PowerShell `&` 被当模块名（`无法加载模块 'llm'`），两个作业 exit 1；改绝对路径才起。下一条从 266 起。
