@@ -1,8 +1,8 @@
 # 项目结构快照（tree.md）
 
-<!-- 重建时间：2026-11-23-14-09，git ls-files（tracked）+ 非忽略文档类 untracked；旧版归档 ai_buckup/tree.md_2026-11-23-14-09-00.md -->
+<!-- 重建时间：2026-11-23-14-25，git ls-files + 非忽略文档类 untracked；旧版归档 ai_buckup/tree.md_2026-11-23-14-25-00.md -->
 
-共 775 个文件。
+共 797 个文件。
 
 ## `(根)`（18 个）
 
@@ -25,7 +25,7 @@
 - `todo.md`
 - `tree.md`
 
-## `ai_buckup`（66 个）
+## `ai_buckup`（67 个）
 
 - `ai_buckup/design.md_2026-11-17-10-24-25.md`
 - `ai_buckup/design.md_2026-11-17-10-44-33.md`
@@ -93,6 +93,7 @@
 - `ai_buckup/tree.md_2026-11-12-11-20-31.md`
 - `ai_buckup/tree.md_2026-11-23-13-15-00.md`
 - `ai_buckup/tree.md_2026-11-23-14-09-00.md`
+- `ai_buckup/tree.md_2026-11-23-14-25-00.md`
 
 ## `dsh-my-presets`（2 个）
 
@@ -273,7 +274,7 @@
 - `records/JARVIS_STATE.md`
 - `records/PROJECT_SUMMARY.txt`
 
-## `tests`（431 个）
+## `tests`（452 个）
 
 - `tests/2026-11-08-14-12-32_cc/opinion.md`
 - `tests/2026-11-08-14-12-32_cc/record_1.md`
@@ -686,6 +687,27 @@
 - `tests/2026-11-22-19-22-36_log_wrap/record_2.md`
 - `tests/2026-11-22-19-22-36_log_wrap/record_3.md`
 - `tests/2026-11-22-19-22-36_log_wrap/record_4.md`
+- `tests/2026-11-22-21-35-00_crossing20/opinion.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_1.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_10.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_11.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_12.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_13.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_14.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_15.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_16.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_17.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_18.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_19.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_2.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_20.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_3.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_4.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_5.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_6.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_7.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_8.md`
+- `tests/2026-11-22-21-35-00_crossing20/record_9.md`
 - `tests/2026-11-22-21-35-00_lamps_shot/opinion.md`
 - `tests/2026-11-22-21-35-00_lamps_shot/record_1.md`
 - `tests/2026-11-22-21-35-00_lamps_shot/record_2.md`
