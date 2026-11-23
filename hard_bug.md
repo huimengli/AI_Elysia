@@ -198,3 +198,11 @@
 - **验法（可复现）**：`fs.readFile` 的行数 − `tools.read` 返回的行数 = 被吞的行数；本次 281 − 268 = 13，`tools.read` 返回的是**从头连续的前 268 行**（贪心对齐 0 缺失），即截断不是跳行。
 - **纪律（改法）**：累积文件（`tests/opinion.md`、`records/`、`hard_bug.md`、`need_user.md`）**只用 `fs.appendFile` 追加**；禁止「`tools.read` + `tools.write` 整份覆盖」；每次写完立刻 `git diff --numstat`，**删除行数必须为 0**。
 - **恢复核验**：恢复后 330 行，`git diff --numstat` = **13 增 / 0 删**（再插两节后 343 行，仍 0 删）。
+
+## HB-048 追记 · 2026-11-23-15:47 · 状态：**未修（open）** · 真机复现 2 次 + 一条新根因
+- **复现现场（逐字，`GET /api/monitor_logs?name=jarvis` 环）**：`15:36:23 Recording... → 15:36:25 [STT] Recording aborted. → capture saved (1 s) → Recorded 1.5s → Transcription empty`；`15:36:47 Recording... → 15:36:49 [STT] Speech detected (rms=0.0281) → Recording aborted. → capture saved (1 s) → 15:36:53 [You] 播放`。**录音被截到 1.5 s 这条在你今天真机里跑了 2 遍**（15:31 那轮录音 5.1 s 完整、无中止）。
+- **新根因（逐字，第一条）**：`15:36:21 [Duck] 没有暂停任何播放（CDP 连不上：CDP 端口 9333 连不上（没有我起的窗口带 --remote-debugging-port））`、`15:36:45` 同句再来一次。**播歌窗口没有调试端口 → Duck 无法暂停 B 站播放 → 播歌期间的录音必被中止标志截**。这条比 HB-048 第 4 项（CDP 随实例漂移）更硬：端口根本不在启动参数里。
+- **新根因（逐字，第二条）**：`15:33:35 [Wake] barge-in score=0.751 recording=False → barge-in candidate 1/2 (no abort yet)`、`15:34:04 score=0.771 → candidate 1/2 (no abort yet)`：播歌时她只数到 1 票，**需要 2 票才打断**；1.5 s 保护（`stt.py:286-294`）之后中止标志一置位就 `break`。
+- **转录面（逐字）**：`[You] 播放到箱。` + `[热词] 表 38 行，偏置=关` → `关键词「箱」` → 播了「青之箱 蓝箱 第二季」第7话（不是你要的歌）；`[Tool: web_search] 搜索「花海 歌曲 播放」`；`[ABORT] set by websocket_endpoint:540`（网页端停止）。**歌名丢失一半来自转录质量 + 偏置关**，不只在录音截断。
+- **耗时面（F 块第一手）**：`llm_secs 114.41 / 17.5`、`tts_secs 60.79 / 50.65`、`total_secs 184.73 / 76.8`、`first sound 14309 ms`。`E` 块：`play_music n=2 fail=0 avg=63.14`。
+- **方案（照旧第 3 项，追加第 5 条）**：播歌窗口启动参数里带 `--remote-debugging-port`（否则 Duck 永远暂停不了播放）；歌名缺失时**如实问用户**，不从半句里抠字；`recording=True` 期间中止标志要区分「她自己的声音 / 背景播放声 / 你的声音」（barge-in 2 票口径要重定）。落 `tests/2026-11-23-15-42-47_voice3/record_1..3.md + opinion.md`。

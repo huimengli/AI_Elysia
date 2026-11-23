@@ -75,3 +75,9 @@
 - 照 `services.py:26-44` 的实测命令起 llama（pid 18176，`:8080` 200）+ GPT-SoVITS api_v2（pid 6304，`:9880` 在听，根路径 404 属正常）+ 真 `jarvis.main`（`:7860`，`JARVIS_ONE_WINDOW=1`）。顺序照 `start_all_in_one.bat` 的口径：先起服务、后起 jarvis，让它认「外部起 · 无日志接管」，不抢管道、不杀它们。
 - 四灯逐字复核：wake 绿（`aili_xiya_v1.3.onnx / threshold 0.75`、listening true）、asr 绿（`faster-whisper small / cpu / zh（模型已加载=True）`）、llm 绿、tts 绿；`jarvis_windows=1`。启动 1.5 s 后有一次假唤醒（peak 0.791 越线 → 录音 2 s 无语音 `max rms=0.0021` → `Transcription empty`），照实记，与 `stt.py:265-267` docstring 记过的同族，不是模型坏了。
 - 自曝第 265 处：相对路径 + PowerShell `&` 被当模块名（`无法加载模块 'llm'`），两个作业 exit 1；改绝对路径才起。下一条从 266 起。
+- `2657643` docs(AI): 三服务全起 + 四灯复核 + 自曝 265（2 个文件；本地提交，未 push）
+
+## 追加（2026-11-23-15:48）· 真机 3 轮落盘（20 轮未达 3/20）
+- 你 15:42 的话落 `records/2026-11-23-15-42-47.md` + `todo.md` P2-5（阈值余量 0.72）与 P2-5b（四条判据逐轮）。三服务保持运行（你 15:30 的口径，与 P2-3 停服务口径相反）。落 `tests/2026-11-23-15-42-47_voice3/record_1..3.md + opinion.md`，累积 `tests/opinion.md` 追加。
+- 照实：**灵敏度余量薄，0.72 坐实** —— 越线 `0.791/0.779/0.751/0.771/0.765/0.778/0.79`，未越线里 `0.748/0.734/0.730/0.729/0.721/0.708/0.704/0.703`（0.70–0.748 密集）。**吃尾复现 2 次**（15:36:25 `capture 1 s` 转录空；15:36:49 `capture 1 s` 转录只剩「播放」），**新根因逐字** `[Duck] CDP 连不上（没有我起的窗口带 --remote-debugging-port）`（播歌窗口不可暂停）+ `barge-in candidate 1/2 (no abort yet)`（要 2 票才打断）。追记进 `hard_bug.md` HB-048（open）。
+- **转录是主害**：`[You] 播放到箱。`（`表 38 行，偏置=关`）→ 关键词「箱」播了「青之箱」，不是你要的歌；`web_search 搜索「花海 歌曲 播放」` → 之后「花海」播周杰伦花海（若你说花海则判据③中）。耗时第一手：`llm_secs 114.41 s`、`total_secs 184.73 s`、`first sound 14309 ms`。**播不播未证实**，要你的耳朵。20 轮口径未达 3/20，剩下要你在麦克风前继续说。
