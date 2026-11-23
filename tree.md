@@ -1,8 +1,8 @@
 # 项目结构快照（tree.md）
 
-<!-- 重建时间：2026-11-23-14-43，git ls-files + 非忽略文档类 untracked；旧版归档 ai_buckup/tree.md_2026-11-23-14-43-00.md -->
+<!-- 重建时间：2026-11-23-14:56，git ls-files + 非忽略文档类 untracked；旧版归档 ai_buckup/tree.md_2026-11-23-14-56-00.md -->
 
-共 802 个文件。
+共 807 个文件。
 
 ## `(根)`（18 个）
 
@@ -25,7 +25,7 @@
 - `todo.md`
 - `tree.md`
 
-## `ai_buckup`（72 个）
+## `ai_buckup`（73 个）
 
 - `ai_buckup/design.md_2026-11-17-10-24-25.md`
 - `ai_buckup/design.md_2026-11-17-10-44-33.md`
@@ -99,6 +99,7 @@
 - `ai_buckup/tree.md_2026-11-23-14-25-00.md`
 - `ai_buckup/tree.md_2026-11-23-14-31-00.md`
 - `ai_buckup/tree.md_2026-11-23-14-43-00.md`
+- `ai_buckup/tree.md_2026-11-23-14-56-00.md`
 
 ## `dsh-my-presets`（2 个）
 
@@ -279,7 +280,7 @@
 - `records/JARVIS_STATE.md`
 - `records/PROJECT_SUMMARY.txt`
 
-## `tests`（452 个）
+## `tests`（456 个）
 
 - `tests/2026-11-08-14-12-32_cc/opinion.md`
 - `tests/2026-11-08-14-12-32_cc/record_1.md`
@@ -713,6 +714,10 @@
 - `tests/2026-11-22-21-35-00_crossing20/record_7.md`
 - `tests/2026-11-22-21-35-00_crossing20/record_8.md`
 - `tests/2026-11-22-21-35-00_crossing20/record_9.md`
+- `tests/2026-11-22-21-35-00_deploy3/opinion.md`
+- `tests/2026-11-22-21-35-00_deploy3/record_1.md`
+- `tests/2026-11-22-21-35-00_deploy3/record_2.md`
+- `tests/2026-11-22-21-35-00_deploy3/record_3.md`
 - `tests/2026-11-22-21-35-00_lamps_shot/opinion.md`
 - `tests/2026-11-22-21-35-00_lamps_shot/record_1.md`
 - `tests/2026-11-22-21-35-00_lamps_shot/record_2.md`
