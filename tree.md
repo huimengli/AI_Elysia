@@ -1,8 +1,8 @@
 # 项目结构快照（tree.md）
 
-<!-- 重建时间：2026-11-23-16-28，git ls-files + 非忽略文档类 untracked；旧版归档 ai_buckup/tree.md_2026-11-23-16-28-00.md -->
+<!-- 重建时间：2026-11-23-17-08，git ls-files + 非忽略文档类 untracked；旧版归档 ai_buckup/tree.md_2026-11-23-17-08-00.md -->
 
-共 842 个文件。
+共 845 个文件。
 
 ## `(根)`（18 个）
 
@@ -25,7 +25,7 @@
 - `todo.md`
 - `tree.md`
 
-## `ai_buckup`（76 个）
+## `ai_buckup`（77 个）
 
 - `ai_buckup/design.md_2026-11-17-10-24-25.md`
 - `ai_buckup/design.md_2026-11-17-10-44-33.md`
@@ -103,6 +103,7 @@
 - `ai_buckup/tree.md_2026-11-23-15-48-00.md`
 - `ai_buckup/tree.md_2026-11-23-16-01-00.md`
 - `ai_buckup/tree.md_2026-11-23-16-28-00.md`
+- `ai_buckup/tree.md_2026-11-23-17-08-00.md`
 
 ## `dsh-my-presets`（2 个）
 
@@ -162,7 +163,7 @@
 - `openWakeWord/output/aili_xiya_v1.0c/aili_xiya_v1.0c.onnx`
 - `openWakeWord/output/aili_xiya_v1.0c/aili_xiya_v1.0c.onnx.data`
 
-## `records`（121 个）
+## `records`（122 个）
 
 - `records/2026-10-12-12-28-30.md`
 - `records/2026-10-13-11-45.md`
@@ -282,11 +283,12 @@
 - `records/2026-11-23-15-42-47.md`
 - `records/2026-11-23-15-59-43.md`
 - `records/2026-11-23-16-10-23.md`
+- `records/2026-11-23-16-47-26.md`
 - `records/AI_Benchmark.md`
 - `records/JARVIS_STATE.md`
 - `records/PROJECT_SUMMARY.txt`
 
-## `tests`（485 个）
+## `tests`（486 个）
 
 - `tests/2026-11-08-14-12-32_cc/opinion.md`
 - `tests/2026-11-08-14-12-32_cc/record_1.md`
@@ -737,6 +739,7 @@
 - `tests/2026-11-23-11-59-00_hb053_gate/record_2.md`
 - `tests/2026-11-23-11-59-00_hb053_gate/record_3.md`
 - `tests/2026-11-23-15-42-47_voice3/opinion.md`
+- `tests/2026-11-23-15-42-47_voice3/p0_3_metrics.md`
 - `tests/2026-11-23-15-42-47_voice3/record_1.md`
 - `tests/2026-11-23-15-42-47_voice3/record_2.md`
 - `tests/2026-11-23-15-42-47_voice3/record_3.md`
