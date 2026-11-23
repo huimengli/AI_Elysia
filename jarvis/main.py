@@ -553,6 +553,7 @@ _PLAY_VERBS = ("播放", "播", "放歌", "放一首", "来一", "听", "唱", "
 _DANGER_WORDS = ("锁屏", "锁定", "锁屏", "关机", "重启", "休眠", "睡眠", "lock", "power", "shutdown", "reboot")
 _last_user_text = [""]  # 可变容器：分发层的越界闸门读它
 _PLAYED = [False]  # 本轮是否已播过一次歌（play_music 闸门）
+_EXECUTED = [0]  # P2-7b：当轮**真调用**（真跑过 dispatch）的计数——执行声明必须绑定它
 
 
 def _exec_tool_with_retry(name: str, args: dict) -> str:
@@ -572,6 +573,20 @@ def _exec_tool_with_retry(name: str, args: dict) -> str:
             return (f"没有播歌：「{u[:30]}」是**打开对象**的指令，该调 `open_site`"
                     "（用户自定义站点在 config.yaml 的 `sites:` 里，用户名字优先），"
                     "不是播放指令 —— 「播歌页」里的「播」撞了播放动词，我不拿它当播放。")
+        # P2-7a（records/2026-11-23-16-10-23.md）：15:31 的转录是半句「播放到箱。」（逐字，
+        # 后面跟着「[热词] 表 38 行，偏置=关」），模型从半句里抠出单字「箱」当真歌名，播了
+        # 「青之箱 蓝箱 第二季」第 7 话——不是你要的歌（你要的整句逐字是「爱莉希雅，播放稻香」）。
+        # 歌名缺失时如实问用户：不从半句里抠字，不调 B 站 API，不拿别的歌凑。
+        kw = (args.get("keyword") or "").strip()
+        _JUNK = ("播放", "播", "放", "到", "的", "一下", "一首", "歌", "音乐", "歌曲",
+                  "来", "听", "来一首", "放一首", "《", "》", "！", "？", "。", "，", "、")
+        if len(kw) < 2 or kw in _JUNK:
+            return (f"没有播歌：关键词「{kw}」不是歌名（太短，或是动词/助词）。"
+                    f"原文「{u[:40]}」里没有歌名结构——请告诉我歌名，例如「播放《稻香》」。"
+                    "我不从半句里抠字，不调 B 站搜索 API，不拿别的歌凑。")
+        if not any(c.isalpha() for c in kw):
+            return (f"没有播歌：关键词「{kw}」里没有任何字（汉字/字母），不是歌名。"
+                    "请告诉我歌名（例如「播放《稻香》」），我不猜。")
         if _PLAYED[0]:
             # 22:05 播歌唯一性 + 11:20 轮 6c 实测（模型连调两次 play_music，同一首歌
             # 从 0:00 播两遍，第二遍还多杀一次窗口）：一轮里只允许一次播放，第二次拒。
@@ -636,10 +651,18 @@ def _exec_tool_with_retry(name: str, args: dict) -> str:
     if not ok:
         time.sleep(0.5)
         result = dispatch(name, args)
+    if name in ("music_control", "read_page", "find_page_text") and "连不上" in result:
+        # P2-6a（records/2026-11-23-15-59-43.md 逐字四份 + 15:37:02/15:37:11 两份）：播歌窗口被
+        # 关掉后，调试端口随那个实例一起消失，Duck 暂停/恢复、读页面、播完关窗全失明。
+        # 照实告知并给恢复路径（重新起播歌窗口），不假装控制成功。
+        result += ("\n（我起的播歌窗口已经不在了：调试端口随那个实例一起消失。要暂停/恢复/关弹幕/"
+                   "播完关窗，先让我用 play_music 重新起播歌窗口；现在我不碰任何页面，"
+                   "也不假装控制成功。）")
     # E 块（design §2）：工具调用次数/耗时/失败率的埋点
     try:
         pass  # 第 175 处自曝后删：模块级已 import svc；函数内局部 import 会让 svc 变局部变量 → UnboundLocalError
         svc.tool_stat(name, ok, time.time() - t0)
+        _EXECUTED[0] += 1  # P2-7b：真调用计数（执行声明绑定它；闸门早退的不计）
     except Exception:
         pass
     return result
@@ -818,6 +841,7 @@ def _process_request(user_text: str, source: str = "voice") -> str:
     event_log.log("user", user_text, source)
     _last_user_text[0] = user_text  # 越界闸门读这份原文（main._exec_tool_with_retry）
     _PLAYED[0] = False  # 每句只允许一次 play_music（22:05 播歌唯一性）
+    _EXECUTED[0] = 0  # P2-7b：当轮真调用计数清零
     _broadcast({"type": "user", "text": user_text})
     _broadcast({"type": "status", "message": "思考中…"})
 
@@ -853,6 +877,20 @@ def _process_request(user_text: str, source: str = "voice") -> str:
         cfg = _load_config()
         ollama_provider = cfg["llm"]["providers"].get("ollama", {"model": "qwen3:8b"})
         response_text = _call_ollama_provider(ollama_provider, cfg["llm"].get("temperature", 0.7), full_messages)
+
+    # P2-7b（records/2026-11-23-16-10-23.md 逐字）：15:57:10 的「我执行了 关闭浏览器窗口
+    # （jarvis 自己的）、打开新窗口（打开github）、发送消息（打开b站）、搜索（打开百度）、播放
+    # 音乐…、music_control…、搜索（打开百度）」是**模型自己吐的格式串**——那一小时里没有任何
+    # `[Tool:` 行，E 块计数一个没涨（play_music 2 / web_search 1 / music_control 1 / type_text 1 /
+    # read_page 1，与 15:37 逐字相同）。你要的「打开浏览器」没有发生。执行声明必须绑定当轮
+    # 真调用；无真调用时不许声称执行，如实说。
+    _CLAIM = re.search(r"我执行了|已执行|已播放|播放了|打开了|已打开|已搜索|搜索了|已输入|输入了|已关闭|关闭了", response_text)
+    if _CLAIM and _EXECUTED[0] == 0:
+        response_text = (f"这一句我没有调用任何工具，上面那些「执行了」是历史里的旧记录，这一轮没有"
+                         f"发生（你说的是「{user_text[:40]}」）。要我做请说清动作和对象；"
+                         "我不拿历史当执行。")
+        _jlog(f"[诚实] 执行声明绑定真调用：声明命中「{_CLAIM.group()}」而 _EXECUTED=0，回复改诚实")
+        event_log.log("system", "执行声明无真调用，回复改诚实", source)
 
     context.add("user", user_text)
     context.add("assistant", response_text)

@@ -370,3 +370,9 @@ o_speech_seconds）本批未实施，仍挂在 todo。
 - 「没能成功打开浏览器」的真相：**复述历史当执行**。15:57:10 她声称执行了 7 类工具（关窗/github/b站/百度/播歌/music_control/百度），而 E 块计数一个没涨（play_music 2 / web_search 1 / music_control 1 / type_text 1 / read_page 1，与 15:37 逐字相同）→ 没有真调用，浏览器不会打开；口头声称 = 虚假成功。
 - 唯一性副作用：22:05「只允许 1 个播歌窗口」的证据是第一次播歌；窗口被你关掉、计数变 0，「已播过」的记忆仍在 → 既不播也不开。窗口没了证据应失效，这条口径要在 P2 重定。
 - 唤醒面是好的（F 块 15 次越线 0.75–0.793）；截录音 + 复述历史两环每轮都坏。20 轮未达 7/20。
+
+## 追加（2026-11-23-16:27）· 三条闸门 20 轮明确测试 20/20 PASS
+- 三条改法落在 jarvis/main.py（38 增 0 删）：P2-7a 歌名闸门（len(kw)<2 / 动词助词表 / 无字 → 拒，如实问歌名，不调 B 站 API）；P2-6a CDP 失明恢复路径（music_control/read_page/find_page_text 结果含「连不上」→ 追加「调试端口随那个实例一起消失，先让我用 play_music 重新起播歌窗口；不碰任何页面，不假装控制成功」）；P2-7b 执行声明绑定真调用（_EXECUTED 在 svc.tool_stat 处 +1、闸门早退不计，_process_request 开头清零；声明命中而计数为 0 → 回复改「这一句我没有调用任何工具……我不拿历史当执行」+ [诚实] log）。
+- 20 轮走真函数 _exec_tool_with_retry / _process_request；桩的是 dispatch（起窗口/联网/CDP 连不上原句）与 _call_llm 文本，以及 memory/context/event_log 写入。闸门与计数不桩。20/20 PASS。
+- 照实记两条边界：第 6 轮半句尾巴双字「到箱」放行（闸门只拦单字/动词/助词/无字）——15:31 播「青之箱」的同族仍在；第 7 轮「《稻香》」放行但未 strip 书名号，真调 B 站大概率空结果。两条未修，等你点头才动 app_control 的关键词处理。
+- 20 轮没有真起播歌窗口、没有真语音、没有真 B 站请求。四条判据（含「关键词与你说的一致」「播不播」）在真机 3 轮验。自曝 267：子进程没带 USERPROFILE → Path.home() 在 tts.py:34 炸 Could not determine home directory。

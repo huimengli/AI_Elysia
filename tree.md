@@ -1,8 +1,8 @@
 # 项目结构快照（tree.md）
 
-<!-- 重建时间：2026-11-23-16-01，git ls-files + 非忽略文档类 untracked；旧版归档 ai_buckup/tree.md_2026-11-23-16-01-00.md -->
+<!-- 重建时间：2026-11-23-16-28，git ls-files + 非忽略文档类 untracked；旧版归档 ai_buckup/tree.md_2026-11-23-16-28-00.md -->
 
-共 819 个文件。
+共 842 个文件。
 
 ## `(根)`（18 个）
 
@@ -25,7 +25,7 @@
 - `todo.md`
 - `tree.md`
 
-## `ai_buckup`（75 个）
+## `ai_buckup`（76 个）
 
 - `ai_buckup/design.md_2026-11-17-10-24-25.md`
 - `ai_buckup/design.md_2026-11-17-10-44-33.md`
@@ -102,6 +102,7 @@
 - `ai_buckup/tree.md_2026-11-23-14-56-00.md`
 - `ai_buckup/tree.md_2026-11-23-15-48-00.md`
 - `ai_buckup/tree.md_2026-11-23-16-01-00.md`
+- `ai_buckup/tree.md_2026-11-23-16-28-00.md`
 
 ## `dsh-my-presets`（2 个）
 
@@ -161,7 +162,7 @@
 - `openWakeWord/output/aili_xiya_v1.0c/aili_xiya_v1.0c.onnx`
 - `openWakeWord/output/aili_xiya_v1.0c/aili_xiya_v1.0c.onnx.data`
 
-## `records`（120 个）
+## `records`（121 个）
 
 - `records/2026-10-12-12-28-30.md`
 - `records/2026-10-13-11-45.md`
@@ -280,11 +281,12 @@
 - `records/2026-11-23-11-59-00.md`
 - `records/2026-11-23-15-42-47.md`
 - `records/2026-11-23-15-59-43.md`
+- `records/2026-11-23-16-10-23.md`
 - `records/AI_Benchmark.md`
 - `records/JARVIS_STATE.md`
 - `records/PROJECT_SUMMARY.txt`
 
-## `tests`（464 个）
+## `tests`（485 个）
 
 - `tests/2026-11-08-14-12-32_cc/opinion.md`
 - `tests/2026-11-08-14-12-32_cc/record_1.md`
@@ -742,6 +744,27 @@
 - `tests/2026-11-23-15-42-47_voice3/record_5.md`
 - `tests/2026-11-23-15-42-47_voice3/record_6.md`
 - `tests/2026-11-23-15-42-47_voice3/record_7.md`
+- `tests/2026-11-23-16-10-23_gates/opinion.md`
+- `tests/2026-11-23-16-10-23_gates/record_1.md`
+- `tests/2026-11-23-16-10-23_gates/record_10.md`
+- `tests/2026-11-23-16-10-23_gates/record_11.md`
+- `tests/2026-11-23-16-10-23_gates/record_12.md`
+- `tests/2026-11-23-16-10-23_gates/record_13.md`
+- `tests/2026-11-23-16-10-23_gates/record_14.md`
+- `tests/2026-11-23-16-10-23_gates/record_15.md`
+- `tests/2026-11-23-16-10-23_gates/record_16.md`
+- `tests/2026-11-23-16-10-23_gates/record_17.md`
+- `tests/2026-11-23-16-10-23_gates/record_18.md`
+- `tests/2026-11-23-16-10-23_gates/record_19.md`
+- `tests/2026-11-23-16-10-23_gates/record_2.md`
+- `tests/2026-11-23-16-10-23_gates/record_20.md`
+- `tests/2026-11-23-16-10-23_gates/record_3.md`
+- `tests/2026-11-23-16-10-23_gates/record_4.md`
+- `tests/2026-11-23-16-10-23_gates/record_5.md`
+- `tests/2026-11-23-16-10-23_gates/record_6.md`
+- `tests/2026-11-23-16-10-23_gates/record_7.md`
+- `tests/2026-11-23-16-10-23_gates/record_8.md`
+- `tests/2026-11-23-16-10-23_gates/record_9.md`
 - `tests/__init__.py`
 - `tests/opinion.md`
 - `tests/test_context.py`
