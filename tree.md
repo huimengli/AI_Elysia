@@ -1,8 +1,8 @@
 # 项目结构快照（tree.md）
 
-<!-- 重建时间：2026-11-23-13-15，由 git ls-files（tracked）+ 非忽略的文档类 untracked 文件生成，不含 .gitignore 排除项 -->
+<!-- 重建时间：2026-11-23-14-09，git ls-files（tracked）+ 非忽略文档类 untracked；旧版归档 ai_buckup/tree.md_2026-11-23-14-09-00.md -->
 
-共 767 个文件。
+共 775 个文件。
 
 ## `(根)`（18 个）
 
@@ -25,7 +25,7 @@
 - `todo.md`
 - `tree.md`
 
-## `ai_buckup`（59 个）
+## `ai_buckup`（66 个）
 
 - `ai_buckup/design.md_2026-11-17-10-24-25.md`
 - `ai_buckup/design.md_2026-11-17-10-44-33.md`
@@ -73,6 +73,8 @@
 - `ai_buckup/progress.md_2026-11-22-13-12-00.md`
 - `ai_buckup/progress.md_2026-11-22-18-30-00.md`
 - `ai_buckup/progress.md_2026-11-22-21-47-00.md`
+- `ai_buckup/progress.md_2026-11-23-13-16-00.md`
+- `ai_buckup/progress.md_2026-11-23-13-31-00.md`
 - `ai_buckup/todo.md_2026-11-10-21-52-25.md`
 - `ai_buckup/todo.md_2026-11-12-16-58-46.md`
 - `ai_buckup/todo.md_2026-11-12-19-23-02.md`
@@ -84,8 +86,13 @@
 - `ai_buckup/todo.md_2026-11-17-15-51-09.md`
 - `ai_buckup/todo.md_2026-11-18-12-52-45.md`
 - `ai_buckup/todo.md_2026-11-21-12-00-00.md`
+- `ai_buckup/todo.md_2026-11-23-13-16-00.md`
+- `ai_buckup/todo.md_2026-11-23-13-31-00.md`
+- `ai_buckup/todo.md_2026-11-23-14-09-00.md`
 - `ai_buckup/tree.md_2026-11-11-21-15-00.md`
 - `ai_buckup/tree.md_2026-11-12-11-20-31.md`
+- `ai_buckup/tree.md_2026-11-23-13-15-00.md`
+- `ai_buckup/tree.md_2026-11-23-14-09-00.md`
 
 ## `dsh-my-presets`（2 个）
 
@@ -266,7 +273,7 @@
 - `records/JARVIS_STATE.md`
 - `records/PROJECT_SUMMARY.txt`
 
-## `tests`（430 个）
+## `tests`（431 个）
 
 - `tests/2026-11-08-14-12-32_cc/opinion.md`
 - `tests/2026-11-08-14-12-32_cc/record_1.md`
@@ -683,6 +690,7 @@
 - `tests/2026-11-22-21-35-00_lamps_shot/record_1.md`
 - `tests/2026-11-22-21-35-00_lamps_shot/record_2.md`
 - `tests/2026-11-22-21-35-00_lamps_shot/record_3.md`
+- `tests/2026-11-22-21-35-00_ring_full/opinion.md`
 - `tests/2026-11-22-21-35-00_ring_full/record_1.md`
 - `tests/2026-11-22-21-35-00_ring_full/record_2.md`
 - `tests/2026-11-22-21-35-00_ring_full/record_3.md`
