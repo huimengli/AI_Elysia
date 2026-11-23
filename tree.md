@@ -1,8 +1,8 @@
 # 项目结构快照（tree.md）
 
-<!-- 重建时间：2026-11-23-17-08，git ls-files + 非忽略文档类 untracked；旧版归档 ai_buckup/tree.md_2026-11-23-17-08-00.md -->
+<!-- 重建时间：2026-11-23-20-44，git ls-files + 非忽略文档类 untracked；旧版归档 ai_buckup/tree.md_2026-11-23-20-44-00.md -->
 
-共 845 个文件。
+共 870 个文件。
 
 ## `(根)`（18 个）
 
@@ -25,7 +25,7 @@
 - `todo.md`
 - `tree.md`
 
-## `ai_buckup`（77 个）
+## `ai_buckup`（78 个）
 
 - `ai_buckup/design.md_2026-11-17-10-24-25.md`
 - `ai_buckup/design.md_2026-11-17-10-44-33.md`
@@ -104,6 +104,7 @@
 - `ai_buckup/tree.md_2026-11-23-16-01-00.md`
 - `ai_buckup/tree.md_2026-11-23-16-28-00.md`
 - `ai_buckup/tree.md_2026-11-23-17-08-00.md`
+- `ai_buckup/tree.md_2026-11-23-20-44-00.md`
 
 ## `dsh-my-presets`（2 个）
 
@@ -288,7 +289,7 @@
 - `records/JARVIS_STATE.md`
 - `records/PROJECT_SUMMARY.txt`
 
-## `tests`（486 个）
+## `tests`（510 个）
 
 - `tests/2026-11-08-14-12-32_cc/opinion.md`
 - `tests/2026-11-08-14-12-32_cc/record_1.md`
@@ -768,6 +769,30 @@
 - `tests/2026-11-23-16-10-23_gates/record_7.md`
 - `tests/2026-11-23-16-10-23_gates/record_8.md`
 - `tests/2026-11-23-16-10-23_gates/record_9.md`
+- `tests/2026-11-23-16-47-26_hourrec/opinion.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_1.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_10.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_11.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_12.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_13.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_14.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_15.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_16.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_17.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_18.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_19.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_2.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_20.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_3.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_4.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_5.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_6.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_7.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_8.md`
+- `tests/2026-11-23-16-47-26_hourrec/record_9.md`
+- `tests/2026-11-23-16-47-26_hourrec/verify_record_1.md`
+- `tests/2026-11-23-16-47-26_hourrec/verify_record_2.md`
+- `tests/2026-11-23-16-47-26_hourrec/verify_record_3.md`
 - `tests/__init__.py`
 - `tests/opinion.md`
 - `tests/test_context.py`
